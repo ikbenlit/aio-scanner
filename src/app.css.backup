@@ -1,0 +1,68 @@
+/* 1. Tailwind base, components & utilities */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* 2. Local font-face declarations */
+@font-face {
+    font-family: 'Orbitron';
+    src: url('/fonts/Orbitron-Regular.woff2') format('woff2');
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}
+@font-face {
+    font-family: 'Orbitron';
+    src: url('/fonts/Orbitron-Bold.woff2') format('woff2');
+    font-weight: 700;
+    font-style: normal;
+    font-display: swap;
+}
+@font-face {
+    font-family: 'Exo 2';
+    src: url('/fonts/Exo2-Regular.woff2') format('woff2');
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}
+@font-face {
+    font-family: 'Exo 2';
+    src: url('/fonts/Exo2-Medium.woff2') format('woff2');
+    font-weight: 500;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* 3. Design tokens (colors, typography, spacing, etc.) */
+:root {
+    /* Kleuren */
+    --primary-blue: #2E9BDA;
+    --primary-gradient: linear-gradient(135deg, #2E9BDA, #4FACFE);
+    --secondary-yellow: #F5B041;
+    --accent-red: #E74C3C;
+    --success-green: #10b981;
+    --cyber-accent: #00F5FF;
+    --dark-primary: #1a1a1a;
+    --dark-secondary: #0f172a;
+    --background-primary: #FFFFFF;
+    --background-secondary: #f1f5f9;
+    --text-gray: #64748b;
+    --border-gray: #e2e8f0;
+    --bg-light: #f8fafc;
+
+    /* Typography */
+    --font-header: 'Orbitron', system-ui, sans-serif;
+    --font-body: 'Exo 2', system-ui, sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+}
+
+/* 4. Glassmorphism utility */
+@layer utilities {
+    .glass {
+        background-color: rgba(255, 255, 255, 0.6);
+        backdrop-filter: blur(10px);
+        border-radius: 16px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1), 0 2px 4px rgba(0,0,0,0.06);
+    }
+}
+  

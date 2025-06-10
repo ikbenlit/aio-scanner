@@ -1,11 +1,12 @@
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { ScanOrchestrator } from '$lib/scan/ScanOrchestrator.js';
-import { supabase } from '$lib/supabase.js';
+import { getSupabase } from '$lib/supabase';
 
 export const POST: RequestHandler = async ({ request, getClientAddress }) => {
   try {
     const { url } = await request.json();
+    const supabase = getSupabase();
 
     // 1. Validate URL
     if (!url || typeof url !== 'string') {

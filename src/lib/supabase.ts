@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
-import { SUPABASE_CONFIG } from '$lib/config';
+import { getSupabaseConfig } from './config';
 
 // Database Types voor TypeScript
 export interface Database {
@@ -58,16 +58,25 @@ export interface Database {
   };
 }
 
-// Supabase client instantie
-export const supabase = createClient<Database>(
-  SUPABASE_CONFIG.url,
-  SUPABASE_CONFIG.anonKey
-);
+// Supabase client instantie - lazy geïnitialiseerd
+let supabaseInstance: ReturnType<typeof createClient<Database>> | null = null;
+
+export function getSupabase() {
+  if (!supabaseInstance) {
+    const config = getSupabaseConfig();
+    supabaseInstance = createClient<Database>(
+      config.url,
+      config.anonKey
+    );
+  }
+  return supabaseInstance;
+}
 
 // Helper functie voor database operaties
 export const db = {
   // Users
   async createUser(email: string, plan_type = 'free') {
+    const supabase = getSupabase();
     return await supabase
       .from('users')
       .insert({ email, plan_type })
@@ -76,6 +85,7 @@ export const db = {
   },
 
   async getUserByEmail(email: string) {
+    const supabase = getSupabase();
     return await supabase
       .from('users')
       .select('*')
@@ -85,6 +95,7 @@ export const db = {
 
   // Scans
   async createScan(url: string, user_id?: number) {
+    const supabase = getSupabase();
     return await supabase
       .from('scans')
       .insert({ url, user_id, status: 'pending' })
@@ -93,6 +104,7 @@ export const db = {
   },
 
   async updateScanStatus(scanId: number, status: string, result_json?: any, overall_score?: number) {
+    const supabase = getSupabase();
     const updateData: any = { status };
     if (result_json) updateData.result_json = result_json;
     if (overall_score) updateData.overall_score = overall_score;
@@ -107,6 +119,7 @@ export const db = {
   },
 
   async getScan(scanId: number) {
+    const supabase = getSupabase();
     return await supabase
       .from('scans')
       .select('*')

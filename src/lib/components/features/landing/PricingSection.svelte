@@ -12,17 +12,17 @@
         Transparante prijzen
       </h2>
       <p class="text-lg text-gray-600 max-w-2xl mx-auto">
-        Kies het plan dat bij jouw behoeften past. Alle plannen inclusief onbeperkte scans en gedetailleerde rapporten.
+        Kies het plan dat bij jouw behoeften past. Credits verlopen nooit en je betaalt alleen voor wat je gebruikt.
       </p>
     </div>
 
-    <div class="grid md:grid-cols-3 gap-8">
-      <!-- Free Plan -->
-      <div class="glass p-8 rounded-2xl">
+    <div class="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+      <!-- Single Scan -->
+      <div class="glass p-8 rounded-2xl transition-all duration-300 hover:scale-105 hover:shadow-xl">
         <div class="text-center mb-8">
-          <h3 class="text-xl font-header font-bold text-gray-900 mb-2">Gratis</h3>
-          <div class="text-3xl font-bold text-gray-900">€0</div>
-          <p class="text-gray-600">voor altijd</p>
+          <h3 class="text-xl font-header font-bold text-gray-900 mb-2">Losse Scan</h3>
+          <div class="text-3xl font-bold text-gray-900">€9,95</div>
+          <p class="text-gray-600">voor één scan</p>
         </div>
         
         <ul class="space-y-4 mb-8">
@@ -30,13 +30,13 @@
             <svg class="w-5 h-5 text-success-green mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
             </svg>
-            1 scan per dag
+            1 scan
           </li>
           <li class="flex items-center">
             <svg class="w-5 h-5 text-success-green mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
             </svg>
-            Basis rapport
+            Basis PDF rapport
           </li>
           <li class="flex items-center">
             <svg class="w-5 h-5 text-success-green mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -50,22 +50,22 @@
           size="default"
           on:scan={onScan}
           placeholder="https://jouwwebsite.nl"
-          buttonText="Start gratis scan"
+          buttonText="Start scan"
         />
       </div>
 
-      <!-- Pro Plan -->
-      <div class="glass p-8 rounded-2xl border-2 border-primary-blue relative">
+      <!-- Starter Pack -->
+      <div class="glass p-8 rounded-2xl border-2 border-primary-blue relative transition-all duration-300 hover:scale-105 hover:shadow-xl">
         <div class="absolute -top-4 left-1/2 transform -translate-x-1/2">
           <span class="bg-primary-blue text-white px-4 py-1 rounded-full text-sm font-medium">
-            Meest gekozen
+            Populair
           </span>
         </div>
         
         <div class="text-center mb-8">
-          <h3 class="text-xl font-header font-bold text-gray-900 mb-2">Pro</h3>
-          <div class="text-3xl font-bold text-gray-900">€49</div>
-          <p class="text-gray-600">per maand</p>
+          <h3 class="text-xl font-header font-bold text-gray-900 mb-2">Starter Pack</h3>
+          <div class="text-3xl font-bold text-gray-900">€19,95</div>
+          <p class="text-gray-600">voor 2 credits + 1 bonus</p>
         </div>
         
         <ul class="space-y-4 mb-8">
@@ -73,73 +73,70 @@
             <svg class="w-5 h-5 text-success-green mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
             </svg>
-            Onbeperkte scans
+            2 credits (verlopen nooit)
           </li>
           <li class="flex items-center">
             <svg class="w-5 h-5 text-success-green mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
             </svg>
-            Gedetailleerd rapport
+            +1 gratis bonus scan
           </li>
           <li class="flex items-center">
             <svg class="w-5 h-5 text-success-green mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
             </svg>
-            AI-optimalisatie suggesties
+            Uitgebreid PDF rapport
           </li>
           <li class="flex items-center">
             <svg class="w-5 h-5 text-success-green mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
             </svg>
-            Prioriteit support
-          </li>
-        </ul>
-
-        <URLInput 
-          size="default"
-          on:scan={onScan}
-          placeholder="https://jouwwebsite.nl"
-          buttonText="Start pro scan"
-        />
-      </div>
-
-      <!-- Enterprise Plan -->
-      <div class="glass p-8 rounded-2xl">
-        <div class="text-center mb-8">
-          <h3 class="text-xl font-header font-bold text-gray-900 mb-2">Enterprise</h3>
-          <div class="text-3xl font-bold text-gray-900">Op maat</div>
-          <p class="text-gray-600">prijs op aanvraag</p>
-        </div>
-        
-        <ul class="space-y-4 mb-8">
-          <li class="flex items-center">
-            <svg class="w-5 h-5 text-success-green mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-            </svg>
-            Alles uit Pro plan
-          </li>
-          <li class="flex items-center">
-            <svg class="w-5 h-5 text-success-green mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-            </svg>
-            API toegang
-          </li>
-          <li class="flex items-center">
-            <svg class="w-5 h-5 text-success-green mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-            </svg>
-            Custom integraties
-          </li>
-          <li class="flex items-center">
-            <svg class="w-5 h-5 text-success-green mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-            </svg>
-            Dedicated support
+            Scan historie (30 dagen)
           </li>
         </ul>
 
         <button class="w-full bg-primary-blue text-white py-2 px-4 rounded-lg hover:bg-primary-blue-dark transition-colors">
-          Neem contact op
+          Koop nu
+        </button>
+      </div>
+
+      <!-- Professional Pack -->
+      <div class="glass p-8 rounded-2xl transition-all duration-300 hover:scale-105 hover:shadow-xl">
+        <div class="text-center mb-8">
+          <h3 class="text-xl font-header font-bold text-gray-900 mb-2">Professional Pack</h3>
+          <div class="text-3xl font-bold text-gray-900">€49,95</div>
+          <p class="text-gray-600">voor 5 credits + 1 bonus</p>
+        </div>
+        
+        <ul class="space-y-4 mb-8">
+          <li class="flex items-center">
+            <svg class="w-5 h-5 text-success-green mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+            </svg>
+            5 credits (verlopen nooit)
+          </li>
+          <li class="flex items-center">
+            <svg class="w-5 h-5 text-success-green mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+            </svg>
+            +1 gratis bonus scan
+          </li>
+          <li class="flex items-center">
+            <svg class="w-5 h-5 text-success-green mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+            </svg>
+            Uitgebreid PDF rapport
+          </li>
+          <li class="flex items-center">
+            <svg class="w-5 h-5 text-success-green mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+            </svg>
+            Scan historie (90 dagen)
+          </li>
+        </ul>
+
+        <button class="w-full bg-primary-blue text-white py-2 px-4 rounded-lg hover:bg-primary-blue-dark transition-colors">
+          Koop nu
         </button>
       </div>
     </div>

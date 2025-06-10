@@ -1,139 +1,107 @@
 # Website Tooling - Component Inventarisatie
 
 ## 📊 Overzicht
-**Totaal: 48 componenten**
-- **Shadcn-Svelte: 21 componenten (44%)**
-- **Custom: 27 componenten (56%)**
+**Totaal: 54 componenten**
+- **Shadcn-Svelte: 21 componenten (39%)**
+- **Custom: 33 componenten (61%)**
+- **Gerealiseerd: 16 componenten (30%)**
 
 ---
 
-## ✅ SHADCN-SVELTE COMPONENTEN (21)
+## 📁 Component Structuur per Pagina
 
-### 📝 Forms & Inputs (4)
-- **Email Input Field** - Standard input met email validatie
-- **Password Input Field** - Input met show/hide toggle
-- **Checkbox (voorwaarden)** - Styled checkbox voor akkoord voorwaarden
-- **Submit Buttons** - Primary/secondary button styling
+### 🏠 Landing Page (`/`)
+#### Layout Components
+- **Header/Navigation Bar** - ✅ Gerealiseerd - Complex nav met logo, menu, user account
+- **Footer** - ✅ Gerealiseerd - Multi-column footer met links en contact info
 
-### 🔘 Buttons & CTAs (3)
-- **Primary CTA Button** - Hoofdactie buttons (blauw, prominent)
-- **Secondary Button** - Tweede keuze buttons (outline/ghost)
-- **Icon Buttons** - Buttons met iconen (share, download, etc.)
+#### Core Components
+- **URL Input Field** - ✅ Gerealiseerd - Grote, prominente input op homepage
 
-### 📊 Data Display (3)
-- **Progress Bar/Circle** - Voortgang indicatoren voor scans
-- **Status Indicators** - Badges voor status (✅⏳⏸️)
-- **Scan History List** - Tabel/lijst van eerdere scans
+#### Feature Components
+- **Hero Section** - ✅ Gerealiseerd - Hoofdsectie met CTA en URL input
+- **Feature Section** - ✅ Gerealiseerd - Overzicht van belangrijkste features
+- **Why Now Section** - ✅ Gerealiseerd - Urgentie en timing argumenten
+- **Pricing Section** - ✅ Gerealiseerd - Pakketten en prijzen overzicht
+- **Testimonial Section** - ✅ Gerealiseerd - Klantreviews en social proof
+- **Final CTA Section** - ✅ Gerealiseerd - Afsluitende call-to-action
 
-### 🃏 Cards & Containers (4)
-- **Package Pricing Cards** - Standaard pricing cards layout
-- **Feature Cards** - Grid van features met icoon + tekst
-- **Testimonial Cards** - Klantreviews in card format
-- **Purchase Confirmation Card** - Bevestiging na aankoop
+### 🔍 Live Scan Page (`/scan/{scanId}`)
+#### UI Components
+- **Progress Circle** - ✅ Gerealiseerd - Grote cirkel met voortgang (0-100%)
+- **Status Indicators** - ✅ Gerealiseerd - Badges voor status (✅⏳⏸️)
+- **Module Progress Grid** - ✅ Gerealiseerd - Grid met 8 module statussen
+- **Activity Log** - ✅ Gerealiseerd - Real-time feed van scan activiteiten
+- **Website Preview** - ✅ Gerealiseerd - Screenshot/favicon met URL
 
-### 🎭 Overlays & Modals (3)
-- **Background Overlay** - Dialog backdrop (blur/darken)
-- **Toast Notifications** - Success/error meldingen
-- **Loading States** - Skeleton loaders tijdens laden
+### 📧 Email Capture Modal
+#### UI Components
+- **Background Overlay** - Nog te maken - Blur + dark overlay
+- **Glassmorphism Modal** - Nog te maken - Centered modal met glass effect
+- **Website Preview Card** - Nog te maken - Screenshot + metadata
+- **Email Form** - Nog te maken - Input met validatie
+- **Trust Indicators** - Nog te maken - Veiligheid en privacy badges
 
-### 🎮 Interactive Elements (3)
-- **Accordions (8 modules)** - Uitklapbare secties voor modules
-- **Tabs (auth page)** - Login/Register tab switching
-- **Hover Tooltips** - Info tooltips bij hover
+### 📊 Results Dashboard (`/results/{scanId}`)
+#### UI Components
+- **Score Circle** - Nog te maken - Geanimeerde SVG circle met score
+- **Radar Chart** - Nog te maken - 8-module visualization
+- **Quick Wins Cards** - Nog te maken - Expandable cards met acties
+- **Module Accordions** - Nog te maken - 8 expandable sections
+- **Discount Banner** - Nog te maken - Tijdelijke aanbieding banner
+- **PDF Download Button** - Nog te maken - Rapport download functionaliteit
 
-### 🧭 Layout (1)
-- **Breadcrumbs** - Navigatie breadcrumbs
+### 💰 Package Selection (`/upgrade`)
+#### UI Components
+- **Package Cards** - ✅ Gerealiseerd - Pricing cards layout
+- **Discount Banner** - Nog te maken - Tijdelijke aanbieding banner
+- **Email Form** - Nog te maken - Input met voorwaarden checkbox
+- **Social Proof** - Nog te maken - Testimonials en reviews
 
----
+### ✅ Payment Success (`/checkout/success`)
+#### UI Components
+- **Success Hero** - Nog te maken - Grote success icon met tekst
+- **Purchase Confirmation** - Nog te maken - Aankoop details card
+- **Bonus Scan Gift** - Nog te maken - Promotie banner
+- **Social Sharing** - Nog te maken - Share buttons met tekst
 
-## 🛠️ CUSTOM COMPONENTEN (27)
+### ❌ Payment Failed (`/checkout/failed`)
+#### UI Components
+- **Error Header** - Nog te maken - Error icon met tekst
+- **Failure Reason** - Nog te maken - Dynamische error message
+- **Recovery Options** - Nog te maken - Action buttons
+- **Support Section** - Nog te maken - Help en contact info
 
-### 🧭 Layout & Navigation (4)
-- **Header/Navigation Bar** - Complex nav met logo, menu, user account
-- **Footer** - Multi-column footer met links en contact info
-- **Page Container** - Responsive wrapper met max-width en padding
-- **Grid Layout (responsive)** - Custom grid systeem voor verschillende breakpoints
+### 👤 User Dashboard (`/dashboard`)
+#### UI Components
+- **Credit Balance** - Nog te maken - Saldo display
+- **Scan History** - Nog te maken - Lijst van eerdere scans
+- **Low Credits Warning** - Nog te maken - Waarschuwing banner
 
-### 📝 Forms & Inputs (2)
-- **URL Input Field (large, hero)** - Grote, prominente input op homepage
-- **Form Validation (real-time)** - Live validatie feedback tijdens typen
-
-### 🔘 Buttons & CTAs (2)
-- **Social Share Buttons** - Integratie met social media APIs
-- **Package Selection Cards** - Interactieve cards die fungeren als radio buttons
-
-### 📊 Data Display (5)
-- **Score Circle (animated 0-100)** - Geanimeerde SVG circle met score
-- **Radar Chart (8-module)** - Interactieve 8-punts radar voor modules
-- **Module Grid (8 items)** - Custom grid voor 8 SEO modules
-- **Activity Log (live updates)** - Real-time feed van scan activiteiten
-- **Credit Balance Display** - Styled weergave van beschikbare credits
-
-### 🃏 Cards & Containers (3)
-- **Quick Wins Cards (expandable)** - Cards die uitklappen met details
-- **Module Accordion Cards** - Custom accordion per SEO module
-- **Website Preview Card** - Screenshot + metadata van gescande site
-
-### 🎭 Overlays & Modals (1)
-- **Email Capture Modal (glassmorphism)** - Styled modal met glassmorphism effect
-
-### ⚡ Specialized Components (7)
-- **Live Scan Interface** - Real-time scanning UI met progress en feedback
-- **Countdown Timer** - Geanimeerde timer voor tijdelijke aanbiedingen
-- **Website Screenshot Display** - Component voor het tonen van website screenshots
-- **PDF Download Button** - Button die PDF rapport genereert en download
-- **Discount Banner** - Promotionele banner met animaties
-- **Trust Badges** - Vertrouwenssignalen (SSL, beveiliging, reviews)
-- **Social Proof Indicators** - Live tellers van gebruikers, scans, etc.
-
-### 🎮 Interactive Elements (3)
-- **Expandable Sections** - Custom uitklapbare content secties
-- **Copy-to-clipboard** - Kopieer functionaliteit met feedback
-- **Smart Email Detection** - Automatische email detectie en suggesties
-
----
-
-## 🎯 Prioriteit Custom Components
-
-### 🔥 High Priority (Core Features)
-1. **Score Circle** - Hero element, eerste indruk
-2. **Live Scan Interface** - Kern van de applicatie
-3. **Radar Chart** - Unieke selling point
-4. **Email Capture Modal** - Conversie kritiek
-
-### 🟡 Medium Priority (User Experience)
-5. **URL Input Field (hero)** - Landing page conversie
-6. **Activity Log** - Real-time feedback
-7. **Website Preview Card** - Visuele feedback
-8. **Package Selection Cards** - Purchasing flow
-
-### 🔵 Low Priority (Polish)
-9. **Countdown Timer** - Marketing element
-10. **Social Proof Indicators** - Trust building
-11. **Trust Badges** - Credibility
-12. **Glassmorphism Modal** - Visual polish
+### 🔐 Auth Page (`/auth`)
+#### UI Components
+- **Login Form** - Nog te maken - Email/password inputs
+- **Smart Email Detection** - Nog te maken - Real-time email check
+- **Account Upgrade Flow** - Nog te maken - Upgrade prompts
 
 ---
 
 ## 💡 Development Strategie
 
-**Fase 1: Shadcn Foundation**
-- Setup Shadcn-Svelte basis componenten
-- Bouw standaard forms, buttons, cards
-- Krijg basis functionaliteit werkend
+### Fase 1: Core Pages & Components
+1. Landing Page (meeste componenten al gerealiseerd)
+2. Live Scan Page (Activity Log al gerealiseerd)
+3. Email Capture Modal
+4. Results Dashboard
 
-**Fase 2: Core Custom Components**
-- Score Circle voor immediate impact
-- Live Scan Interface voor functionaliteit
-- Radar Chart voor differentiatie
+### Fase 2: Payment & Auth Flow
+1. Package Selection
+2. Payment Success/Failed
+3. Auth Page
+4. User Dashboard
 
-**Fase 3: Enhancement & Polish**
-- Resterende custom components
-- Animations en micro-interactions
-- Performance optimizatie
-
-**Voordelen van deze mix:**
-- Snelle start met proven components
-- Focus op unieke features die waarde toevoegen
-- Consistent design system als basis
-- Efficiënte development tijd
+### Fase 3: Enhancement & Polish
+1. Animaties en micro-interactions
+2. Performance optimalisatie
+3. Error handling
+4. Mobile responsiveness

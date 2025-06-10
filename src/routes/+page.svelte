@@ -8,13 +8,14 @@
   import TestimonialSection from '$lib/components/features/landing/TestimonialSection.svelte';
   import Header from '$lib/components/layout/Header.svelte';
   import Footer from '$lib/components/layout/Footer.svelte';
+  import { goto } from '$app/navigation';
   
   // Handle URL scan
   function handleScan(event: CustomEvent<{ url: string }>) {
     const { url } = event.detail;
-    // TODO: Navigate to scan page
-    console.log('Starting scan for:', url);
-    // goto(`/scan?url=${encodeURIComponent(url)}`);
+    // Genereer een willekeurige scan ID voor test doeleinden
+    const testScanId = Math.random().toString(36).substring(7);
+    goto(`/scan/${testScanId}?url=${encodeURIComponent(url)}`);
   }
   
   function handleLogin() {

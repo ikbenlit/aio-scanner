@@ -123,8 +123,8 @@ export class ContentFetcher {
         }
       };
 
-    } catch (error) {
-      throw new Error(`Playwright fetch failed: ${error.message}`);
+    } catch (error: unknown) {
+      throw new Error(`Playwright fetch failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       if (browser) {
         await browser.close();

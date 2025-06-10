@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
-import { PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY } from '$env/static/public';
+import { SUPABASE_CONFIG } from './config';
 
 // Database Types voor TypeScript
 export interface Database {
@@ -60,8 +60,8 @@ export interface Database {
 
 // Supabase client instantie
 export const supabase = createClient<Database>(
-  PUBLIC_SUPABASE_URL,
-  PUBLIC_SUPABASE_ANON_KEY
+  SUPABASE_CONFIG.url,
+  SUPABASE_CONFIG.anonKey
 );
 
 // Helper functie voor database operaties

@@ -14,13 +14,14 @@
   
   // Handle URL scan - start echte scan via API
   async function handleScan(event: CustomEvent<{ url: string }>) {
+    console.log('📡 handleScan called in +page.svelte with event:', event);
     const { url } = event.detail;
     
     if (isScanning) return; // Prevent multiple simultaneous scans
     
     try {
       isScanning = true;
-      console.log(`Starting scan for URL: ${url}`);
+      console.log(`🚀 Starting scan for URL: ${url}`);
       
       // Call anonymous scan API (temporary using test endpoint)
       const response = await fetch('/api/scan/test-simple', {
@@ -70,7 +71,7 @@
 <Header />
 
 <main>
-  <HeroSection onScan={handleScan} {isScanning} />
+  <HeroSection on:scan={handleScan} onScan={handleScan} {isScanning} />
   <FeatureSection />
   <TestimonialSection />
   <PricingSection onScan={handleScan} {isScanning} />

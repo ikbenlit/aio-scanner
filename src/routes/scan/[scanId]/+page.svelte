@@ -10,7 +10,7 @@
   import WebsitePreview from '$lib/components/features/scan/WebsitePreview.svelte';
   import EmailCaptureModal from '$lib/components/features/scan/EmailCaptureModal.svelte';
   import { Button } from '$lib/components/ui/button';
-  import { getSupabase } from '$lib/supabase';
+  import { supabase } from '$lib/supabaseClient.js';
   import type { FlowAction } from '$lib/scan/completion';
   import type { ScanResult } from '$lib/scan/types';
 
@@ -60,9 +60,81 @@
     }
   });
 
+  async function simulateTestScanCompletion() {
+    console.log('🧪 Simulating test scan completion...');
+    
+    // Simulate scan progress
+    scanStatus = 'running';
+    scanProgress = 20;
+    estimatedTime = 15;
+    
+    // Update activity log
+    activityItems = [
+      { text: 'Content wordt geanalyseerd...', status: 'success' },
+      { text: 'Technical SEO check gestart', status: 'success' },
+      { text: 'Schema markup detectie...', status: 'pending' }
+    ];
+    
+    // Simulate progress updates
+    setTimeout(() => {
+      scanProgress = 60;
+      estimatedTime = 8;
+      activityItems = [
+        { text: 'Technical SEO analyse voltooid', status: 'success' },
+        { text: 'Schema markup gedetecteerd', status: 'success' },
+        { text: 'AI analyse wordt uitgevoerd...', status: 'pending' }
+      ];
+      
+      // Update module progress
+      modules = modules.map((module, index) => ({
+        ...module,
+        status: index < 2 ? 'complete' : 'scanning',
+        score: index < 2 ? Math.round(65 + Math.random() * 30) : 0
+      }));
+    }, 2000);
+    
+    // Complete scan
+    setTimeout(() => {
+      scanStatus = 'completed';
+      scanProgress = 100;
+      estimatedTime = 0;
+      overallScore = 73;
+      
+      activityItems = [
+        { text: 'Technical SEO analyse voltooid', status: 'success' },
+        { text: 'Schema markup gedetecteerd', status: 'success' },
+        { text: 'AI analyse afgerond', status: 'success' },
+        { text: 'Test rapport gegenereerd', status: 'success' }
+      ];
+      
+      // Complete all modules
+      modules = modules.map((module, index) => ({
+        ...module,
+        status: 'complete',
+        score: Math.round(65 + Math.random() * 30)
+      }));
+      
+      // Stop polling and show email modal for test
+      clearInterval(pollInterval);
+      setTimeout(() => {
+        showEmailModal = true;
+      }, 1000);
+      
+    }, 5000);
+  }
+
   async function pollScanStatus() {
     try {
-      const supabase = getSupabase();
+      // Check if this is a test scan (from test-simple endpoint)
+      const scanIdNum = parseInt(scanId);
+      const isTestScan = scanIdNum > 1000 && scanIdNum < 10000; // Test IDs are 4-digit numbers
+      
+      if (isTestScan) {
+        // Simulate test scan completion
+        await simulateTestScanCompletion();
+        return;
+      }
+
       const { data, error: dbError } = await supabase
         .from('scans')
         .select('*')

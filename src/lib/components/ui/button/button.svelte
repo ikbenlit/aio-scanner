@@ -62,6 +62,7 @@
 		class={cn(buttonVariants({ variant, size }), className)}
 		{type}
 		{disabled}
+		on:click
 	>
 		<slot />
 	</button>

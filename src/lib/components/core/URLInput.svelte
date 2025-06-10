@@ -1,7 +1,6 @@
 <!-- src/lib/components/core/URLInput.svelte -->
 <script lang="ts">
     import { createEventDispatcher } from 'svelte';
-    import { Button } from '$lib/components/ui/button';
     
     // Props
     export let value = '';
@@ -56,7 +55,12 @@
     }
     
     function handleScan() {
-      if (!isValid || disabled || loading) return;
+      console.log('🔍 URLInput handleScan called', { isValid, disabled, loading, value });
+      
+      if (!isValid || disabled || loading) {
+        console.log('⚠️ Scan blocked:', { isValid, disabled, loading });
+        return;
+      }
       
       let finalUrl = value;
       
@@ -65,6 +69,7 @@
         finalUrl = 'https://' + finalUrl;
       }
       
+      console.log('✅ Dispatching scan event:', finalUrl);
       dispatch('scan', { url: finalUrl });
     }
     
@@ -88,8 +93,8 @@
       : 'w-full h-12 px-4 text-base border-0 rounded-lg bg-gray-50 focus:bg-white focus:ring-2 focus:ring-primary-blue focus:outline-none transition-all duration-200 font-body';
       
     $: buttonClass = size === 'large'
-      ? 'h-14 px-8 text-lg font-semibold bg-primary-blue hover:bg-primary-blue/90 disabled:opacity-50 disabled:cursor-not-allowed rounded-xl transition-all duration-200 whitespace-nowrap'
-      : 'h-12 px-6 text-base font-semibold bg-primary-blue hover:bg-primary-blue/90 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg transition-all duration-200 whitespace-nowrap';
+      ? 'h-14 px-8 text-lg font-semibold bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-xl transition-all duration-200 whitespace-nowrap'
+      : 'h-12 px-6 text-base font-semibold bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg transition-all duration-200 whitespace-nowrap';
   </script>
   
   <div class="w-full">
@@ -109,10 +114,10 @@
         />
       </div>
       
-      <Button
+      <button
         on:click={handleScan}
         disabled={!isValid || disabled || loading}
-        class={buttonClass}
+        class="flex items-center justify-center {buttonClass} text-white shadow-sm hover:shadow-md focus:ring-2 focus:ring-primary-blue/50 focus:outline-none"
       >
         {#if loading}
           <svg class="w-5 h-5 mr-2 animate-spin" fill="none" viewBox="0 0 24 24">
@@ -127,7 +132,7 @@
           </svg>
           {buttonText}
         {/if}
-      </Button>
+      </button>
     </div>
     
     <!-- Error Message -->

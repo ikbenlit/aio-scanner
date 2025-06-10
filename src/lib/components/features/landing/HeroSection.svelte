@@ -6,8 +6,18 @@
   export let onScan: (event: CustomEvent<{ url: string }>) => void;
   export let isScanning: boolean = false;
   
+  const dispatch = createEventDispatcher<{
+    scan: { url: string };
+  }>();
+  
   function handleScan(event: CustomEvent<{ url: string }>) {
-    onScan(event);
+    console.log('HeroSection handleScan called with:', event.detail);
+    // Dispatch event up to parent
+    dispatch('scan', event.detail);
+    // Also call the onScan prop for backward compatibility
+    if (onScan) {
+      onScan(event);
+    }
   }
   
   // Animation logic

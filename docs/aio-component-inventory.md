@@ -1,10 +1,10 @@
 # Website Tooling - Component Inventarisatie
 
 ## 📊 Overzicht
-**Totaal: 54 componenten**
-- **Shadcn-Svelte: 21 componenten (39%)**
-- **Custom: 33 componenten (61%)**
-- **Gerealiseerd: 16 componenten (30%)**
+**Totaal: 55 componenten**
+- **Shadcn-Svelte: 21 componenten (38%)**
+- **Custom: 34 componenten (62%)**
+- **Gerealiseerd: 16 componenten (29%)**
 
 ---
 
@@ -53,7 +53,7 @@
 
 ### 💰 Package Selection (`/upgrade`)
 #### UI Components
-- **Package Cards** - ✅ Gerealiseerd - Pricing cards layout
+- **Pricing Section** - ✅ Gerealiseerd - (Hergebruik van `landing/PricingSection.svelte`)
 - **Discount Banner** - Nog te maken - Tijdelijke aanbieding banner
 - **Email Form** - Nog te maken - Input met voorwaarden checkbox
 - **Social Proof** - Nog te maken - Testimonials en reviews
@@ -64,6 +64,7 @@
 - **Purchase Confirmation** - Nog te maken - Aankoop details card
 - **Bonus Scan Gift** - Nog te maken - Promotie banner
 - **Social Sharing** - Nog te maken - Share buttons met tekst
+- **Account Upgrade Flow** - Nog te maken - Upgrade prompts
 
 ### ❌ Payment Failed (`/checkout/failed`)
 #### UI Components
@@ -82,7 +83,11 @@
 #### UI Components
 - **Login Form** - Nog te maken - Email/password inputs
 - **Smart Email Detection** - Nog te maken - Real-time email check
-- **Account Upgrade Flow** - Nog te maken - Upgrade prompts
+
+---
+
+## 🎨 General UI Components
+- **Button** - ✅ Gerealiseerd - (`ui/button/button.svelte`)
 
 ---
 

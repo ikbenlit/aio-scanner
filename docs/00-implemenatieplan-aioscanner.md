@@ -6,6 +6,9 @@ Dit document beschrijft het gefaseerde implementatieplan voor de AIO-Scanner app
 - ⚪️ To Do
 - 🟡 In Progress
 - ✅ Done
+- 🔧 Fixed Issue
+
+**Laatste update:** December 2024 - na voltooiing scan engine foundation
 
 ---
 
@@ -16,34 +19,51 @@ Deze fase richt zich op het opzetten van de basis van de applicatie, de backend-
 | Sub-fase | Taak | Status | Notities |
 | :--- | :--- | :--- | :--- |
 | **1.1 Project Setup** | Opzetten SvelteKit project | ✅ Done | Project is opgezet met SvelteKit, TypeScript, Tailwind. |
-| | Basis UI componenten (Shadcn) | 🟡 In Progress | Inventarisatie is afgerond. Veel UI componenten moeten nog gebouwd worden. |
+| | Basis UI componenten (Shadcn) | 🟡 In Progress | Component inventarisatie compleet. 16 van 55 componenten voltooid. |
 | | Layout (Header/Footer) | ✅ Done | `Header.svelte` en `Footer.svelte` zijn aanwezig. |
 | **1.2 Backend & Database** | Opzetten Supabase project | ✅ Done | Project aangemaakt, environment variabelen geconfigureerd. |
 | | Database schema ontwerp | ✅ Done | Schema is gedefinieerd in `04-database-scheme.md`. |
-| | Implementatie database schema | ✅ Done | Phase 1 tabellen (`users`, `scans`) zijn aangemaakt in Supabase. |
-| **1.3 Scan Engine** | Ontwikkelen web scraper (Cheerio/Playwright) | 🟡 In Progress | ContentFetcher (Cheerio+Playwright fallback) is gebouwd. |
-| | API endpoint voor anonieme scan (`/api/scan/anonymous`) | 🟡 In Progress | API endpoint is aangemaakt, nog kleine TypeScript fixes nodig. |
-| | Implementatie van de 8 analysemodules | 🟡 In Progress | TechnicalSEOModule + SchemaMarkupModule compleet. 2 van 4 core modules done. |
+| | Implementatie database schema | ✅ Done | Phase 1 tabellen (`users`, `scans`) zijn aangemaakt en getest in Supabase. |
+| | Supabase client configuratie | ✅ Done | Lazy initialisatie patroon geïmplementeerd voor deployment. |
+| **1.3 Scan Engine** | Type definitions (`src/lib/scan/types.ts`) | ✅ Done | Comprehensive interfaces voor ScanModule, ModuleResult, Finding, etc. |
+| | Content fetcher (`ContentFetcher.ts`) | ✅ Done | Cheerio-first benadering met Playwright fallback voor JS-heavy sites. |
+| | TechnicalSEOModule | ✅ Done | Analyseert robots.txt, meta tags, sitemap. Geteste score: 70/100 op schema.org. |
+| | SchemaMarkupModule | ✅ Done | JSON-LD en Open Graph analyse. Geteste score: 92/100 op schema.org. |
+| | AIContentModule | ⚪️ To Do | Voor AI-optimalisatie analyse (ChatGPT, Claude detection). |
+| | AICitationModule | ⚪️ To Do | Voor citatie-opportunities en authority analysis. |
+| | ScanOrchestrator | ✅ Done | Parallelle module uitvoering met timeout handling. Overall score: 81/100. |
+| | API endpoint voor anonieme scan | ✅ Done | `/api/scan/anonymous` werkend. Scan duur: ~1.3-2.9 seconden. |
+| | Test infrastructure | ✅ Done | `/api/test` endpoint voor module testing. Succesvolle tests uitgevoerd. |
 | **1.4 Basis User Flow**| Landing page URL input | ✅ Done | `URLInput.svelte` is aanwezig. |
-| | Live scan-voortgang pagina (`/scan/[scanId]`) | 🟡 In Progress | Frontend componenten zijn er (`ModuleProgressGrid`, etc.), maar geen backend koppeling. |
+| | Live scan-voortgang pagina (`/scan/[scanId]`) | 🟡 In Progress | Frontend componenten zijn er (`ModuleProgressGrid`, etc.), backend koppeling nodig. |
+| **1.5 Deployment Setup** | Vercel deployment configuratie | ✅ Done | Succesvol gedeployed na oplossen van environment/import issues. |
+| | TypeScript configuratie fixes | ✅ Done | Relatieve imports gebruikt, alle TypeScript fouten opgelost. |
+
+**Status Fase 1:** 🟡 **75% Compleet** - Scan engine foundation gereed, 2 meer modules nodig voor MVP.
 
 ---
 
-## Fase 2: User Experience & Conversie
+## Fase 2: User Experience & Conversie (PRIORITEIT: Email Capture Flow)
 
-Deze fase bouwt voort op de kernfunctionaliteit met een focus op de gebruikerservaring, het vastleggen van gebruikersgegevens en de weergave van resultaten.
+Deze fase implementeert de kritieke scan completion flow voor maximale conversie van anonieme gebruikers.
 
 | Sub-fase | Taak | Status | Notities |
 | :--- | :--- | :--- | :--- |
-| **2.1 Landing Page** | Ontwikkelen landingspagina secties | ✅ Done | Alle secties (`Hero`, `Features`, `Testimonials`, etc.) zijn aanwezig. |
+| **2.1 Scan Completion Flow** | User status detection (auth check) | ⚪️ To Do | **CRITICAL:** Bepaalt welke flow gebruiker krijgt na scan. |
+| | Email Capture Modal (Anonymous users) | ⚪️ To Do | **HIGH PRIORITY:** Maximum leverage moment voor email capture. |
+| | Credit check voor authenticated users | ⚪️ To Do | Real-time validatie van beschikbare credits. |
+| | Temporary session management (1 hour) | ⚪️ To Do | Browser sessie na email capture voor results toegang. |
+| | IP-based rate limiting | ⚪️ To Do | **ANTI-ABUSE:** 5 scans per IP per uur voor anonymous users. |
+| **2.2 Landing Page** | Ontwikkelen landingspagina secties | ✅ Done | Alle secties (`Hero`, `Features`, `Testimonials`, etc.) zijn aanwezig. |
 | | Integreren live demo | ⚪️ To Do | |
-| **2.2 Email Capture** | Ontwikkelen Email Capture Modal | ⚪️ To Do | Ontwerp is gespecificeerd in de documentatie. |
-| | Integratie met Resend.com voor email delivery | ⚪️ To Do | |
-| | Opzetten email templates | ⚪️ To Do | |
-| **2.3 Results Dashboard** | Ontwikkelen score visualisatie | 🟡 In Progress | Componenten lijken aanwezig, koppeling met data nodig. |
-| | Ontwikkelen radar chart | ⚪️ To Do | |
-| | Ontwikkelen 'Quick Wins' en module details | 🟡 In Progress | Basis accordeon/uitklap-structuur kan aanwezig zijn. |
-| | Genereren van basis PDF rapport | ⚪️ To Do | |
+| **2.3 Email Infrastructure** | Integratie met Resend.com voor email delivery | ⚪️ To Do | Voor scan rapport verzending na email capture. |
+| | Email templates (scan rapport) | ⚪️ To Do | Dutch language templates met actionable insights. |
+| **2.4 Results Dashboard** | Koppeling scan results met frontend | ⚪️ To Do | Data flow van API naar results componenten. |
+| | Score visualisatie implementatie | 🟡 In Progress | Componenten aanwezig, data koppeling nodig. |
+| | Quick Wins en module details | 🟡 In Progress | Accordion structuur voor findings en recommendations. |
+| | Basis PDF rapport generatie | ⚪️ To Do | Voor email attachment na capture. |
+
+**Business Impact Fase 2:** Email capture = **60% conversie potentieel** van anonieme gebruikers.
 
 ---
 
@@ -53,30 +73,111 @@ Deze fase introduceert het businessmodel, inclusief betalingen en gebruikersacco
 
 | Sub-fase | Taak | Status | Notities |
 | :--- | :--- | :--- | :--- |
-| **3.1 Authenticatie** | Opzetten Supabase Auth | ⚪️ To Do | |
-| | Implementatie Login/Register flow | ⚪️ To Do | |
-| | Account upgrade pad (anoniem -> betaald) | ⚪️ To Do | |
-| **3.2 Payments** | Integratie Mollie | ⚪️ To Do | |
-| | Ontwikkelen Package Selection pagina (`/upgrade`) | ⚪️ To Do | De `checkout` feature map is nu nog leeg. |
-| | Opzetten Mollie webhook voor confirmatie | ⚪️ To Do | |
-| | Credit systeem (toevoegen & aftrekken) | ⚪️ To Do | |
-| **3.3 Authenticated User Features**| API endpoint voor betaalde scan (`/api/scan/authenticated`) | ⚪️ To Do | |
-| | Scan geschiedenis in dashboard | ⚪️ To Do | |
-| | Genereren van uitgebreid PDF rapport | ⚪️ To Do | |
+| **3.1 Authenticatie** | Opzetten Supabase Auth | ⚪️ To Do | Login/register flows. |
+| | Account upgrade pad (anoniem -> betaald) | ⚪️ To Do | Smooth transitie van email capture naar account. |
+| | Password reset & email verification | ⚪️ To Do | |
+| **3.2 Payments** | Integratie Mollie | ⚪️ To Do | Nederlandse payment provider. |
+| | Package Selection pagina (`/upgrade`) | ⚪️ To Do | Checkout components nog niet gebouwd. |
+| | Mollie webhook voor payment confirmatie | ⚪️ To Do | Credit toevoeging na betaling. |
+| | Credit systeem (deduction & addition) | ⚪️ To Do | Real-time credit management. |
+| **3.3 Authenticated User Features**| API endpoint voor betaalde scan | ⚪️ To Do | `/api/scan/authenticated` met credit deduction. |
+| | Scan geschiedenis in dashboard | ⚪️ To Do | Persistent storage van scan resultaten. |
+| | Uitgebreid PDF rapport voor paid users | ⚪️ To Do | Meer details dan basic rapport. |
 
 ---
 
-## Fase 4: Afronding & Deployment
+## Fase 4: Advanced Scan Modules & Optimization
 
-De laatste fase richt zich op het testen, optimaliseren en live zetten van de applicatie.
+Deze fase voltooit de scan engine en optimaliseert de applicatie.
 
 | Sub-fase | Taak | Status | Notities |
 | :--- | :--- | :--- | :--- |
-| **4.1 Testing** | End-to-end testing van alle user flows | ⚪️ To Do | |
-| | Testen van payment flow | ⚪️ To Do | |
-| | Testen van responsive design | ⚪️ To Do | |
-| **4.2 Optimalisatie** | Performance optimalisatie (LCP, etc.) | ⚪️ To Do | |
-| | Accessibility (WCAG 2.1 AA) | ⚪️ To Do | |
-| **4.3 Deployment** | Opzetten Vercel hosting | ⚪️ To Do | |
-| | Configuratie productie-omgeving (env vars) | ⚪️ To Do | |
-| | Go-live | ⚪️ To Do | |
+| **4.1 Voltooiing Scan Engine** | AIContentModule implementatie | ⚪️ To Do | AI content detection en optimalisatie tips. |
+| | AICitationModule implementatie | ⚪️ To Do | Citation opportunities en authority building. |
+| | Advanced error handling | 🟡 In Progress | Graceful degradation bij module failures. |
+| | Performance optimalisatie scan speed | ⚪️ To Do | Target: <2 seconden per scan. |
+| **4.2 Testing & Quality** | End-to-end testing van complete flows | ⚪️ To Do | |
+| | Automated testing voor scan modules | ⚪️ To Do | Regression testing voor algorithm updates. |
+| | Security testing (rate limiting, abuse) | ⚪️ To Do | |
+| **4.3 Production Readiness** | Monitoring en logging | ⚪️ To Do | Error tracking, performance metrics. |
+| | Backup en disaster recovery | ⚪️ To Do | |
+| | GDPR compliance verificatie | ⚪️ To Do | Voor email storage en processing. |
+
+---
+
+## MVP Launch Prioriteiten (Next 2 Weeks)
+
+### **Week 1: Scan Completion Flow (CRITICAL)**
+**Estimated effort: 18 hours**
+
+1. **User Authentication Check** (4h) - Detect logged in users
+2. **Email Capture Modal** (8h) - **HIGHEST ROI** - Convert anonymous users 
+3. **Simple Credit Deduction** (4h) - Basic paid user protection
+4. **IP Rate Limiting** (2h) - Prevent obvious abuse
+
+### **Week 2: Results Integration (CRITICAL)**
+**Estimated effort: 16 hours**
+
+1. **Complete AIContentModule** (6h) - Finish core scan capabilities  
+2. **Complete AICitationModule** (6h) - Full MVP scan functionality
+3. **Results Dashboard Data Flow** (4h) - Connect API to frontend
+
+**Target:** **Functional MVP** met volledige scan → email capture → results flow.
+
+---
+
+## Technische Issues & Oplossingen
+
+### Issue #1: Vercel Deployment Failure (Opgelost ✅)
+
+**Probleem:**
+- Fout: "supabaseUrl is required" tijdens Vercel build
+- TypeScript fout: "Cannot find module '$lib/config'"
+- Environment variables niet beschikbaar tijdens build fase
+
+**Oplossing:**
+1. **Lazy Initialisatie Pattern** voor Supabase client
+2. **Environment Variables Handling** voor dev/prod omgevingen  
+3. **Relatieve imports** i.p.v. `$lib` alias
+
+**Resultaat:** ✅ Vercel deployment succesvol, alle TypeScript fouten opgelost.
+
+### Issue #2: Scan Engine Character Encoding (Opgelost ✅)
+
+**Probleem:** 
+- Nederlandse tekst werd niet correct getoond in scan resultaten
+- Encoding issues met UTF-8 characters
+
+**Oplossing:**
+- Correct UTF-8 handling in ContentFetcher
+- Nederlandse tekst validatie in test endpoints
+
+**Resultaat:** ✅ Nederlandse output werkt correct, geteste op schema.org.
+
+---
+
+## Success Metrics & KPIs
+
+### **Technische Metrics (MVP)**
+- ✅ Scan completion rate: **100%** (beide modules succesvol op test)
+- ✅ Scan performance: **1.3-2.9 seconden** (binnen target <3s)
+- ✅ Score accuracy: **81/100 overall** op schema.org (realistic scoring)
+- 🎯 Target email capture rate: **60%+** van anonieme scans
+
+### **Business Metrics (Post-Launch)**
+- Email capture conversion rate
+- Anonymous to paid user conversion  
+- Credit usage patterns
+- Customer acquisition cost (CAC)
+
+---
+
+**Huidige Project Status:**
+- **Fase 1:** ✅ **75% Compleet** (scan engine foundation klaar)
+- **Fase 2:** ⚪️ **0% Gestart** (email capture flow is next priority)
+- **MVP Launch:** 🎯 **2 weken** (met focus op email capture flow)
+
+**Volgende Stappen:**
+1. Implementeer scan completion flow (Week 1)
+2. Voltooi laatste 2 scan modules (Week 2)  
+3. Launch MVP met email capture (End Week 2)

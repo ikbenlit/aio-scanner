@@ -1,0 +1,104 @@
+---
+description: AI-powered SEO scanner (SvelteKit + Supabase)
+globs: []
+alwaysApply: false
+---
+
+# AIO Scanner – Architecture Guide
+
+## Frontend Architecture
+- SvelteKit v2 with TypeScript
+- Tailwind CSS with custom theme tokens
+- Shadcn-svelte for standard UI components
+- Custom components for scanning visualizations (ScoreCircle, RadarChart)
+- Mobile-first design approach
+
+## Backend & Database
+- Supabase for database, authentication, and file storage
+- PostgreSQL with Row Level Security
+- Real-time updates via Supabase subscriptions
+- Server-side logic using SvelteKit endpoints
+
+## Scanning Engine
+- Primary: Cheerio (fast HTML parsing)
+- Fallback: Playwright (JS-rendered pages)
+- Logic:
+  1. Fetch page with Cheerio
+  2. Detect need for JS rendering
+  3. If needed, scan with Playwright
+  4. Analyze with AI modules (robots.txt, schema, content etc.)
+
+## AI Analysis Modules
+Each module returns:
+```typescript
+interface ModuleResult {
+  name: string;
+  score: number;
+  maxScore: number;
+  percentage: number;
+  status: 'success' | 'warning' | 'error';
+  details: Record<string, unknown>;
+  fixes: Fix[];
+}
+```
+
+## Email & PDF Flow
+- Resend for transactional emails
+- Phase 1: HTML reports
+- Phase 2+: PDF reports via Playwright
+- Flow: scan complete → email capture → email with report
+
+## Payments & Credits
+- Mollie for iDEAL, credit card, SEPA
+- Credit-based system (1 / 2 / 5 scans)
+- No subscriptions, credits don’t expire
+- Credits stored in Supabase, secured by RLS
+
+## Error Handling
+- Use error boundaries (SvelteKit handleError)
+- Graceful fallback UI
+- Log errors to console / Supabase
+- Retry mechanism for failed scans
+
+## Security
+- Input validation with Zod
+- API protection via Supabase auth
+- CORS headers configured in endpoints
+- Rate limiting (future: middleware layer)
+
+## Performance
+- Edge caching for assets via Vercel
+- ISR for scan results
+- Code splitting + lazy loading
+- Monitor cold starts & long scans
+
+## Project Structure
+```
+src/
+├── lib/
+│   ├── components/
+│   │   ├── ui/          # Shadcn
+│   │   ├── custom/      # AIO-specific visuals
+│   │   └── composite/   # Hybrid components
+│   ├── scanner/
+│   │   ├── engine.ts    # Scan orchestration
+│   │   ├── modules/     # 8 AI modules
+│   │   └── parsers/     # Cheerio / Playwright
+│   ├── stores/          # scan.ts, auth.ts, credits.ts
+│   └── utils/           # supabase.ts, mollie.ts, validators.ts
+├── routes/
+│   ├── scan/
+│   ├── checkout/
+│   └── dashboard/
+```
+
+## Hosting
+- Vercel (optimized for SvelteKit)
+- Edge CDN, image optimization, preview deployments
+- Serverless scan functions via SvelteKit
+
+## Implementation Phases
+- Week 1–2: Setup SvelteKit + Tailwind + Supabase
+- Week 3–4: Scanning engine + UI + Email flow
+- Week 5–6: Payments + Credits + Dashboard
+- Week 7–8: Optimization + Launch prep

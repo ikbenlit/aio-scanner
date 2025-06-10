@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
-import { SUPABASE_CONFIG } from './config';
+import { SUPABASE_CONFIG } from '$lib/config';
 
 // Database Types voor TypeScript
 export interface Database {

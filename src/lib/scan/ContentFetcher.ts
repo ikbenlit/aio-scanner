@@ -46,7 +46,7 @@ export class ContentFetcher {
       };
 
     } catch (error) {
-      console.log(`Cheerio fetch gefaald voor ${url}:`, error.message);
+      console.log(`Cheerio fetch gefaald voor ${url}:`, error instanceof Error ? error.message : String(error));
       // Fallback naar Playwright
       return await this.fetchWithPlaywright(url);
     }

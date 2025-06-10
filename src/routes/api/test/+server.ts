@@ -94,4 +94,20 @@ export const GET: RequestHandler = async ({ url }) => {
       stack: error instanceof Error ? error.stack : undefined
     }, { status: 500 });
   }
+};
+
+export const POST: RequestHandler = async ({ request }) => {
+  try {
+    const body = await request.json();
+    return json({
+      message: 'POST request successful',
+      received: body,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    return json({
+      error: 'Failed to parse JSON',
+      message: error instanceof Error ? error.message : 'Unknown error'
+    }, { status: 400 });
+  }
 }; 

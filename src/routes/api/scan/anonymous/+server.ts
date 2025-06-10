@@ -3,6 +3,37 @@ import type { RequestHandler } from './$types';
 import { ScanOrchestrator } from '$lib/scan/ScanOrchestrator.js';
 import { getSupabase } from '$lib/supabase';
 
+// Basic in-memory rate limiting (for MVP)
+// In production: use Redis or database-based rate limiting
+const ipScanCounts = new Map<string, { count: number; resetTime: number }>();
+
+async function checkBasicRateLimit(clientIP: string): Promise<{ allowed: boolean; reason?: string }> {
+  const now = Date.now();
+  const hourMs = 60 * 60 * 1000; // 1 hour
+  const maxScansPerHour = 5;
+  
+  const ipData = ipScanCounts.get(clientIP);
+  
+  if (!ipData || now > ipData.resetTime) {
+    // First request or reset time passed
+    ipScanCounts.set(clientIP, { count: 1, resetTime: now + hourMs });
+    return { allowed: true };
+  }
+  
+  if (ipData.count >= maxScansPerHour) {
+    return { 
+      allowed: false, 
+      reason: `Maximum ${maxScansPerHour} scans per uur bereikt. Probeer later opnieuw.` 
+    };
+  }
+  
+  // Increment count
+  ipData.count++;
+  ipScanCounts.set(clientIP, ipData);
+  
+  return { allowed: true };
+}
+
 export const POST: RequestHandler = async ({ request, getClientAddress }) => {
   try {
     const { url } = await request.json();
@@ -22,10 +53,13 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 
     // 2. Rate limiting based on IP (basic protection)
     const clientIP = getClientAddress();
-    
-    // TODO: Implement proper rate limiting with Redis/Supabase
-    // For now, just log the IP for monitoring
     console.log(`Scan request from IP: ${clientIP} for URL: ${url}`);
+    
+    // Basic rate limiting: 5 scans per IP per hour
+    const rateLimitCheck = await checkBasicRateLimit(clientIP);
+    if (!rateLimitCheck.allowed) {
+      throw error(429, rateLimitCheck.reason || 'Te veel scan verzoeken. Probeer later opnieuw.');
+    }
 
     // 3. Create scan record in database
     const { data: scanRecord, error: dbError } = await supabase
@@ -76,7 +110,7 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
   } catch (err) {
     console.error('Anonymous scan API error:', err);
     
-    if (err?.status) {
+    if (err && typeof err === 'object' && 'status' in err) {
       // Re-throw SvelteKit errors
       throw err;
     }

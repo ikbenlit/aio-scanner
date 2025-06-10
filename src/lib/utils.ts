@@ -7,6 +7,13 @@ export function cn(...inputs: ClassValue[]) {
 	return twMerge(clsx(inputs));
 }
 
+// Type voor Shadcn components met element refs
+export type WithElementRef<T extends Record<string, any>, K extends keyof T = never> = T & {
+	element?: HTMLElement;
+} & {
+	[P in K]: T[P];
+};
+
 type FlyAndScaleParams = {
 	y?: number;
 	x?: number;

@@ -38,18 +38,13 @@
 	export let variant: ButtonVariant = "default";
 	export let size: ButtonSize = "default";
 	export let href: string | undefined = undefined;
-	export let type: string = "button";
+	export let type: "button" | "submit" | "reset" = "button";
 	export let disabled: boolean = false;
 	export let ref: HTMLElement | null = null;
 </script>
 
 {#if href}
 	<a
-		href={disabled ? undefined : href}
-		aria-disabled={disabled}
-		role={disabled ? "link" : undefined}
-		tabindex={disabled ? -1 : undefined}
-	>
 		bind:this={ref}
 		data-slot="button"
 		class={cn(buttonVariants({ variant, size }), className)}

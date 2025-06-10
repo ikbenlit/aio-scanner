@@ -4,6 +4,7 @@
   import URLInput from '$lib/components/core/URLInput.svelte';
   
   export let onScan: (event: CustomEvent<{ url: string }>) => void;
+  export let isScanning: boolean = false;
   
   function handleScan(event: CustomEvent<{ url: string }>) {
     onScan(event);
@@ -99,6 +100,8 @@
             on:scan={handleScan}
             placeholder="https://jouwwebsite.nl"
             buttonText="Scan je site"
+            loading={isScanning}
+            disabled={isScanning}
           />
         </div>
         <!-- Trust Indicators -->

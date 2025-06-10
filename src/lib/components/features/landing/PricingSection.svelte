@@ -3,6 +3,7 @@
   import URLInput from '$lib/components/core/URLInput.svelte';
   
   export let onScan: (event: CustomEvent<{ url: string }>) => void;
+  export let isScanning: boolean = false;
 </script>
 
 <section class="py-20 bg-gradient-to-br from-bg-light via-white to-blue-50">
@@ -51,6 +52,8 @@
           on:scan={onScan}
           placeholder="https://jouwwebsite.nl"
           buttonText="Start scan"
+          loading={isScanning}
+          disabled={isScanning}
         />
       </div>
 

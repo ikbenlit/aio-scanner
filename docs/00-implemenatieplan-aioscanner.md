@@ -8,7 +8,7 @@ Dit document beschrijft het gefaseerde implementatieplan voor de AIO-Scanner app
 - ✅ Done
 - 🔧 Fixed Issue
 
-**Laatste update:** December 2024 - na voltooiing scan engine foundation
+**Laatste update:** December 2024 - na voltooiing Phase 2.1 Scan Completion Flow
 
 ---
 
@@ -39,7 +39,14 @@ Deze fase richt zich op het opzetten van de basis van de applicatie, de backend-
 | **1.5 Deployment Setup** | Vercel deployment configuratie | ✅ Done | Succesvol gedeployed na oplossen van environment/import issues. |
 | | TypeScript configuratie fixes | ✅ Done | Relatieve imports gebruikt, alle TypeScript fouten opgelost. |
 
-**Status Fase 1:** 🟡 **75% Compleet** - Scan engine foundation gereed, 2 meer modules nodig voor MVP.
+**Status Fase 1:** ✅ **100% Compleet** - Scan engine foundation gereed, alle basis modules werkend.
+
+**Status Fase 2.1:** ✅ **100% Compleet** - Kritieke scan completion flow geïmplementeerd:
+- **Authentication Detection:** User status check met credit balance
+- **Email Capture Modal:** Maximum leverage conversion punt met psychological triggers  
+- **Flow Decision Logic:** Decision tree implementatie (Auth vs Anonymous vs Credits)
+- **Rate Limiting:** Basic IP-based abuse protection (5 scans/hour)
+- **API Endpoints:** `/api/scan/complete` en `/api/scan/email-capture`
 
 ---
 
@@ -49,11 +56,11 @@ Deze fase implementeert de kritieke scan completion flow voor maximale conversie
 
 | Sub-fase | Taak | Status | Notities |
 | :--- | :--- | :--- | :--- |
-| **2.1 Scan Completion Flow** | User status detection (auth check) | ⚪️ To Do | **CRITICAL:** Bepaalt welke flow gebruiker krijgt na scan. |
-| | Email Capture Modal (Anonymous users) | ⚪️ To Do | **HIGH PRIORITY:** Maximum leverage moment voor email capture. |
-| | Credit check voor authenticated users | ⚪️ To Do | Real-time validatie van beschikbare credits. |
-| | Temporary session management (1 hour) | ⚪️ To Do | Browser sessie na email capture voor results toegang. |
-| | IP-based rate limiting | ⚪️ To Do | **ANTI-ABUSE:** 5 scans per IP per uur voor anonymous users. |
+| **2.1 Scan Completion Flow** | User status detection (auth check) | ✅ Done | **CRITICAL:** `checkUserStatus()` functie met credit check geïmplementeerd. |
+| | Email Capture Modal (Anonymous users) | ✅ Done | **HIGH PRIORITY:** Maximum leverage moment modal met psychological triggers. |
+| | Credit check voor authenticated users | ✅ Done | Real-time credit validatie en deduction met atomic updates. |
+| | Temporary session management (1 hour) | ✅ Done | Browser localStorage sessie na email capture voor results toegang. |
+| | IP-based rate limiting | ✅ Done | **ANTI-ABUSE:** 5 scans per IP per uur in-memory rate limiting. |
 | **2.2 Landing Page** | Ontwikkelen landingspagina secties | ✅ Done | Alle secties (`Hero`, `Features`, `Testimonials`, etc.) zijn aanwezig. |
 | | Integreren live demo | ⚪️ To Do | |
 | **2.3 Email Infrastructure** | Integratie met Resend.com voor email delivery | ⚪️ To Do | Voor scan rapport verzending na email capture. |

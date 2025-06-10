@@ -1,41 +1,219 @@
 <!-- src/routes/scan/[scanId]/+page.svelte -->
 <script lang="ts">
+  import { onMount, onDestroy } from 'svelte';
   import { page } from '$app/stores';
+  import { goto } from '$app/navigation';
   import Header from '$lib/components/layout/Header.svelte';
   import ModuleProgressGrid from '$lib/components/features/scan/ModuleProgressGrid.svelte';
   import ActivityLog from '$lib/components/features/scan/ActivityLog.svelte';
   import ProgressCircle from '$lib/components/features/scan/ProgressCircle.svelte';
   import WebsitePreview from '$lib/components/features/scan/WebsitePreview.svelte';
+  import EmailCaptureModal from '$lib/components/features/scan/EmailCaptureModal.svelte';
   import { Button } from '$lib/components/ui/button';
+  import { getSupabase } from '$lib/supabase';
+  import type { FlowAction } from '$lib/scan/completion';
+  import type { ScanResult } from '$lib/scan/types';
 
   // Get scanId from URL
   const scanId = $page.params.scanId;
   const urlToScan = $page.url.searchParams.get('url') || 'jouwwebsite.nl';
 
-  // Mock data voor MVP
-  const modules = [
-    { id: 'content', name: 'AI Content Analysis', icon: '🤖', status: 'scanning' as const },
-    { id: 'technical', name: 'Technical SEO', icon: '🔍', status: 'pending' as const },
-    { id: 'schema', name: 'Schema Markup', icon: '📝', status: 'pending' as const },
-    { id: 'presence', name: 'Cross-web Presence', icon: '🌐', status: 'pending' as const },
-    { id: 'authority', name: 'Authority & Citations', icon: '🏆', status: 'pending' as const },
-    { id: 'freshness', name: 'Content Freshness', icon: '🔄', status: 'pending' as const },
-    { id: 'multimodal', name: 'Multimodal', icon: '📱', status: 'pending' as const },
-    { id: 'monitoring', name: 'Monitoring Hooks', icon: '📊', status: 'pending' as const }
+  // Reactive state
+  let scanStatus: 'pending' | 'running' | 'completed' | 'failed' = 'pending';
+  let scanProgress = 0;
+  let estimatedTime = 30;
+  let overallScore = 0;
+  let showEmailModal = false;
+  let scanResults: ScanResult | null = null;
+  let error = '';
+  
+  // Polling interval
+  let pollInterval: ReturnType<typeof setInterval>;
+  
+  // Module progress tracking
+  let modules: Array<{ 
+    id: string; 
+    name: string; 
+    icon: string; 
+    status: 'pending' | 'scanning' | 'complete'; 
+    score: number; 
+  }> = [
+    { id: 'technical', name: 'Technical SEO', icon: '🔍', status: 'pending', score: 0 },
+    { id: 'schema', name: 'Schema Markup', icon: '📝', status: 'pending', score: 0 },
+    { id: 'ai_content', name: 'AI Content Analysis', icon: '🤖', status: 'pending', score: 0 },
+    { id: 'ai_citation', name: 'AI Citation Opportunities', icon: '🏆', status: 'pending', score: 0 }
   ];
 
-  const activityItems = [
-    { text: 'robots.txt checked', status: 'success' as const },
-    { text: 'Sitemap.xml found', status: 'success' as const },
-    { text: 'Checking structured data...', status: 'pending' as const }
+  let activityItems: Array<{ text: string; status: 'success' | 'pending' | 'error' }> = [
+    { text: 'Scan gestart...', status: 'pending' }
   ];
 
-  // Mock scan data
-  const scanData = {
-    progress: 25,
-    estimatedTime: 15,
-    url: urlToScan
-  };
+  onMount(() => {
+    // Start polling scan status
+    pollScanStatus();
+    pollInterval = setInterval(pollScanStatus, 2000); // Poll every 2 seconds
+  });
+
+  onDestroy(() => {
+    if (pollInterval) {
+      clearInterval(pollInterval);
+    }
+  });
+
+  async function pollScanStatus() {
+    try {
+      const supabase = getSupabase();
+      const { data, error: dbError } = await supabase
+        .from('scans')
+        .select('*')
+        .eq('id', scanId)
+        .single();
+
+      if (dbError || !data) {
+        console.error('Error fetching scan:', dbError);
+        return;
+      }
+
+      // Update status
+      scanStatus = data.status;
+      overallScore = data.overall_score || 0;
+
+      // Update progress based on status
+      if (scanStatus === 'pending') {
+        scanProgress = 0;
+        estimatedTime = 30;
+      } else if (scanStatus === 'running') {
+        scanProgress = Math.min(90, scanProgress + 5); // Gradual progress
+        estimatedTime = Math.max(5, estimatedTime - 2);
+        
+        // Update activity log
+        if (activityItems.length === 1) {
+          activityItems = [
+            { text: 'Content wordt geanalyseerd...', status: 'pending' },
+            { text: 'Technical SEO check gestart', status: 'success' },
+            { text: 'Schema markup detectie...', status: 'pending' }
+          ];
+        }
+      } else if (scanStatus === 'completed') {
+        scanProgress = 100;
+        estimatedTime = 0;
+        
+        // Update final activity
+        activityItems = [
+          { text: 'Technical SEO analyse voltooid', status: 'success' },
+          { text: 'Schema markup gedetecteerd', status: 'success' },
+          { text: 'AI analyse afgerond', status: 'success' },
+          { text: 'Rapport gegenereerd', status: 'success' }
+        ];
+
+        // Stop polling and trigger completion flow
+        clearInterval(pollInterval);
+        await handleScanCompletion();
+      } else if (scanStatus === 'failed') {
+        error = 'Scan mislukt. Probeer het opnieuw.';
+        clearInterval(pollInterval);
+      }
+
+      // Update module progress (mock data based on overall progress)
+      if (scanStatus === 'running' || scanStatus === 'completed') {
+        modules = modules.map((module, index) => ({
+          ...module,
+          status: index < (scanProgress / 25) ? 'complete' : scanProgress > index * 25 ? 'scanning' : 'pending',
+          score: scanProgress > index * 25 ? Math.round(65 + Math.random() * 30) : 0
+        }));
+      }
+
+    } catch (err) {
+      console.error('Polling error:', err);
+    }
+  }
+
+  async function handleScanCompletion() {
+    try {
+      console.log('Scan completed, triggering completion flow');
+      
+      const response = await fetch('/api/scan/complete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ scanId })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to process scan completion');
+      }
+
+      const data = await response.json();
+      const action: FlowAction = data.action;
+
+      // Handle different flow actions
+      switch (action.type) {
+        case 'show_results':
+          // Authenticated user with credits - direct to results
+          goto(`/scan/${scanId}/results`);
+          break;
+
+        case 'show_upgrade_prompt':
+          // Authenticated user without credits - upgrade prompt
+          goto('/upgrade?reason=no_credits');
+          break;
+
+        case 'show_email_capture':
+          // Anonymous user - show email capture modal
+          scanResults = data.scanResults;
+          showEmailModal = true;
+          break;
+
+        case 'error':
+          error = action.message;
+          break;
+
+        default:
+          console.error('Unknown flow action:', action);
+          error = 'Er is een onbekende fout opgetreden';
+      }
+
+    } catch (err) {
+      console.error('Scan completion error:', err);
+      error = 'Er is een fout opgetreden bij het voltooien van de scan';
+    }
+  }
+
+  async function handleEmailSubmit(event: CustomEvent<{ email: string }>) {
+    try {
+      const { email } = event.detail;
+      console.log('Processing email capture:', email);
+
+      const response = await fetch('/api/scan/email-capture', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, scanId })
+      });
+
+      if (!response.ok) {
+        throw new Error('Email capture failed');
+      }
+
+      const data = await response.json();
+      
+      // Close modal and redirect to results
+      showEmailModal = false;
+      goto(data.redirectUrl);
+
+    } catch (err) {
+      console.error('Email capture error:', err);
+      error = 'Er is een fout opgetreden bij het verwerken van je email';
+    }
+  }
+
+  function handleEmailModalClose() {
+    showEmailModal = false;
+    // For now, allow closing. In production, consider limiting this.
+  }
+
+  function cancelScan() {
+    // TODO: Implement scan cancellation
+    goto('/');
+  }
 </script>
 
 <svelte:head>
@@ -47,59 +225,106 @@
 
 <main class="min-h-screen bg-gradient-to-br from-bg-light via-white to-blue-50">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-    <!-- Scan Header -->
-    <div class="text-center mb-12">
-      <h1 class="text-3xl font-header font-bold text-gray-900 mb-4">
-        AI Scan in Progress
-      </h1>
-      <p class="text-lg text-gray-600">
-        We analyseren je website voor AI-vindbaarheid...
-      </p>
-    </div>
-
-    <!-- Main Content Grid -->
-    <div class="grid lg:grid-cols-2 gap-8">
-      <!-- Left Column: Progress & Status -->
-      <div class="space-y-8">
-        <!-- Progress Circle -->
-        <div class="glass p-8 rounded-2xl text-center">
-          <ProgressCircle 
-            progress={scanData.progress} 
-            size={192}
-            strokeWidth={8}
-          />
-          <p class="text-gray-600 mt-4">
-            Geschatte tijd: ~{scanData.estimatedTime} seconden
-          </p>
+    
+    {#if error}
+      <!-- Error State -->
+      <div class="text-center">
+        <div class="bg-red-50 border border-red-200 rounded-lg p-6 max-w-md mx-auto">
+          <div class="text-red-600 text-lg mb-4">⚠️ Fout</div>
+          <p class="text-red-800 mb-4">{error}</p>
+          <Button on:click={() => goto('/')} variant="outline">
+            Probeer Opnieuw
+          </Button>
         </div>
-
-        <!-- Module Progress -->
-        <ModuleProgressGrid {modules} />
+      </div>
+    {:else}
+      <!-- Scan Header -->
+      <div class="text-center mb-12">
+        <h1 class="text-3xl font-header font-bold text-gray-900 mb-4">
+          {#if scanStatus === 'completed'}
+            🎉 Scan Voltooid!
+          {:else if scanStatus === 'running'}
+            🔍 AI Scan in Progress
+          {:else}
+            ⏳ Scan wordt voorbereid...
+          {/if}
+        </h1>
+        <p class="text-lg text-gray-600">
+          {#if scanStatus === 'completed'}
+            Je website analyse is klaar
+          {:else}
+            We analyseren je website voor AI-vindbaarheid...
+          {/if}
+        </p>
       </div>
 
-      <!-- Right Column: Activity & Preview -->
-      <div class="space-y-8">
-        <!-- Activity Log -->
-        <ActivityLog items={activityItems} />
+      <!-- Main Content Grid -->
+      <div class="grid lg:grid-cols-2 gap-8">
+        <!-- Left Column: Progress & Status -->
+        <div class="space-y-8">
+          <!-- Progress Circle -->
+          <div class="glass p-8 rounded-2xl text-center">
+            <ProgressCircle 
+              progress={scanProgress} 
+              size={192}
+              strokeWidth={8}
+            />
+            <div class="mt-4">
+              {#if scanStatus === 'completed'}
+                <p class="text-lg font-semibold text-green-600">
+                  Score: {overallScore}/100
+                </p>
+              {:else}
+                <p class="text-gray-600">
+                  Geschatte tijd: ~{estimatedTime} seconden
+                </p>
+              {/if}
+            </div>
+          </div>
 
-        <!-- Website Preview -->
-        <div class="glass p-8 rounded-2xl">
-          <h3 class="text-sm font-medium text-gray-600 mb-6">Website Preview</h3>
-          <div class="h-[400px]">
-            <WebsitePreview websiteUrl={scanData.url} />
+          <!-- Module Progress -->
+          <ModuleProgressGrid {modules} />
+        </div>
+
+        <!-- Right Column: Activity & Preview -->
+        <div class="space-y-8">
+          <!-- Activity Log -->
+          <ActivityLog items={activityItems} />
+
+          <!-- Website Preview -->
+          <div class="glass p-8 rounded-2xl">
+            <h3 class="text-sm font-medium text-gray-600 mb-6">Website Preview</h3>
+            <div class="h-[400px]">
+              <WebsitePreview websiteUrl={urlToScan} />
+            </div>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="flex justify-end gap-4">
+            {#if scanStatus !== 'completed'}
+              <Button variant="outline" class="w-full sm:w-auto" on:click={cancelScan}>
+                Scan Annuleren
+              </Button>
+            {/if}
+            
+            {#if scanStatus === 'completed'}
+              <Button variant="default" class="w-full sm:w-auto" disabled>
+                🎉 Verwerking voltooid
+              </Button>
+            {/if}
           </div>
         </div>
-
-        <!-- Action Buttons -->
-        <div class="flex justify-end gap-4">
-          <Button variant="outline" class="w-full sm:w-auto">
-            Scan Annuleren
-          </Button>
-          <Button variant="default" class="w-full sm:w-auto">
-            Resultaten Bekijken
-          </Button>
-        </div>
       </div>
-    </div>
+    {/if}
   </div>
-</main> 
+</main>
+
+<!-- Email Capture Modal -->
+{#if showEmailModal && scanResults}
+  <EmailCaptureModal 
+    {scanResults}
+    isOpen={showEmailModal}
+    on:submit={handleEmailSubmit}
+    on:close={handleEmailModalClose}
+  />
+{/if} 

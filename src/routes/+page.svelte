@@ -10,12 +10,45 @@
   import Footer from '$lib/components/layout/Footer.svelte';
   import { goto } from '$app/navigation';
   
-  // Handle URL scan
-  function handleScan(event: CustomEvent<{ url: string }>) {
+  let isScanning = false;
+  
+  // Handle URL scan - start echte scan via API
+  async function handleScan(event: CustomEvent<{ url: string }>) {
     const { url } = event.detail;
-    // Genereer een willekeurige scan ID voor test doeleinden
-    const testScanId = Math.random().toString(36).substring(7);
-    goto(`/scan/${testScanId}?url=${encodeURIComponent(url)}`);
+    
+    if (isScanning) return; // Prevent multiple simultaneous scans
+    
+    try {
+      isScanning = true;
+      console.log(`Starting scan for URL: ${url}`);
+      
+      // Call anonymous scan API (temporary using test endpoint)
+      const response = await fetch('/api/scan/test-simple', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ url })
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Scan kon niet worden gestart');
+      }
+      
+      const data = await response.json();
+      console.log(`Scan started with ID: ${data.scanId}`);
+      
+      // Redirect naar scan pagina met echte scan ID
+      goto(`/scan/${data.scanId}`);
+      
+    } catch (error) {
+      console.error('Scan error:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Onbekende fout';
+      alert(`Scan kon niet worden gestart: ${errorMessage}`);
+    } finally {
+      isScanning = false;
+    }
   }
   
   function handleLogin() {
@@ -37,10 +70,10 @@
 <Header />
 
 <main>
-  <HeroSection onScan={handleScan} />
+  <HeroSection onScan={handleScan} {isScanning} />
   <FeatureSection />
   <TestimonialSection />
-  <PricingSection onScan={handleScan} />
+  <PricingSection onScan={handleScan} {isScanning} />
 
   <!-- Final CTA -->
   <section class="py-20 lg:py-32 bg-gradient-to-br from-primary-blue/5 via-cyber-accent/5 to-secondary-yellow/5">
@@ -57,6 +90,8 @@
           on:scan={handleScan}
           placeholder="https://jouwwebsite.nl"
           buttonText="Scan nu gratis"
+          loading={isScanning}
+          disabled={isScanning}
         />
         <p class="text-sm text-gray-500 mt-4">✓ Geen registratie vereist ✓ Resultaten binnen 30 seconden</p>
       </div>

@@ -2,6 +2,19 @@ import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from '@sveltejs/kit';
 import { handleEmailCapture } from '$lib/scan/completion';
 import { getSupabaseClient } from '$lib/supabase';
+import type { ModuleResult, ScanResult } from '$lib/scan/types';
+
+interface ScanRecord {
+  id: string;
+  url: string;
+  status: 'pending' | 'processing' | 'completed' | 'failed';
+  overall_score: number | null;
+  result_json: {
+    moduleResults: ModuleResult[];
+  } | null;
+  created_at: string;
+  completed_at: string | null;
+}
 
 /**
  * API endpoint voor email capture processing
@@ -27,7 +40,7 @@ export const POST: RequestHandler = async ({ request }) => {
       .from('scans')
       .select('*')
       .eq('id', scanId)
-      .single();
+      .single<ScanRecord>();
 
     if (dbError || !scanData) {
       console.error('Scan not found:', dbError);
@@ -43,14 +56,14 @@ export const POST: RequestHandler = async ({ request }) => {
     }
 
     // Convert to ScanResult format
-    const scanResults = {
-      scanId: scanData.id.toString(),
+    const scanResults: ScanResult = {
+      scanId: scanData.id,
       url: scanData.url,
       status: 'completed' as const,
       overallScore: scanData.overall_score || 0,
       moduleResults: scanData.result_json.moduleResults || [],
       createdAt: scanData.created_at,
-      completedAt: scanData.completed_at
+      completedAt: scanData.completed_at || undefined
     };
 
     // Process email capture

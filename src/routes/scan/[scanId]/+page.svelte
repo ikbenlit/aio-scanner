@@ -8,11 +8,13 @@
   import ActivityLog from '$lib/components/features/scan/ActivityLog.svelte';
   import ProgressCircle from '$lib/components/features/scan/ProgressCircle.svelte';
   import WebsitePreview from '$lib/components/features/scan/WebsitePreview.svelte';
-  import EmailCaptureModal from '$lib/components/features/scan/EmailCaptureModal.svelte';
+  import EmailCaptureModal from '$lib/components/features/email/EmailCaptureModal.svelte';
   import { Button } from '$lib/components/ui/button';
-  import { supabase } from '$lib/supabaseClient.js';
+  import { getSupabaseClient } from '$lib/supabase.js';
   import type { FlowAction } from '$lib/scan/completion';
   import type { ScanResult } from '$lib/scan/types';
+  import EmailCaptureForm from '$lib/components/features/email/EmailCaptureForm.svelte';
+  import EmailVerification from '$lib/components/features/email/EmailVerification.svelte';
 
   // Get scanId from URL
   const scanId = $page.params.scanId;
@@ -26,6 +28,9 @@
   let showEmailModal = false;
   let scanResults: ScanResult | null = null;
   let error = '';
+  
+  // Get Supabase client instance
+  const supabase = getSupabaseClient();
   
   // Polling interval
   let pollInterval: ReturnType<typeof setInterval>;
@@ -60,125 +65,49 @@
     }
   });
 
-  async function simulateTestScanCompletion() {
-    console.log('🧪 Simulating test scan completion...');
-    
-    // Simulate scan progress
-    scanStatus = 'running';
-    scanProgress = 20;
-    estimatedTime = 15;
-    
-    // Update activity log
-    activityItems = [
-      { text: 'Content wordt geanalyseerd...', status: 'success' },
-      { text: 'Technical SEO check gestart', status: 'success' },
-      { text: 'Schema markup detectie...', status: 'pending' }
-    ];
-    
-    // Simulate progress updates
-    setTimeout(() => {
-      scanProgress = 60;
-      estimatedTime = 8;
-      activityItems = [
-        { text: 'Technical SEO analyse voltooid', status: 'success' },
-        { text: 'Schema markup gedetecteerd', status: 'success' },
-        { text: 'AI analyse wordt uitgevoerd...', status: 'pending' }
-      ];
-      
-      // Update module progress
-      modules = modules.map((module, index) => ({
-        ...module,
-        status: index < 2 ? 'complete' : 'scanning',
-        score: index < 2 ? Math.round(65 + Math.random() * 30) : 0
-      }));
-    }, 2000);
-    
-    // Complete scan
-    setTimeout(() => {
-      scanStatus = 'completed';
-      scanProgress = 100;
-      estimatedTime = 0;
-      overallScore = 73;
-      
-      activityItems = [
-        { text: 'Technical SEO analyse voltooid', status: 'success' },
-        { text: 'Schema markup gedetecteerd', status: 'success' },
-        { text: 'AI analyse afgerond', status: 'success' },
-        { text: 'Test rapport gegenereerd', status: 'success' }
-      ];
-      
-      // Complete all modules
-      modules = modules.map((module, index) => ({
-        ...module,
-        status: 'complete',
-        score: Math.round(65 + Math.random() * 30)
-      }));
-      
-      // Stop polling and show email modal for test
-      clearInterval(pollInterval);
-      setTimeout(() => {
-        showEmailModal = true;
-      }, 1000);
-      
-    }, 5000);
-  }
-
   async function pollScanStatus() {
     try {
-      // Check if this is a test scan (from test-simple endpoint)
-      const scanIdNum = parseInt(scanId);
-      const isTestScan = scanIdNum > 1000 && scanIdNum < 10000; // Test IDs are 4-digit numbers
+      // Call the GET API endpoint for real scan status
+      const response = await fetch(`/api/scan/anonymous?scanId=${scanId}`);
       
-      if (isTestScan) {
-        // Simulate test scan completion
-        await simulateTestScanCompletion();
-        return;
+      if (!response.ok) {
+        throw new Error(`API error: ${response.status}`);
       }
 
-      const { data, error: dbError } = await supabase
-        .from('scans')
-        .select('*')
-        .eq('id', scanId)
-        .single();
-
-      if (dbError || !data) {
-        console.error('Error fetching scan:', dbError);
-        return;
-      }
-
-      // Update status
+      const data = await response.json();
+      
+      // Update scan status from API response
       scanStatus = data.status;
-      overallScore = data.overall_score || 0;
-
-      // Update progress based on status
+      scanProgress = data.progress || 0;
+      overallScore = data.overallScore || 0;
+      
+      // Update estimated time based on progress
       if (scanStatus === 'pending') {
-        scanProgress = 0;
         estimatedTime = 30;
+        activityItems = [{ text: 'Scan wordt voorbereid...', status: 'pending' }];
       } else if (scanStatus === 'running') {
-        scanProgress = Math.min(90, scanProgress + 5); // Gradual progress
-        estimatedTime = Math.max(5, estimatedTime - 2);
+        estimatedTime = Math.max(5, Math.round(30 - (scanProgress / 100) * 30));
         
-        // Update activity log
-        if (activityItems.length === 1) {
-          activityItems = [
-            { text: 'Content wordt geanalyseerd...', status: 'pending' },
-            { text: 'Technical SEO check gestart', status: 'success' },
-            { text: 'Schema markup detectie...', status: 'pending' }
-          ];
+        // Update activity log based on progress
+        updateActivityLog(scanProgress);
+        
+        // Update module progress based on results
+        if (data.results && data.results.moduleResults) {
+          updateModuleProgress(data.results.moduleResults);
         }
       } else if (scanStatus === 'completed') {
         scanProgress = 100;
         estimatedTime = 0;
         
-        // Update final activity
+        // Final activity log
         activityItems = [
-          { text: 'Technical SEO analyse voltooid', status: 'success' },
+          { text: 'Content geanalyseerd', status: 'success' },
+          { text: 'Technical SEO voltooid', status: 'success' },
           { text: 'Schema markup gedetecteerd', status: 'success' },
-          { text: 'AI analyse afgerond', status: 'success' },
           { text: 'Rapport gegenereerd', status: 'success' }
         ];
 
-        // Stop polling and trigger completion flow
+        // Stop polling and handle completion
         clearInterval(pollInterval);
         await handleScanCompletion();
       } else if (scanStatus === 'failed') {
@@ -186,18 +115,65 @@
         clearInterval(pollInterval);
       }
 
-      // Update module progress (mock data based on overall progress)
-      if (scanStatus === 'running' || scanStatus === 'completed') {
-        modules = modules.map((module, index) => ({
-          ...module,
-          status: index < (scanProgress / 25) ? 'complete' : scanProgress > index * 25 ? 'scanning' : 'pending',
-          score: scanProgress > index * 25 ? Math.round(65 + Math.random() * 30) : 0
-        }));
-      }
-
     } catch (err) {
       console.error('Polling error:', err);
+      // Don't stop polling on temporary errors, just log them
     }
+  }
+
+  function updateActivityLog(progress: number) {
+    if (progress >= 5 && progress < 30) {
+      activityItems = [
+        { text: 'Content wordt geanalyseerd...', status: 'pending' }
+      ];
+    } else if (progress >= 30 && progress < 60) {
+      activityItems = [
+        { text: 'Content geanalyseerd', status: 'success' },
+        { text: 'Technical SEO analyse...', status: 'pending' }
+      ];
+    } else if (progress >= 60 && progress < 90) {
+      activityItems = [
+        { text: 'Content geanalyseerd', status: 'success' },
+        { text: 'Technical SEO voltooid', status: 'success' },
+        { text: 'Schema markup detectie...', status: 'pending' }
+      ];
+    } else if (progress >= 90 && progress < 100) {
+      activityItems = [
+        { text: 'Content geanalyseerd', status: 'success' },
+        { text: 'Technical SEO voltooid', status: 'success' },
+        { text: 'Schema markup gedetecteerd', status: 'success' },
+        { text: 'Rapport wordt gegenereerd...', status: 'pending' }
+      ];
+    }
+  }
+
+  function updateModuleProgress(moduleResults: any[]) {
+    // Map API module results to frontend module display
+    const moduleMap: {[key: string]: string} = {
+      'TechnicalSEO': 'technical',
+      'SchemaMarkup': 'schema',
+      'AIContent': 'ai_content',
+      'AICitation': 'ai_citation'
+    };
+
+    modules = modules.map(module => {
+      // Find corresponding result from API
+      const result = moduleResults.find(r => 
+        moduleMap[r.moduleName] === module.id || 
+        r.moduleName.toLowerCase().includes(module.id.replace('_', ''))
+      );
+
+      if (result) {
+        return {
+          ...module,
+          status: result.status === 'completed' ? 'complete' : 
+                  result.status === 'failed' ? 'complete' : 'scanning',
+          score: result.score || 0
+        };
+      }
+
+      return module;
+    });
   }
 
   async function handleScanCompletion() {
@@ -247,33 +223,6 @@
     } catch (err) {
       console.error('Scan completion error:', err);
       error = 'Er is een fout opgetreden bij het voltooien van de scan';
-    }
-  }
-
-  async function handleEmailSubmit(event: CustomEvent<{ email: string }>) {
-    try {
-      const { email } = event.detail;
-      console.log('Processing email capture:', email);
-
-      const response = await fetch('/api/scan/email-capture', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, scanId })
-      });
-
-      if (!response.ok) {
-        throw new Error('Email capture failed');
-      }
-
-      const data = await response.json();
-      
-      // Close modal and redirect to results
-      showEmailModal = false;
-      goto(data.redirectUrl);
-
-    } catch (err) {
-      console.error('Email capture error:', err);
-      error = 'Er is een fout opgetreden bij het verwerken van je email';
     }
   }
 
@@ -392,11 +341,15 @@
 </main>
 
 <!-- Email Capture Modal -->
-{#if showEmailModal && scanResults}
-  <EmailCaptureModal 
-    {scanResults}
+{#if showEmailModal}
+  <EmailCaptureModal
+    {scanId}
+    url={urlToScan}
     isOpen={showEmailModal}
-    on:submit={handleEmailSubmit}
-    on:close={handleEmailModalClose}
+    onSuccess={() => {
+      showEmailModal = false;
+      goto(`/scan/${scanId}/results`);
+    }}
+    onClose={handleEmailModalClose}
   />
 {/if} 

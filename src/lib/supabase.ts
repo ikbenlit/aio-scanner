@@ -2,6 +2,9 @@ import { createClient } from '@supabase/supabase-js';
 import { getSupabaseConfig } from './config';
 import { PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY } from '$env/static/public';
 
+// Supabase Json type definition, as it's not directly exported in some versions.
+type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
+
 // Database Types voor TypeScript
 export interface Database {
   public: {
@@ -33,8 +36,10 @@ export interface Database {
           user_id: number | null;
           url: string;
           status: string;
+          progress: number;
+          email: string | null;
           overall_score: number | null;
-          result_json: any | null;
+          result_json: Json | null;
           created_at: string;
           completed_at: string | null;
         };
@@ -42,17 +47,49 @@ export interface Database {
           user_id?: number | null;
           url: string;
           status?: string;
+          progress?: number;
+          email?: string | null;
           overall_score?: number | null;
-          result_json?: any | null;
+          result_json?: Json | null;
           completed_at?: string | null;
         };
         Update: {
           user_id?: number | null;
           url?: string;
           status?: string;
+          progress?: number;
+          email?: string | null;
           overall_score?: number | null;
-          result_json?: any | null;
+          result_json?: Json | null;
           completed_at?: string | null;
+        };
+      };
+      scan_modules: {
+        Row: {
+            id: number;
+            scan_id: number;
+            module_name: string;
+            status: string;
+            score: number;
+            findings: Json | null;
+            progress: number;
+            created_at: string;
+            completed_at: string | null;
+        };
+        Insert: {
+            scan_id: number;
+            module_name: string;
+            status?: string;
+            score?: number;
+            findings?: Json | null;
+            progress?: number;
+        };
+        Update: {
+            status?: string;
+            score?: number;
+            findings?: Json | null;
+            progress?: number;
+            completed_at?: string | null;
         };
       };
     };
@@ -98,12 +135,12 @@ export const db = {
     const supabase = getSupabaseClient();
     return await supabase
       .from('scans')
-      .insert({ url, user_id, status: 'pending' })
+      .insert({ url, user_id, status: 'pending', progress: 0 })
       .select()
       .single();
   },
 
-  async updateScanStatus(scanId: number, status: string, result_json?: any, overall_score?: number) {
+  async updateScanStatus(scanId: number, status: string, result_json?: Json, overall_score?: number) {
     const supabase = getSupabaseClient();
     const updateData: any = { status };
     if (result_json) updateData.result_json = result_json;

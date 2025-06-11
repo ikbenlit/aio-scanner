@@ -32,7 +32,7 @@ Deze fase richt zich op het opzetten van de basis van de applicatie, de backend-
 | | AIContentModule | ✅ Done | Voor AI-optimalisatie analyse (ChatGPT, Claude detection). |
 | | AICitationModule | ✅ Done | Voor citatie-opportunities en authority analysis. |
 | | ScanOrchestrator | ✅ Done | Parallelle module uitvoering met timeout handling. Overall score: 81/100. |
-| | API endpoint voor anonieme scan | ✅ Done | `/api/scan/anonymous` werkend. Scan duur: ~1.3-2.9 seconden. |
+| | API endpoint voor anonieme scan | ✅ Done | `/api/scan/anonymous` werkend. Scan duur: ~1.3-2.9 seconden. Free Tier Journey volledig functioneel. |
 | | Test infrastructure | ✅ Done | `/api/test` endpoint voor module testing. Succesvolle tests uitgevoerd. |
 | **1.4 Basis User Flow**| Landing page URL input | ✅ Done | `URLInput.svelte` is aanwezig en functioneel. |
 | | Live scan-voortgang pagina (`/scan/[scanId]`) | ✅ Done | Frontend componenten zijn geïmplementeerd en gekoppeld aan backend. |
@@ -57,7 +57,7 @@ Deze fase implementeert de kritieke scan completion flow voor maximale conversie
 | Sub-fase | Taak | Status | Notities |
 | :--- | :--- | :--- | :--- |
 | **2.1 Scan Completion Flow** | User status detection (auth check) | ✅ Done | **CRITICAL:** `checkUserStatus()` functie met credit check geïmplementeerd. |
-| | Email Capture Modal (Anonymous users) | ✅ Done | **HIGH PRIORITY:** Maximum leverage moment modal met psychological triggers. |
+| | Email Capture Modal (Anonymous users) | ✅ Done | **HIGH PRIORITY:** Maximum leverage moment modal met psychological triggers. Free Tier Journey succesvol geïmplementeerd. |
 | | Credit check voor authenticated users | ✅ Done | Real-time credit validatie en deduction met atomic updates. |
 | | Temporary session management (1 hour) | ✅ Done | Browser localStorage sessie na email capture voor results toegang. |
 | | IP-based rate limiting | ✅ Done | **ANTI-ABUSE:** 5 scans per IP per uur in-memory rate limiting. |
@@ -129,7 +129,7 @@ Deze fase voltooit de scan engine en optimaliseert de applicatie.
 2. **Package Selection UI** (6h) - Upgrade flow
 3. **Credit System** (4h) - Real-time credit management
 
-**Target:** **Production Ready MVP** met volledige email + payment flow.
+**Target:** **Production Ready MVP** met volledige Free Tier Journey functionaliteit.
 
 ---
 

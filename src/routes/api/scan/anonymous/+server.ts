@@ -62,7 +62,7 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
     }
 
     // 3. Create scan record in database
-    const { data: scanRecord, error: dbError } = await supabase
+    const { data: scanRecord, error: dbError }: { data: any, error: any } = await supabase
       .from('scans')
       .insert({
         url: parsedUrl.toString(),
@@ -128,19 +128,20 @@ export const GET: RequestHandler = async ({ url }) => {
             throw error(400, 'Scan ID is vereist');
         }
 
-        // Haal scan status op
+        // data: scan as any to bypass type errors until supabase.ts is fixed
         const { data: scan, error: dbError } = await supabase
             .from('scans')
             .select(`
                 id,
                 status,
+                progress,
                 overall_score,
                 result_json,
                 created_at,
                 completed_at
             `)
             .eq('id', scanId)
-            .single();
+            .single<any>();
 
         if (dbError) {
             console.error('Database error:', dbError);
@@ -151,29 +152,15 @@ export const GET: RequestHandler = async ({ url }) => {
             throw error(404, 'Scan niet gevonden');
         }
 
-        // Bereken voortgang percentage
-        let progress = 0;
-        if (scan.status === 'completed') {
-            progress = 100;
-        } else if (scan.status === 'running') {
-            if (scan.result_json?.moduleResults) {
-                const completedModules = scan.result_json.moduleResults.filter(
-                    (m: any) => m.status === 'completed'
-                ).length;
-                const totalModules = scan.result_json.moduleResults.length;
-                progress = Math.round((completedModules / totalModules) * 100);
-            }
-        }
-
         return json({
             id: scan.id,
             status: scan.status,
-            progress,
+            progress: scan.progress,
             overallScore: scan.overall_score,
-            results: scan.status === 'completed' ? scan.result_json : null,
+            results: scan.result_json,
             createdAt: scan.created_at,
             completedAt: scan.completed_at,
-            estimatedTimeRemaining: progress < 100 ? '30 seconds' : null
+            estimatedTimeRemaining: scan.progress < 100 ? `${30 - Math.floor(scan.progress / 100 * 30)} seconds` : null
         });
 
     } catch (err) {

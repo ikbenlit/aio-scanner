@@ -18,21 +18,29 @@ export class ScanOrchestrator {
 
   async executeScan(url: string, scanId: string): Promise<ScanResult> {
     console.log(`Starting scan for ${url} with ID ${scanId}`);
-    
+    const supabase = getSupabaseClient();
+    const numericScanId = parseInt(scanId, 10);
+
     try {
-      // 1. Fetch content (Cheerio → Playwright fallback)
+      // 1. Set scan status to 'running'
+      await supabase
+        .from('scans')
+        .update({ status: 'running', progress: 5 })
+        .eq('id', numericScanId);
+
+      // 2. Fetch content
       console.log('Fetching content...');
       const { html, metadata } = await this.contentFetcher.fetchContent(url);
       console.log(`Content fetched using ${metadata.fetchMethod} in ${metadata.responseTime}ms`);
 
-      // 2. Run modules parallel met progress tracking
+      // 3. Run modules and track progress
       console.log('Starting module analysis...');
-      const moduleResults = await this.runModulesParallel(url, html, scanId, metadata);
+      const moduleResults = await this.runModulesParallel(url, html, numericScanId, metadata);
 
-      // 3. Calculate overall score
+      // 4. Calculate overall score
       const overallScore = this.calculateOverallScore(moduleResults);
 
-      // 4. Create scan result
+      // 5. Create final scan result object
       const scanResult: ScanResult = {
         scanId,
         url,
@@ -43,21 +51,28 @@ export class ScanOrchestrator {
         completedAt: new Date().toISOString()
       };
 
-      // NIEUW: Update scan status in database
-      await getSupabaseClient()
+      // 6. Update scan to 'completed' in the database
+      await supabase
         .from('scans')
         .update({
           status: 'completed',
+          progress: 100,
           overall_score: overallScore,
+          result_json: scanResult as any, // Cast to any to avoid type issues for now
           completed_at: new Date().toISOString()
         })
-        .eq('id', scanId);
+        .eq('id', numericScanId);
 
       console.log(`Scan completed for ${url} with score ${overallScore}`);
       return scanResult;
 
     } catch (error) {
       console.error(`Scan failed for ${url}:`, error);
+      // Update scan status to failed
+      await supabase
+        .from('scans')
+        .update({ status: 'failed', progress: 100 })
+        .eq('id', parseInt(scanId, 10));
       throw error;
     }
   }
@@ -65,56 +80,53 @@ export class ScanOrchestrator {
   private async runModulesParallel(
     url: string, 
     html: string, 
-    scanId: string, 
+    scanId: number, 
     metadata: any
   ): Promise<ModuleResult[]> {
-    
-    const modulePromises = this.modules.map(async (module) => {
+    const supabase = getSupabaseClient();
+    const totalModules = this.modules.length;
+    const accumulatedResults: ModuleResult[] = [];
+
+    for (let i = 0; i < this.modules.length; i++) {
+      const module = this.modules[i];
+      let result: ModuleResult;
+
       try {
         console.log(`Starting ${module.name} analysis...`);
-        
-        // Run module analysis with timeout
-        const result = await this.runModuleWithTimeout(module, url, html, metadata);
-        
-        // NIEUW: Update scan_modules tabel
-        await getSupabaseClient()
-          .from('scan_modules')
-          .insert({
-            scan_id: scanId,
-            module_name: module.name,
-            status: 'completed',
-            score: result.score,
-            findings: result.findings,
-            progress: 100,
-            completed_at: new Date().toISOString()
-          });
-
+        result = await this.runModuleWithTimeout(module, url, html, metadata);
         console.log(`${module.name} completed with score ${result.score}`);
-        return result;
-
       } catch (error) {
         console.error(`${module.name} failed:`, error);
-        
-        // Return fallback result instead of 0
-        return {
+        result = {
           moduleName: module.name,
-          score: 50, // Fallback score - better than 0
+          score: 0,
           status: 'failed' as const,
           findings: [{
             type: 'error' as const,
-            title: 'Module temporarily unavailable',
-            description: `${module.name} analysis could not be completed`,
-            impact: 'medium' as const,
+            title: 'Module kon niet worden uitgevoerd',
+            description: `${module.name} is mislukt vanwege een technische fout.`,
+            impact: 'high' as const,
             category: 'system'
           }],
           recommendations: []
         };
       }
-    });
 
-    // Wait for all modules to complete
-    const results = await Promise.all(modulePromises);
-    return results;
+      accumulatedResults.push(result);
+      const progress = 5 + Math.round(((i + 1) / totalModules) * 90); // Progress from 5% to 95%
+
+      // Update progress and partial results in the database
+      await supabase
+        .from('scans')
+        .update({
+          progress: progress,
+          // Storing partial results for the frontend to render
+          result_json: { moduleResults: accumulatedResults } as any // Cast to any to avoid type issues
+        })
+        .eq('id', scanId);
+    }
+
+    return accumulatedResults;
   }
 
   private async runModuleWithTimeout(

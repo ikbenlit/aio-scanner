@@ -23,8 +23,8 @@
       isScanning = true;
       console.log(`🚀 Starting scan for URL: ${url}`);
       
-      // Call anonymous scan API (temporary using test endpoint)
-      const response = await fetch('/api/scan/test-simple', {
+      // Call anonymous scan API for Free Tier Journey
+      const response = await fetch('/api/scan/anonymous', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'

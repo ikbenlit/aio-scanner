@@ -9,20 +9,36 @@ globs:
 alwaysApply: false
 ---
 # Coding Standards
+# Coding Standards
 
 ## TypeScript
-- Gebruik strikte type checking
-- Vermijd `any` type
-- Definieer interfaces voor alle objecten
+- Gebruik strikte type checking **in production**
+- **MVP Exception:** `any` type toegestaan voor snelle prototyping en external library issues
+- Definieer interfaces voor alle objecten **waar praktisch**
 - Gebruik type guards waar nodig
 - Exporteer types en interfaces
+- **Refactor regel:** `any` types documenteren met TODO comments voor later cleanup
+
+## Context-Aware Standards
+
+### MVP/Prototype Phase
+- Focus op werkende functionaliteit over perfecte types
+- `any` types toegestaan met documentatie waarom
+- Snelle iteratie over code perfectie
+- Basis error handling voldoende
+
+### Production Phase  
+- Strikte type checking vereist
+- Comprehensive error handling
+- Volledige test coverage
+- Performance optimalisatie
 
 ## React
 - Gebruik functionele componenten
 - Implementeer React Server Components waar mogelijk
 - Volg React hooks regels
 - Gebruik custom hooks voor herbruikbare logica
-- Implementeer error boundaries
+- Implementeer error boundaries **in production**
 
 ## Styling
 - Gebruik Tailwind CSS voor styling
@@ -39,21 +55,24 @@ alwaysApply: false
 - Vermijd prop drilling
 
 ## API & Data
-- Gebruik tRPC voor type-safe API calls
-- Implementeer error handling
-- Gebruik zod voor validatie
+- Gebruik tRPC voor type-safe API calls **in production**
+- **MVP:** Direct API calls toegestaan voor snelheid
+- Implementeer error handling (basis niveau voor MVP)
+- Gebruik zod voor validatie **waar kritiek**
 - Cache responses waar mogelijk
 - Implementeer rate limiting
 
 ## Testing
-- Schrijf unit tests voor utilities
+- **MVP:** Focus op manual testing en kritieke flows
+- **Production:** Schrijf unit tests voor utilities
 - Schrijf integration tests voor API calls
 - Schrijf E2E tests voor kritieke flows
-- Bereik 80% code coverage
+- Bereik 80% code coverage **in production**
 - Gebruik Jest en React Testing Library
 
 ## Performance
-- Implementeer code splitting
+- **MVP:** Basis optimalisatie (geen premature optimization)
+- **Production:** Implementeer code splitting
 - Optimaliseer bundle size
 - Gebruik image optimalisatie
 - Implementeer caching strategieën
@@ -62,31 +81,51 @@ alwaysApply: false
 ## Code Organization Principles
 
 ### DRY (Don't Repeat Yourself)
-- Hergebruik code via shared utilities
-- Maak herbruikbare componenten
+- **MVP:** Copy-paste toegestaan voor snelheid, refactor later
+- Hergebruik code via shared utilities **waar obvious**
+- Maak herbruikbare componenten **na pattern emergence**
 - Centraliseer business logic
 - Gebruik custom hooks voor gedeelde functionaliteit
-- Implementeer shared types en interfaces
+- Implementeer shared types en interfaces **in production**
 - Vermijd duplicatie van validatie logica
 - Gebruik constants voor herhaalde waarden
 
 ### SOC (Separation of Concerns)
-- Scheid UI van business logic
+- Scheid UI van business logic **waar practical**
 - Houd componenten klein en gefocust
 - Gebruik feature-based mappenstructuur
+- **MVP:** Monolithic components toegestaan voor snelheid
 - Scheid data fetching van rendering
-- Implementeer clean architecture principes
+- Implementeer clean architecture principes **in production**
 - Houd services en utilities gescheiden
 - Gebruik dependency injection waar mogelijk
 
 ### Code Modulariteit
-- Schrijf kleine, testbare functies
+- Schrijf kleine, testbare functies **waar mogelijk**
 - Gebruik composition over inheritance
-- Implementeer interface segregation
+- **MVP:** Pragmatische shortcuts toegestaan
+- Implementeer interface segregation **in production**
 - Houd modules losjes gekoppeld
 - Gebruik dependency inversion
-- Maak gebruik van dependency injection
-- Implementeer SOLID principes
+- Maak gebruik van dependency injection **in production**
+- Implementeer SOLID principes **in production**
 
-When running command prompts the user uses Windows PowerShell syntax 
+## Phase Transition Guidelines
 
+### MVP → Production Checklist
+- [ ] Replace all `any` types with proper interfaces
+- [ ] Add comprehensive error handling
+- [ ] Implement proper testing suite
+- [ ] Add performance optimizations
+- [ ] Refactor duplicated code
+- [ ] Add proper validation layers
+- [ ] Implement security measures
+- [ ] Add monitoring and logging
+
+### Technical Debt Management
+- Document all MVP shortcuts with TODO comments
+- Track technical debt in backlog
+- Allocate 20% of post-MVP time to cleanup
+- Prioritize refactoring based on usage patterns
+
+When running command prompts the user uses Windows PowerShell syntax

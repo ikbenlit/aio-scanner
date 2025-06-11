@@ -38,7 +38,7 @@
 #### UI Components
 - **Background Overlay** - Nog te maken - Blur + dark overlay
 - **Glassmorphism Modal** - Nog te maken - Centered modal met glass effect
-- **Website Preview Card** - Nog te maken - Screenshot + metadata
+- **Website Preview Card** - ✅ Gerealiseerd / herbuik src\lib\components\features\scan\WebsitePreview.svelte van Live Scan Page- Screenshot/favicon met URL
 - **Email Form** - Nog te maken - Input met validatie
 - **Trust Indicators** - Nog te maken - Veiligheid en privacy badges
 

@@ -1,6 +1,7 @@
 <!-- EmailCaptureModal.svelte -->
 <script lang="ts">
   import { fade, blur } from 'svelte/transition';
+  import { goto } from '$app/navigation';
   import { Button } from "$lib/components/ui/button";
   import EmailCaptureForm from './EmailCaptureForm.svelte';
   import WebsitePreview from '../scan/WebsitePreview.svelte';
@@ -17,6 +18,15 @@
     { icon: '✉️', text: 'Geen spam, direct resultaat' },
     { icon: '📊', text: 'Professioneel PDF rapport' }
   ];
+
+  async function handleSuccess() {
+    // Eerst modal sluiten
+    isOpen = false;
+    // Dan redirecten
+    await goto(`/scan/${scanId}/results`);
+    // Dan callback aanroepen
+    onSuccess();
+  }
 </script>
 
 {#if isOpen}
@@ -51,7 +61,7 @@
         </div>
 
         <!-- Email capture form -->
-        <EmailCaptureForm {scanId} {onSuccess} />
+        <EmailCaptureForm {scanId} onSuccess={handleSuccess} />
 
         <!-- Trust indicators -->
         <div class="border-t pt-4 mt-6">

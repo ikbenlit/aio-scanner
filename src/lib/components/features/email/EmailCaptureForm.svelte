@@ -22,19 +22,6 @@
     error = null;
 
     try {
-      // Eerst email valideren
-      const validateRes = await fetch('/api/email/verify', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email })
-      });
-      
-      const validateData = await validateRes.json();
-      if (!validateData.valid) {
-        error = validateData.error || "Ongeldig email adres";
-        return;
-      }
-
       // Email verzenden
       const sendRes = await fetch('/api/email/send', {
         method: 'POST',
@@ -42,17 +29,19 @@
         body: JSON.stringify({ email, scanId })
       });
 
-      const data = await sendRes.json();
-      
-      if (!data.success) {
+      if (!sendRes.ok) {
+        const data = await sendRes.json();
         throw new Error(data.error || "Email verzenden mislukt");
       }
 
       success = true;
-      onSuccess();
+      // Wacht even voordat we redirecten
+      setTimeout(() => {
+        onSuccess();
+      }, 2000);
 
     } catch (e: unknown) {
-      error = e instanceof Error ? e.message : "Er is iets misgegaan";
+      error = e instanceof Error ? e.message : "Email verzenden mislukt";
     } finally {
       isLoading = false;
     }

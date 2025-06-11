@@ -2,7 +2,7 @@ import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from '@sveltejs/kit';
 import { handleScanCompletion } from '$lib/scan/completion';
 import { getSupabaseClient } from '$lib/supabase';
-import type { ScanResult, ModuleResult } from '$lib/scan/types';
+import type { EngineScanResult as ScanResult, convertToEmailFormat } from '$lib/types/scan';
 
 // Interface voor de database scan data
 interface DatabaseScan {
@@ -14,7 +14,7 @@ interface DatabaseScan {
     moduleResults: ModuleResult[];
   };
   created_at: string;
-  completed_at: string;
+  completed_at: string | null;
 }
 
 /**
@@ -23,50 +23,36 @@ interface DatabaseScan {
  */
 export const POST: RequestHandler = async ({ request }) => {
   try {
+    console.log('🎯 Processing scan completion...');
     const { scanId } = await request.json();
 
     if (!scanId) {
       throw error(400, 'Scan ID is required');
     }
 
-    // Fetch scan results from database
+    console.log(`📊 Fetching scan data for ID: ${scanId}`);
     const supabase = getSupabaseClient();
+    
+    // Expliciet type casting voor database response
     const { data: scanData, error: dbError } = await supabase
       .from('scans')
       .select('*')
       .eq('id', scanId)
-      .single();
+      .single() as { data: DatabaseScan | null; error: any };
 
-    if (dbError || !scanData) {
-      console.error('Scan not found:', dbError);
+    if (dbError) {
+      console.error('Database error:', dbError);
+      throw error(500, 'Database error: ' + dbError.message);
+    }
+
+    if (!scanData) {
+      console.error('Scan not found:', scanId);
       throw error(404, 'Scan not found');
     }
 
-    // Type guard voor database scan data
-    const isValidScanData = (data: unknown): data is DatabaseScan => {
-      return (
-        typeof data === 'object' &&
-        data !== null &&
-        'id' in data &&
-        'url' in data &&
-        'status' in data &&
-        'overall_score' in data &&
-        'result_json' in data &&
-        'created_at' in data &&
-        'completed_at' in data
-      );
-    };
-
-    if (!isValidScanData(scanData)) {
-      throw error(400, 'Invalid scan data format');
-    }
-
     if (scanData.status !== 'completed') {
+      console.error('Invalid scan status:', scanData.status);
       throw error(400, 'Scan is not completed yet');
-    }
-
-    if (!scanData.result_json) {
-      throw error(400, 'Scan results not available');
     }
 
     // Convert database scan to ScanResult format
@@ -75,13 +61,14 @@ export const POST: RequestHandler = async ({ request }) => {
       url: scanData.url,
       status: 'completed',
       overallScore: scanData.overall_score,
-      moduleResults: scanData.result_json.moduleResults || [],
+      moduleResults: scanData.result_json.moduleResults,
       createdAt: scanData.created_at,
-      completedAt: scanData.completed_at
+      completedAt: scanData.completed_at || undefined
     };
 
-    // Process scan completion flow
+    console.log('🔄 Processing completion flow...');
     const flowAction = await handleScanCompletion(scanResult);
+    console.log('✅ Flow action determined:', flowAction);
 
     return json({
       success: true,
@@ -90,12 +77,12 @@ export const POST: RequestHandler = async ({ request }) => {
     });
 
   } catch (err) {
-    console.error('Scan completion API error:', err);
+    console.error('❌ Scan completion API error:', err);
     
     if (err && typeof err === 'object' && 'status' in err) {
       throw err;
     }
     
-    throw error(500, 'Internal server error');
+    throw error(500, 'Internal server error: ' + (err instanceof Error ? err.message : 'Unknown error'));
   }
 }; 

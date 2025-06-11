@@ -1,230 +1,132 @@
-// Scan Completion Flow - beslissingslogica voor post-scan flows
-import { checkUserStatus, deductCredit, type UserStatus } from './auth';
-import type { ScanResult } from './types';
+// src/lib/scan/completion.ts (update existing function)
+import { getSupabaseClient } from '$lib/supabase';
+import { sendScanReport } from '$lib/email/sender';
+import type { EngineScanResult as ScanResult } from '$lib/types/scan';
+import { checkUserStatus } from './auth';
+import type { PostgrestError } from '@supabase/supabase-js';
 
+interface EmailCaptureResult {
+  success: boolean;
+  error?: string;
+  emailSent?: boolean;
+  nextAction: 'show_results' | 'show_error';
+}
+
+// Flow action types
 export type FlowAction = 
-  | { type: 'show_results'; scanId: string }
-  | { type: 'show_upgrade_prompt'; reason: 'no_credits' }
-  | { type: 'show_email_capture'; scanResults: ScanResult }
+  | { type: 'show_results' }
+  | { type: 'show_upgrade_prompt' }
+  | { type: 'show_email_capture' }
   | { type: 'error'; message: string };
 
 /**
- * Hoofdfunctie: bepaalt welke flow een gebruiker krijgt na scan completion
- * Dit implementeert de decision tree uit de scan completion flow spec
+ * Bepaalt de volgende stap in de scan completion flow
  */
-export async function handleScanCompletion(ScanResult: ScanResult): Promise<FlowAction> {
+export async function handleScanCompletion(scanResult: ScanResult): Promise<FlowAction> {
   try {
-    console.log(`Handling scan completion for scan ${ScanResult.scanId}`);
+    console.log(`🔄 Processing scan completion for ${scanResult.scanId}`);
     
-    // Stap 1: Check user authentication status
+    // 1. Check user status
     const userStatus = await checkUserStatus();
-    console.log('User status:', userStatus);
     
+    // 2. Determine next action based on user status
     if (userStatus.isAuthenticated) {
-      // AUTHENTICATED USER FLOW
-      return await handleAuthenticatedUser(userStatus, ScanResult);
+      if (userStatus.credits && userStatus.credits > 0) {
+        // Authenticated user with credits - show results directly
+        return { type: 'show_results' };
+      } else {
+        // Authenticated user without credits - show upgrade prompt
+        return { type: 'show_upgrade_prompt' };
+      }
     } else {
-      // ANONYMOUS USER FLOW - Email Capture Gate
-      return handleAnonymousUser(ScanResult);
+      // Anonymous user - show email capture
+      return { type: 'show_email_capture' };
     }
     
   } catch (error) {
-    console.error('Error in scan completion flow:', error);
-    return {
+    console.error('Scan completion flow error:', error);
+    return { 
       type: 'error',
-      message: 'Er is een fout opgetreden bij het voltooien van de scan'
+      message: error instanceof Error ? error.message : 'Onbekende fout bij verwerken scan'
     };
   }
 }
 
 /**
- * Authenticated user flow: Credit check → Results of Upgrade
- */
-async function handleAuthenticatedUser(
-  userStatus: UserStatus, 
-  ScanResult: ScanResult
-): Promise<FlowAction> {
-  
-  if (!userStatus.userId) {
-    console.error('Authenticated user missing userId');
-    return {
-      type: 'error',
-      message: 'Authenticatie fout - probeer opnieuw in te loggen'
-    };
-  }
-  
-  // Check credits
-  if (userStatus.credits && userStatus.credits > 0) {
-    // Scenario 1: User heeft credits - deduct en toon results
-    const creditDeducted = await deductCredit(userStatus.userId);
-    
-    if (creditDeducted) {
-      console.log(`Credit deducted, showing results for scan ${ScanResult.scanId}`);
-      return {
-        type: 'show_results',
-        scanId: ScanResult.scanId
-      };
-    } else {
-      // Credit deduction mislukt (race condition of database fout)
-      console.log('Credit deduction failed, showing upgrade prompt');
-      return {
-        type: 'show_upgrade_prompt',
-        reason: 'no_credits'
-      };
-    }
-  } else {
-    // Scenario 2: User heeft geen credits - upgrade prompt
-    console.log('User has no credits, showing upgrade prompt');
-    return {
-      type: 'show_upgrade_prompt',
-      reason: 'no_credits'
-    };
-  }
-}
-
-/**
- * Anonymous user flow: Email Capture Gate
- * Dit is het Maximum Leverage moment voor conversie
- */
-function handleAnonymousUser(ScanResult: ScanResult): FlowAction {
-  console.log('Anonymous user detected, showing email capture modal');
-  
-      // Scenario 3: Anonymous user - Email capture voor results toegang
-    return {
-      type: 'show_email_capture',
-      scanResults: ScanResult
-    };
-}
-
-/**
- * Verwerkt email capture van anonymous user
- * Slaat email op en geeft tijdelijke toegang tot results
+ * Process email capture and send scan report
  */
 export async function handleEmailCapture(
   email: string, 
-  ScanResult: ScanResult
-): Promise<{ success: boolean; error?: string }> {
-  
+  scanResults: ScanResult
+): Promise<EmailCaptureResult> {
   try {
-    console.log(`Processing email capture: ${email} for scan ${ScanResult.scanId}`);
+    console.log(`📧 Processing email capture for scan ${scanResults.scanId}`);
     
-    // 1. Store email in database (met conflict handling)
-    await storeEmailCapture(email, ScanResult);
+    const supabase = getSupabaseClient();
     
-    // 2. Create temporary session (1 hour browser access)
-    createTemporarySession(email, ScanResult.scanId);
+    // 1. Save email to database
+    const { error: updateError } = await supabase
+      .from('scans')
+      .update({ 
+        email: email,
+        email_captured_at: new Date().toISOString()
+      })
+      .eq('id', scanResults.scanId);
+
+    if (updateError) {
+      console.error('Email save error:', updateError);
+      return {
+        success: false,
+        error: 'Failed to save email',
+        nextAction: 'show_error'
+      };
+    }
+
+    console.log(`✅ Email ${email} saved for scan ${scanResults.scanId}`);
+
+    // 2. Send scan report via email (background process)
+    console.log(`📧 Triggering email delivery for scan ${scanResults.scanId}`);
     
-    // 3. TODO: Send email report (Phase 2.3)
-    // await sendScanReport(email, ScanResult);
-    
-    return { success: true };
-    
+    // Start email sending but don't wait for it
+    void Promise.resolve(sendScanReport(scanResults, email))
+      .then((emailResult) => {
+        console.log(`📧 Email delivery completed for ${scanResults.scanId}:`, {
+          success: emailResult.success,
+          messageId: emailResult.messageId,
+          error: emailResult.error
+        });
+        
+        // Log email status to database (background)
+        return supabase
+          .from('scans')
+          .update({
+            email_sent: emailResult.success,
+            email_sent_at: emailResult.success ? new Date().toISOString() : null,
+            email_error: emailResult.error || null,
+            email_message_id: emailResult.messageId || null
+          })
+          .eq('id', scanResults.scanId);
+      })
+      .then(() => {
+        console.log(`📧 Email status logged for scan ${scanResults.scanId}`);
+      })
+      .catch((error: Error | PostgrestError) => {
+        console.error(`📧 Failed to log email status for ${scanResults.scanId}:`, error);
+      });
+
+    // 3. Return success and show results
+    return {
+      success: true,
+      emailSent: true,
+      nextAction: 'show_results'
+    };
+
   } catch (error) {
-    console.error('Email capture processing failed:', error);
+    console.error('Email capture processing error:', error);
     return {
       success: false,
-      error: 'Er is een fout opgetreden bij het verwerken van je email'
+      error: error instanceof Error ? error.message : 'Unknown error',
+      nextAction: 'show_error'
     };
   }
 }
-
-/**
- * Slaat email capture op in database
- */
-async function storeEmailCapture(email: string, ScanResult: ScanResult): Promise<void> {
-  const { getSupabase } = await import('../supabase');
-  const supabase = getSupabase();
-  
-  // Ensure user exists in our users table
-  const { error: userError } = await supabase
-    .from('users')
-    .upsert({
-      email: email,
-      plan_type: 'free',
-      credits_balance: 0 // Free users start with 0 credits
-    }, {
-      onConflict: 'email',
-      ignoreDuplicates: true
-    });
-  
-  if (userError) {
-    console.error('Error creating/updating user:', userError);
-  }
-  
-  // Update scan with email capture
-  const { error: scanError } = await supabase
-    .from('scans')
-    .update({
-      // Store email for follow-up (as we don't have user_id for anonymous scans)
-      result_json: {
-        ...ScanResult,
-        email_captured: email,
-        capture_timestamp: new Date().toISOString()
-      }
-    })
-    .eq('id', parseInt(ScanResult.scanId));
-  
-  if (scanError) {
-    console.error('Error updating scan with email:', scanError);
-    throw new Error('Database update failed');
-  }
-}
-
-/**
- * Creates temporary 1-hour session voor anonymous users
- */
-function createTemporarySession(email: string, scanId: string): void {
-  if (typeof window !== 'undefined') {
-    const sessionData = {
-      email: email,
-      scanId: scanId,
-      expires: Date.now() + (60 * 60 * 1000) // 1 hour
-    };
-    
-    localStorage.setItem('temp_session', JSON.stringify(sessionData));
-    console.log(`Temporary session created for ${email}, expires in 1 hour`);
-  }
-}
-
-/**
- * Checks if user has valid temporary session
- */
-export function hasValidTempSession(scanId: string): boolean {
-  if (typeof window === 'undefined') return false;
-  
-  try {
-    const sessionData = localStorage.getItem('temp_session');
-    if (!sessionData) return false;
-    
-    const session = JSON.parse(sessionData);
-    
-    // Check if session is for this scan and not expired
-    if (session.scanId === scanId && session.expires > Date.now()) {
-      return true;
-    }
-    
-    // Clean up expired session
-    localStorage.removeItem('temp_session');
-    return false;
-    
-  } catch (error) {
-    console.error('Error checking temp session:', error);
-    localStorage.removeItem('temp_session');
-    return false;
-  }
-}
-
-/**
- * IP-based rate limiting check voor anonymous users
- * Basis implementatie - wordt uitgebreid in latere phases
- */
-export function checkRateLimit(clientIP: string): { allowed: boolean; reason?: string } {
-  // TODO: Implement proper rate limiting met Redis of Supabase
-  // Voor nu: basic in-memory tracking (reset bij server restart)
-  
-  // In productie: check database voor recente scans van dit IP
-  console.log(`Rate limit check for IP: ${clientIP}`);
-  
-  // Voor MVP: geen echte rate limiting, alleen logging
-  return { allowed: true };
-} 

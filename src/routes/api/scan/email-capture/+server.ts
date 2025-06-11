@@ -1,7 +1,7 @@
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from '@sveltejs/kit';
 import { handleEmailCapture } from '$lib/scan/completion';
-import { getSupabase } from '$lib/supabase';
+import { getSupabaseClient } from '$lib/supabase';
 
 /**
  * API endpoint voor email capture processing
@@ -22,7 +22,7 @@ export const POST: RequestHandler = async ({ request }) => {
     }
 
     // Fetch scan results from database
-    const supabase = getSupabase();
+    const supabase = getSupabaseClient();
     const { data: scanData, error: dbError } = await supabase
       .from('scans')
       .select('*')

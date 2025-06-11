@@ -1,5 +1,5 @@
 // Authentication utilities voor scan completion flow
-import { getSupabase } from '../supabase';
+import { getSupabaseClient } from '../supabase';
 
 export interface UserStatus {
   isAuthenticated: boolean;
@@ -14,7 +14,7 @@ export interface UserStatus {
  * Dit is de basis van de decision tree in de scan completion flow
  */
 export async function checkUserStatus(): Promise<UserStatus> {
-  const supabase = getSupabase();
+  const supabase = getSupabaseClient();
 
   try {
     // Check if user is authenticated via Supabase Auth
@@ -53,7 +53,7 @@ export async function checkUserStatus(): Promise<UserStatus> {
  * Haalt credit balance op voor een gebruiker
  */
 export async function getUserCredits(userId: string): Promise<number> {
-  const supabase = getSupabase();
+  const supabase = getSupabaseClient();
   
   try {
     const { data, error } = await supabase
@@ -62,13 +62,13 @@ export async function getUserCredits(userId: string): Promise<number> {
       .eq('supabase_auth_id', userId)
       .single();
     
-    if (error || !data) {
+    if (error || !data || typeof data.credits_balance !== 'number') {
       // User doesn't exist in our users table yet, but is authenticated
       // This can happen if they just signed up but haven't made any purchases
       return 0;
     }
     
-    return data.credits_balance || 0;
+    return data.credits_balance;
     
   } catch (error) {
     console.error('Error fetching user credits:', error);
@@ -81,7 +81,7 @@ export async function getUserCredits(userId: string): Promise<number> {
  * Returns true als succesvol, false als insufficient credits
  */
 export async function deductCredit(userId: string): Promise<boolean> {
-  const supabase = getSupabase();
+  const supabase = getSupabaseClient();
   
   try {
     // Atomic update om race conditions te voorkomen

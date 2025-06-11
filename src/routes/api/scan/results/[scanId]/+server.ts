@@ -71,8 +71,7 @@ function extractQuickWins(moduleResults: DBModuleResult[]): TransformedScanResul
     const allFindings = moduleResults.flatMap(module => 
         module.findings?.filter(finding => 
             finding.impact === 'high' && 
-            finding.type === 'error' &&
-            finding.recommendation
+            finding.type === 'error'
         ) || []
     );
 
@@ -80,6 +79,6 @@ function extractQuickWins(moduleResults: DBModuleResult[]): TransformedScanResul
         title: finding.title,
         description: finding.description,
         impact: finding.impact,
-        implementation: finding.recommendation || ''
+        implementation: typeof finding.recommendation === 'string' ? finding.recommendation : 'Implementatie details volgen'
     })).slice(0, 3); // Alleen top 3 quick wins
 }

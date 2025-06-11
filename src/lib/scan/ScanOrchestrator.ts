@@ -2,6 +2,8 @@ import type { ScanModule, ScanResult, ModuleResult } from './types.js';
 import { ContentFetcher } from './ContentFetcher.js';
 import { TechnicalSEOModule } from './modules/TechnicalSEOModule.js';
 import { SchemaMarkupModule } from './modules/SchemaMarkupModule.js';
+import { AIContentModule } from './modules/AIContentModule.js';
+import { AICitationModule } from './modules/AICitationModule.js';
 import { getSupabaseClient } from '$lib/supabase';
 
 export class ScanOrchestrator {
@@ -9,15 +11,19 @@ export class ScanOrchestrator {
   private modules: ScanModule[] = [];
 
   constructor() {
-    // Initialize MVP modules (2 modules ready for testing)
+    // Initialize MVP modules (4 modules ready for testing)
     this.modules = [
-      new TechnicalSEOModule(),
-      new SchemaMarkupModule(),
+      new TechnicalSEOModule(),    // Foundation module
+      new SchemaMarkupModule(),    // Foundation module  
+      new AIContentModule(),       // AI-enhancement module
+      new AICitationModule(),      // AI-enhancement module
     ];
+    console.log('Initialized modules:', this.modules.map(m => m.name));
   }
 
   async executeScan(url: string, scanId: string): Promise<ScanResult> {
     console.log(`Starting scan for ${url} with ID ${scanId}`);
+    console.log('Active modules:', this.modules.map(m => m.name));
     const supabase = getSupabaseClient();
     const numericScanId = parseInt(scanId, 10);
 
@@ -85,6 +91,7 @@ export class ScanOrchestrator {
   ): Promise<ModuleResult[]> {
     const supabase = getSupabaseClient();
     const totalModules = this.modules.length;
+    console.log(`Running ${totalModules} modules in sequence:`, this.modules.map(m => m.name));
     const accumulatedResults: ModuleResult[] = [];
 
     for (let i = 0; i < this.modules.length; i++) {
@@ -92,11 +99,11 @@ export class ScanOrchestrator {
       let result: ModuleResult;
 
       try {
-        console.log(`Starting ${module.name} analysis...`);
+        console.log(`[${i + 1}/${totalModules}] Starting ${module.name} analysis...`);
         result = await this.runModuleWithTimeout(module, url, html, metadata);
-        console.log(`${module.name} completed with score ${result.score}`);
+        console.log(`[${i + 1}/${totalModules}] ${module.name} completed with score ${result.score}`);
       } catch (error) {
-        console.error(`${module.name} failed:`, error);
+        console.error(`[${i + 1}/${totalModules}] ${module.name} failed:`, error);
         result = {
           moduleName: module.name,
           score: 0,
@@ -175,4 +182,4 @@ export class ScanOrchestrator {
       return null;
     }
   }
-} 
+}

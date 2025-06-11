@@ -461,11 +461,18 @@ console.log(result); // Object met basis scan data ✅ WORKING
 **Must-Haves (MVP Core Modules):**
 - ✅ **TechnicalSEOModule** - robots.txt, meta tags, sitemap check **DONE**
 - ✅ **SchemaMarkupModule** - JSON-LD detection en validatie **DONE**
-- ⚪️ **AIContentModule** - FAQ detection, conversational tone assessment **TO DO**
+- ✅ **AIContentModule** - FAQ detection, conversational tone assessment **DONE**
 - ⚪️ **AICitationModule** - authority signals, expertise markers **TO DO**
 - ✅ Parallel module execution met timeout handling **DONE**
 - ✅ Simple progress bar (no real-time complexity) **DONE**
 - ✅ Basic scoring algoritme (0-100 per module) **DONE**
+
+**Bug Fixes & Improvements:**
+- ✅ **AIContentModule Display Fix** - Module draaide wel maar resultaten werden niet getoond
+  - **Bug:** Module naam mismatch tussen orchestrator en frontend
+  - **Fix:** Module naam consistent gemaakt ('AI Content') en frontend filtering aangepast
+  - **Impact:** Module toont nu alle bevindingen (FAQ, tone, structure, answers, questions)
+  - **Status:** Opgelost en werkend ✅
 
 **Post-MVP Modules (Later Expansion):**
 - ⏳ **ContentStructureModule** - heading hierarchy, internal links **PLANNED**

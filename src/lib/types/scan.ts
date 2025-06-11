@@ -14,6 +14,7 @@ export type DBModuleResult = {
 
 // Shared types voor scan resultaten
 export interface Finding {
+    recommendation: boolean;
     type: 'success' | 'warning' | 'error';
     title: string;
     description: string;

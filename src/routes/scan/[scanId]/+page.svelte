@@ -45,8 +45,8 @@
   }> = [
     { id: 'technical', name: 'Technical SEO', icon: '🔍', status: 'pending', score: 0 },
     { id: 'schema', name: 'Schema Markup', icon: '📝', status: 'pending', score: 0 },
-    { id: 'ai_content', name: 'AI Content Analysis', icon: '🤖', status: 'pending', score: 0 },
-    { id: 'ai_citation', name: 'AI Citation Opportunities', icon: '🏆', status: 'pending', score: 0 }
+    { id: 'ai_content', name: 'AI Content', icon: '🤖', status: 'pending', score: 0 },
+    { id: 'ai_citation', name: 'AI Citation', icon: '🏆', status: 'pending', score: 0 }
   ];
 
   let activityItems: Array<{ text: string; status: 'success' | 'pending' | 'error' }> = [
@@ -122,26 +122,34 @@
   }
 
   function updateActivityLog(progress: number) {
-    if (progress >= 5 && progress < 30) {
+    if (progress >= 5 && progress < 25) {
       activityItems = [
-        { text: 'Content wordt geanalyseerd...', status: 'pending' }
-      ];
-    } else if (progress >= 30 && progress < 60) {
-      activityItems = [
-        { text: 'Content geanalyseerd', status: 'success' },
         { text: 'Technical SEO analyse...', status: 'pending' }
       ];
-    } else if (progress >= 60 && progress < 90) {
+    } else if (progress >= 25 && progress < 50) {
       activityItems = [
-        { text: 'Content geanalyseerd', status: 'success' },
         { text: 'Technical SEO voltooid', status: 'success' },
         { text: 'Schema markup detectie...', status: 'pending' }
       ];
-    } else if (progress >= 90 && progress < 100) {
+    } else if (progress >= 50 && progress < 75) {
       activityItems = [
-        { text: 'Content geanalyseerd', status: 'success' },
         { text: 'Technical SEO voltooid', status: 'success' },
-        { text: 'Schema markup gedetecteerd', status: 'success' },
+        { text: 'Schema markup voltooid', status: 'success' },
+        { text: 'AI Content analyse...', status: 'pending' }
+      ];
+    } else if (progress >= 75 && progress < 95) {
+      activityItems = [
+        { text: 'Technical SEO voltooid', status: 'success' },
+        { text: 'Schema markup voltooid', status: 'success' },
+        { text: 'AI Content analyse voltooid', status: 'success' },
+        { text: 'AI Citation analyse...', status: 'pending' }
+      ];
+    } else if (progress >= 95 && progress < 100) {
+      activityItems = [
+        { text: 'Technical SEO voltooid', status: 'success' },
+        { text: 'Schema markup voltooid', status: 'success' },
+        { text: 'AI Content analyse voltooid', status: 'success' },
+        { text: 'AI Citation analyse voltooid', status: 'success' },
         { text: 'Rapport wordt gegenereerd...', status: 'pending' }
       ];
     }
@@ -150,10 +158,10 @@
   function updateModuleProgress(moduleResults: any[]) {
     // Map API module results to frontend module display
     const moduleMap: {[key: string]: string} = {
-      'TechnicalSEO': 'technical',
-      'SchemaMarkup': 'schema',
-      'AIContent': 'ai_content',
-      'AICitation': 'ai_citation'
+      'Technical SEO': 'technical',
+      'Schema Markup': 'schema',
+      'AI Content': 'ai_content',
+      'AI Citation': 'ai_citation'
     };
 
     modules = modules.map(module => {

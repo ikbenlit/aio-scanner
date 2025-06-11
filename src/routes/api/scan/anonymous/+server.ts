@@ -1,7 +1,7 @@
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { ScanOrchestrator } from '$lib/scan/ScanOrchestrator.js';
-import { getSupabase } from '$lib/supabase';
+import { getSupabaseClient } from '$lib/supabase';
 
 // Basic in-memory rate limiting (for MVP)
 // In production: use Redis or database-based rate limiting
@@ -37,7 +37,7 @@ async function checkBasicRateLimit(clientIP: string): Promise<{ allowed: boolean
 export const POST: RequestHandler = async ({ request, getClientAddress }) => {
   try {
     const { url } = await request.json();
-    const supabase = getSupabase();
+    const supabase = getSupabaseClient();
 
     // 1. Validate URL
     if (!url || typeof url !== 'string') {
@@ -117,4 +117,72 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
     
     throw error(500, 'Internal server error');
   }
+};
+
+export const GET: RequestHandler = async ({ url }) => {
+    try {
+        const supabase = getSupabaseClient();
+        const scanId = url.searchParams.get('scanId');
+
+        if (!scanId) {
+            throw error(400, 'Scan ID is vereist');
+        }
+
+        // Haal scan status op
+        const { data: scan, error: dbError } = await supabase
+            .from('scans')
+            .select(`
+                id,
+                status,
+                overall_score,
+                result_json,
+                created_at,
+                completed_at
+            `)
+            .eq('id', scanId)
+            .single();
+
+        if (dbError) {
+            console.error('Database error:', dbError);
+            throw error(500, 'Fout bij ophalen scan status');
+        }
+
+        if (!scan) {
+            throw error(404, 'Scan niet gevonden');
+        }
+
+        // Bereken voortgang percentage
+        let progress = 0;
+        if (scan.status === 'completed') {
+            progress = 100;
+        } else if (scan.status === 'running') {
+            if (scan.result_json?.moduleResults) {
+                const completedModules = scan.result_json.moduleResults.filter(
+                    (m: any) => m.status === 'completed'
+                ).length;
+                const totalModules = scan.result_json.moduleResults.length;
+                progress = Math.round((completedModules / totalModules) * 100);
+            }
+        }
+
+        return json({
+            id: scan.id,
+            status: scan.status,
+            progress,
+            overallScore: scan.overall_score,
+            results: scan.status === 'completed' ? scan.result_json : null,
+            createdAt: scan.created_at,
+            completedAt: scan.completed_at,
+            estimatedTimeRemaining: progress < 100 ? '30 seconds' : null
+        });
+
+    } catch (err) {
+        console.error('Scan status API error:', err);
+        
+        if (err && typeof err === 'object' && 'status' in err) {
+            throw err;
+        }
+        
+        throw error(500, 'Internal server error');
+    }
 }; 

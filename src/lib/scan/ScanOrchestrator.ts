@@ -2,6 +2,7 @@ import type { ScanModule, ScanResult, ModuleResult } from './types.js';
 import { ContentFetcher } from './ContentFetcher.js';
 import { TechnicalSEOModule } from './modules/TechnicalSEOModule.js';
 import { SchemaMarkupModule } from './modules/SchemaMarkupModule.js';
+import { getSupabaseClient } from '$lib/supabase';
 
 export class ScanOrchestrator {
   private contentFetcher = new ContentFetcher();
@@ -42,6 +43,16 @@ export class ScanOrchestrator {
         completedAt: new Date().toISOString()
       };
 
+      // NIEUW: Update scan status in database
+      await getSupabaseClient()
+        .from('scans')
+        .update({
+          status: 'completed',
+          overall_score: overallScore,
+          completed_at: new Date().toISOString()
+        })
+        .eq('id', scanId);
+
       console.log(`Scan completed for ${url} with score ${overallScore}`);
       return scanResult;
 
@@ -65,6 +76,19 @@ export class ScanOrchestrator {
         // Run module analysis with timeout
         const result = await this.runModuleWithTimeout(module, url, html, metadata);
         
+        // NIEUW: Update scan_modules tabel
+        await getSupabaseClient()
+          .from('scan_modules')
+          .insert({
+            scan_id: scanId,
+            module_name: module.name,
+            status: 'completed',
+            score: result.score,
+            findings: result.findings,
+            progress: 100,
+            completed_at: new Date().toISOString()
+          });
+
         console.log(`${module.name} completed with score ${result.score}`);
         return result;
 

@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { getSupabaseConfig } from './config';
+import { PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY } from '$env/static/public';
 
 // Database Types voor TypeScript
 export interface Database {
@@ -59,24 +60,23 @@ export interface Database {
 }
 
 // Supabase client instantie - lazy geïnitialiseerd
-let supabaseInstance: ReturnType<typeof createClient<Database>> | null = null;
+let supabaseClient: ReturnType<typeof createClient>;
 
-export function getSupabase() {
-  if (!supabaseInstance) {
-    const config = getSupabaseConfig();
-    supabaseInstance = createClient<Database>(
-      config.url,
-      config.anonKey
-    );
-  }
-  return supabaseInstance;
+export function getSupabaseClient() {
+    if (!supabaseClient) {
+        supabaseClient = createClient(
+            PUBLIC_SUPABASE_URL,
+            PUBLIC_SUPABASE_ANON_KEY
+        );
+    }
+    return supabaseClient;
 }
 
 // Helper functie voor database operaties
 export const db = {
   // Users
   async createUser(email: string, plan_type = 'free') {
-    const supabase = getSupabase();
+    const supabase = getSupabaseClient();
     return await supabase
       .from('users')
       .insert({ email, plan_type })
@@ -85,7 +85,7 @@ export const db = {
   },
 
   async getUserByEmail(email: string) {
-    const supabase = getSupabase();
+    const supabase = getSupabaseClient();
     return await supabase
       .from('users')
       .select('*')
@@ -95,7 +95,7 @@ export const db = {
 
   // Scans
   async createScan(url: string, user_id?: number) {
-    const supabase = getSupabase();
+    const supabase = getSupabaseClient();
     return await supabase
       .from('scans')
       .insert({ url, user_id, status: 'pending' })
@@ -104,7 +104,7 @@ export const db = {
   },
 
   async updateScanStatus(scanId: number, status: string, result_json?: any, overall_score?: number) {
-    const supabase = getSupabase();
+    const supabase = getSupabaseClient();
     const updateData: any = { status };
     if (result_json) updateData.result_json = result_json;
     if (overall_score) updateData.overall_score = overall_score;
@@ -119,7 +119,7 @@ export const db = {
   },
 
   async getScan(scanId: number) {
-    const supabase = getSupabase();
+    const supabase = getSupabaseClient();
     return await supabase
       .from('scans')
       .select('*')

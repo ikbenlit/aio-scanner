@@ -338,4 +338,36 @@ Next Session: Update ScanOrchestrator.ts to use new type system and integrate AI
 
 ---
 
-**Confidence level:** Hoog - core functionaliteit werkt en alle types zijn consistent 🚀
+**Confidence level:** Hoog - core functionaliteit werkt en alle types zijn consistent ��
+
+### 📅 2025-06-13 20:25 - Session Update
+
+**Focus:** Phase 2 Payment Verification Integration  
+**Goal:** Werkende Mollie payment flow
+
+---
+
+**Completed:**
+
+* [x] Payment verification integration - actual time: 45min (estimated: 30min)
+  * Fixed SvelteKit environment variable loading (`$env/static/private`)
+  * Implemented lazy Mollie client initialization
+  * Created missing return page (`/scan/payment-return`)
+  * Working end-to-end payment flow with real Mollie checkout
+  * Test mode configured and working
+
+---
+
+**Lessons Learned:**
+* SvelteKit environment variables moeten via `$env/static/private` voor server-only secrets
+* Mollie client kan het beste lazy worden geïnitialiseerd om test/live keys te switchen
+* Payment return page is essentieel voor user feedback en status
+* Test mode werkt direct met `test_` API keys, geen extra config nodig
+
+---
+
+**Next:** API endpoint restructuring (anonymous → basic rename) en email marketing foundation setup
+
+---
+
+**Confidence level:** Hoog – payment flow werkt end-to-end, klaar voor verdere integratie 🚀

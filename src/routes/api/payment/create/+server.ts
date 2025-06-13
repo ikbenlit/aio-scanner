@@ -36,7 +36,10 @@ export async function POST({ request, url }) {
 
     // Create return/webhook URLs
     const returnUrl = `${url.origin}/scan/payment-return?tier=${tier}&email=${encodeURIComponent(email)}${scanUrl ? `&url=${encodeURIComponent(scanUrl)}` : ''}`;
-    const webhookUrl = `${url.origin}/api/payment/webhook`;
+    // Only set webhook in production
+const webhookUrl = url.origin.includes('localhost') 
+? undefined 
+: `${url.origin}/api/payment/webhook`;
 
     console.log(`💳 Creating payment for ${tier} tier, email: ${email}`);
 

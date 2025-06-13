@@ -1,5 +1,6 @@
 // src/lib/payment/verificationService.ts
 import { createMollieClient, type Payment } from '@mollie/api-client';
+import { MOLLIE_API_KEY, MOLLIE_TEST_MODE } from '$env/static/private';
 import type { ScanTier } from '../types/database.js';
 
 interface PaymentVerificationResult {
@@ -11,24 +12,27 @@ interface PaymentVerificationResult {
   error?: string;
 }
 
-interface PaymentMetadata {
-  tier?: ScanTier;
-  userEmail?: string;
-  product?: string;
-  createdAt?: string;
-}
-
 export class PaymentVerificationService {
-  private mollie;
+  private mollie: any;
   private cache = new Map<string, PaymentVerificationResult>();
   private cacheExpiry = new Map<string, number>();
   private readonly CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
   constructor() {
-    this.mollie = createMollieClient({
-      apiKey: process.env.MOLLIE_API_KEY!,
-      testMode: process.env.MOLLIE_TEST_MODE === 'true'
-    });
+    // Lazy initialization - will be created when first needed
+    this.mollie = null;
+  }
+
+  private getMollieClient() {
+    if (!this.mollie) {
+      console.log('🔧 Initializing Mollie client...');
+      this.mollie = createMollieClient({
+        apiKey: MOLLIE_API_KEY,
+        testMode: MOLLIE_TEST_MODE === 'true'
+      });
+      console.log('✅ Mollie client initialized');
+    }
+    return this.mollie;
   }
 
   /**
@@ -53,7 +57,7 @@ export class PaymentVerificationService {
 
     try {
       console.log(`💳 Verifying Mollie payment: ${paymentId}`);
-      const payment = await this.mollie.payments.get(paymentId);
+      const payment = await this.getMollieClient().payments.get(paymentId);
       
       const result = this.processPaymentResponse(payment, expectedTier);
       
@@ -91,9 +95,9 @@ export class PaymentVerificationService {
     }
 
     // Extract metadata
-    const metadata = payment.metadata as PaymentMetadata || {};
-    const paidTier = metadata.tier;
-    const userEmail = metadata.userEmail || payment.description; // Using description as fallback since billingEmail doesn't exist
+    const metadata = payment.metadata || {};
+    const paidTier = metadata.tier as ScanTier;
+    const userEmail = metadata.userEmail || payment.billingEmail;
     const amount = parseFloat(payment.amount.value);
 
     // Validate tier matches payment
@@ -222,7 +226,7 @@ export class PaymentVerificationService {
 
     const amount = this.getTierPrice(tier);
     
-    const payment = await this.mollie.payments.create({
+    const payment = await this.getMollieClient().payments.create({
       amount: {
         currency: 'EUR',
         value: amount.toFixed(2)
@@ -249,7 +253,7 @@ export class PaymentVerificationService {
    */
   async handleWebhook(paymentId: string): Promise<void> {
     try {
-      const payment = await this.mollie.payments.get(paymentId);
+      const payment = await this.getMollieClient().payments.get(paymentId);
       
       // Clear cache to force fresh verification
       this.cache.delete(paymentId);

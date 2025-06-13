@@ -11,13 +11,13 @@
 | **2.1 ScanOrchestrator Refactoring** | Tier-based execution toevoegen | 🟢 Done | 60 min | Core implementatie voltooid |
 | | Module interface cleanup | 🟢 Done | 30 min | Alle 4 modules gerefactored |
 | | AI Report Generator service | 🟢 Done | 45 min | Voltooid in 25 min |
-| | Payment verification integratie | 🟡 In Progress | 30 min | Mollie payment check |
+| | Payment verification integratie | 🟢 Done | 45 min | Mollie payment flow werkt end-to-end |
 | **2.2 API Endpoints Restructuur** | Anonymous → Basic hernoemen | 🔴 To do | 20 min | Safe rename met backwards compatibility |
 | | Starter tier endpoint | 🟢 Done | 30 min | Nieuwe /api/scan/starter |
 | | Business tier endpoint | 🔴 To do | 30 min | Nieuwe /api/scan/business |
 | | Enterprise tier endpoint | 🔴 To do | 30 min | Nieuwe /api/scan/enterprise |
-| **2.3 Email Marketing Foundation** | Post-scan email triggers | 🔴 To do | 45 min | Email historie integratie |
-| | Template system uitbreiden | 🔴 To do | 30 min | Tier-specific templates |
+| **2.3 Email Marketing Foundation** | Post-scan email triggers | 🚫 Skipped | 45 min | MVP scope cut - geïsoleerd systeem |
+| | Template system uitbreiden | 🚫 Skipped | 30 min | Niet kritiek voor core functionality |
 | **2.4 Backwards Compatibility** | Legacy API wrapper | 🔴 To do | 20 min | Oude endpoints blijven werken |
 | | Deprecation logging | 🔴 To do | 15 min | Usage monitoring |
 
@@ -33,6 +33,19 @@
 - ⚪ Blocked - Wacht op dependency
 
 ---
+
+### **🚫 MVP SCOPE CUTS**
+
+#### **Email Marketing Foundation - SKIPPED**
+**Rationale:** 
+- Volledig geïsoleerd van core scan functionaliteit
+- Conversie optimization heeft traffic nodig (post-launch)
+- 75 minuten beter besteed aan Phase 3 AI enhancement
+
+**Impact:** Geen - alle scan flows werken zonder email marketing
+**Post-MVP:** Implementeren als traffic/conversion data beschikbaar is
+
+--
 
 ## ⚠️ VEILIGE REFACTOR REGELS
 

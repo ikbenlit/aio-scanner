@@ -29,7 +29,7 @@ Refactor existing AIO-Scanner MVP → Tier-based system (Basic €0 | Starter �
 | Phase | Status | Progress | Est. Time | Act. Time | Notes |
 |-------|--------|----------|-----------|-----------|--------|
 | **Phase 1: Database Foundation** | 🟢 Complete | 100% | 4 hours | 4 hours | Schema + types + services voltooid |
-| **Phase 2: Tier System Integration** | 🟡 In Progress | 70% | 5 hours | 2h30min | Module cleanup + ScanOrchestrator voltooid |
+| **Phase 2: Tier System Integration** | 🟡 In Progress | 75% | 5 hours | 3u15min | Payment flow werkt, endpoints bijna klaar |
 | **Phase 3: AI Enhancement Services** | ⚪ Blocked | 0% | 7 hours | - | Depends on Phase 2 |
 | **Phase 4: Frontend & UX Enhancement** | ⚪ Blocked | 0% | 6.5 hours | - | Depends on Phase 1-3 |
 
@@ -51,9 +51,10 @@ Refactor existing AIO-Scanner MVP → Tier-based system (Basic €0 | Starter �
 - [✅] **2.4** Starter tier endpoint implementatie (30min)
 - [✅] **2.5** ScanOrchestrator tier-based execution (45min)
 - [✅] **2.6** Module interface cleanup (30min)
-- [🟡] **2.7** Payment verification integratie (in progress)
-- [ ] **2.8** Anonymous → Basic endpoint rename (pending)
-- [ ] **2.9** Email marketing foundation (pending)
+- [✅] **2.7** Payment verification integratie (45min)
+- [ ] **2.8** Anonymous → Basic endpoint rename (20min)
+- [ ] **2.9** Business/Enterprise endpoint placeholders (30min)
+- [🚫] **2.10** Email marketing foundation - **SKIPPED FOR MVP** (was 75min)
 
 **Quick Link:** [📄 Phase 2 Complete Documentation](link-to-phase-2-document)
 
@@ -103,6 +104,13 @@ Refactor existing AIO-Scanner MVP → Tier-based system (Basic €0 | Starter �
 - ✅ **Deprecation warnings in old endpoints**
 - ✅ **Forward old endpoints to new ones when possible**
 
+#### **MVP Scope Management:**
+- ✅ **Email marketing automation can be post-MVP**
+  - *Why:* No traffic to convert yet, optimization comes with data
+  - *Instead:* Focus on core product value (AI enhancement)
+- ✅ **Skip isolated features that don't block core functionality**
+  - *Why:* Email marketing is completely separate from scan execution
+  - *Result:* Saved 75min for more impactful Phase 3 work
 ---
 
 ## 🔧 **CURSOR-SPECIFIC SUCCESS PATTERNS**
@@ -243,6 +251,27 @@ Refactor existing AIO-Scanner MVP → Tier-based system (Basic €0 | Starter �
 - Avoid: Don't leave tier as optional when every scan will have one
 
 **Next Session:** Update ScanOrchestrator.ts to use new type system and integrate AIReportGenerator, then build tier-specific API endpoints
+
+---
+
+### 📅 2025-06-13 20:25 - Session 4
+**Focus:** Phase 2 Payment Verification Integration  
+**Goal:** Werkende Mollie payment flow
+
+**Completed:**
+- [x] Payment verification integration - actual time: 45min (estimated: 30min)
+  - SvelteKit env loading gefixt
+  - Lazy Mollie client
+  - Return page `/scan/payment-return`
+  - End-to-end Mollie checkout werkt
+  - Test mode geverifieerd
+
+**Lessons Learned:**
+- `$env/static/private` vereist voor server-only secrets in SvelteKit
+- Mollie test/live mode werkt automatisch via API key prefix
+- Return page is essentieel voor user feedback
+
+**Next Session:** API endpoint restructuring (anonymous → basic rename) en email marketing foundation setup
 
 ---
 

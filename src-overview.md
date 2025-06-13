@@ -47,6 +47,8 @@ src/lib/email/templates.ts
 src/lib/email/utils.ts
 src/lib/index.ts
 src/lib/pdf/generator.ts
+src/lib/scan/ContentExtractor.test.ts
+src/lib/scan/ContentExtractor.ts
 src/lib/scan/ContentFetcher.ts
 src/lib/scan/ScanOrchestrator.ts
 src/lib/scan/auth.ts
@@ -56,7 +58,10 @@ src/lib/scan/modules/AIContentModule.ts
 src/lib/scan/modules/SchemaMarkupModule.ts
 src/lib/scan/modules/TechnicalSEOModule.ts
 src/lib/scan/types.ts
+src/lib/services/emailHistoryService.ts
+src/lib/services/migrationService.ts
 src/lib/supabase.ts
+src/lib/types/database.ts
 src/lib/types/email.ts
 src/lib/types/scan.ts
 src/lib/utils.ts
@@ -72,6 +77,7 @@ src/routes/api/scan/email-capture/+server.ts
 src/routes/api/scan/results/[scanId]/+server.ts
 src/routes/api/scan/test-simple/+server.ts
 src/routes/api/test/+server.ts
+src/routes/api/test/content-extractor/+server.ts
 src/routes/api/test/email/+server.ts
 src/routes/api/test/email/preview/+server.ts
 src/routes/api/test/test-conn.js

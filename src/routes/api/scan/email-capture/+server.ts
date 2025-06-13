@@ -2,7 +2,7 @@ import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from '@sveltejs/kit';
 import { handleEmailCapture } from '$lib/scan/completion';
 import { getSupabaseClient } from '$lib/supabase';
-import type { ModuleResult, ScanResult } from '$lib/scan/types';
+import type { ModuleResult, EngineScanResult } from '$lib/scan/types';
 
 interface ScanRecord {
   id: string;
@@ -55,15 +55,16 @@ export const POST: RequestHandler = async ({ request }) => {
       throw error(400, 'Scan results not available');
     }
 
-    // Convert to ScanResult format
-    const scanResults: ScanResult = {
+    // Convert to EngineScanResult format
+    const scanResults: EngineScanResult = {
       scanId: scanData.id,
       url: scanData.url,
       status: 'completed' as const,
       overallScore: scanData.overall_score || 0,
       moduleResults: scanData.result_json.moduleResults || [],
       createdAt: scanData.created_at,
-      completedAt: scanData.completed_at || undefined
+      completedAt: scanData.completed_at || undefined,
+      tier: 'basic' // Default to basic tier for email capture
     };
 
     // Process email capture

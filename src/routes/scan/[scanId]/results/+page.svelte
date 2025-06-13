@@ -7,6 +7,7 @@
   import ProgressCircle from '$lib/components/features/scan/ProgressCircle.svelte';
   import ModuleProgressGrid from '$lib/components/features/scan/ModuleProgressGrid.svelte';
   import StatusIndicators from '$lib/components/features/scan/StatusIndicators.svelte';
+  import WebsitePreview from '$lib/components/features/scan/WebsitePreview.svelte';
   import type { ModuleItem } from '$lib/components/features/scan/ModuleProgressGrid.svelte';
   
   interface ScanModule {
@@ -30,6 +31,7 @@
       moduleResults: ScanModule[];
       createdAt: string;
       completedAt: string;
+      screenshot?: string; // Screenshot data
     };
     emailStatus: {
       email: string | null;
@@ -151,13 +153,23 @@
 <main class="min-h-screen bg-gradient-to-br from-bg-light via-white to-blue-50">
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
   <!-- Header Section -->
-  <div class="text-center mb-12">
+  <div class="text-center mb-8">
     <h1 class="text-3xl font-header font-bold text-gray-900 mb-4">
       🎉 Je Scan Resultaten
     </h1>
-    <p class="text-lg text-gray-600">
+    <p class="text-lg text-gray-600 mb-6">
       Scan resultaten voor {scan.url}
     </p>
+  </div>
+
+  <!-- Website Preview -->
+  <div class="max-w-2xl mx-auto mb-12">
+    <WebsitePreview 
+      websiteUrl={scan.url}
+      websiteScreenshot={scan.screenshot || ''}
+      statusText="Scan voltooid"
+      isLoading={false}
+    />
   </div>
 
   <!-- Email Status Alert -->

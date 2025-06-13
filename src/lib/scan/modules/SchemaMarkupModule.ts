@@ -1,92 +1,62 @@
 import * as cheerio from 'cheerio';
-import type { ScanModule, ModuleResult, Finding, Recommendation, ScanMetadata } from '../types.js';
+import type { ModuleResult, Finding } from '../../types/scan';
 
-export class SchemaMarkupModule implements ScanModule {
-  name = 'Schema Markup';
-  description = 'Analyseert structured data: JSON-LD, schema markup, rich snippets potentie';
-  category = 'foundation' as const;
-
-  async analyze(url: string, html: string, metadata?: ScanMetadata): Promise<ModuleResult> {
-    const findings: Finding[] = [];
-    const recommendations: Recommendation[] = [];
-    
+export class SchemaMarkupModule {
+  async execute(url: string): Promise<ModuleResult> {
     try {
+      // Fetch website content
+      const response = await fetch(url);
+      const html = await response.text();
       const $ = cheerio.load(html);
-      const domain = metadata?.domain || new URL(url).hostname;
-
-      // 1. JSON-LD Analysis
-      this.analyzeJsonLd($, findings, recommendations);
-
-      // 2. Open Graph Analysis
-      this.analyzeOpenGraph($, findings, recommendations);
-
-      // 3. Business Schema Opportunities
-      this.analyzeBusinessSchema($, findings, recommendations);
-
+      
+      const findings = await this.analyzeSchemaMarkup($, url);
       const score = this.calculateScore(findings);
 
       return {
-        moduleName: this.name,
+        name: 'SchemaMarkup',
         score,
-        status: 'completed',
-        findings,
-        recommendations: recommendations.slice(0, 5),
-        metadata: {
-          domain,
-          totalChecks: findings.length
-        }
+        findings
       };
-
     } catch (error) {
       return {
-        moduleName: this.name,
+        name: 'SchemaMarkup',
         score: 0,
-        status: 'failed',
-        findings: [{
-          type: 'error',
-          title: 'Module Error',
-          description: `Schema Markup analysis failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
-          impact: 'high',
-          category: 'system'
-        }],
-        recommendations: []
+        findings: [
+          {
+            title: 'Module Error',
+            description: `Schema Markup analysis failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+            priority: 'high',
+            category: 'system'
+          }
+        ]
       };
     }
   }
 
-  private analyzeJsonLd($: cheerio.CheerioAPI, findings: Finding[], recommendations: Recommendation[]): void {
+  private async analyzeSchemaMarkup($: cheerio.CheerioAPI, url: string): Promise<Finding[]> {
+    const findings: Finding[] = [];
+
+    // 1. JSON-LD Analysis
+    this.analyzeJsonLd($, findings);
+
+    // 2. Open Graph Analysis
+    this.analyzeOpenGraph($, findings);
+
+    // 3. Business Schema Opportunities
+    this.analyzeBusinessSchema($, findings);
+
+    return findings;
+  }
+
+  private analyzeJsonLd($: cheerio.CheerioAPI, findings: Finding[]): void {
     const jsonLdScripts = $('script[type="application/ld+json"]');
     
     if (jsonLdScripts.length === 0) {
       findings.push({
-        type: 'warning',
         title: 'Geen JSON-LD structured data gevonden',
         description: 'Website gebruikt geen JSON-LD schema markup',
-        impact: 'high',
-        category: 'structured-data'
-      });
-
-      recommendations.push({
         priority: 'high',
-        title: 'Implementeer JSON-LD structured data',
-        description: 'Structured data helpt zoekmachines en AI-assistenten je content beter te begrijpen',
-        implementationSteps: [
-          'Implementeer Organization schema voor bedrijfsgegevens',
-          'Voeg WebSite schema toe voor sitewide informatie',
-          'Overweeg FAQ schema voor veelgestelde vragen',
-          'Test met Google Rich Results Test tool'
-        ],
-        estimatedTime: '2-4 uur',
-        expectedImpact: 'Rich snippets, betere AI-assistant detectie',
-        codeSnippet: `<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "Organization",
-  "name": "Jouw Bedrijf",
-  "url": "https://jouwdomein.nl",
-  "logo": "https://jouwdomein.nl/logo.png"
-}
-</script>`
+        category: 'structured-data'
       });
       return;
     }
@@ -108,257 +78,247 @@ export class SchemaMarkupModule implements ScanModule {
           foundSchemaTypes.push(type);
         }
 
-        this.validateSchemaType(schema, findings, recommendations);
+        this.validateSchemaType(schema, findings);
 
       } catch (parseError) {
         findings.push({
-          type: 'error',
           title: 'JSON-LD syntax error',
           description: 'Ongeldige JSON-LD syntax gedetecteerd',
-          impact: 'medium',
-          category: 'structured-data'
-        });
-
-        recommendations.push({
           priority: 'medium',
-          title: 'Corrigeer JSON-LD syntax',
-          description: 'Ongeldige JSON-LD kan niet door zoekmachines worden gelezen',
-          implementationSteps: [
-            'Valideer JSON syntax met online JSON validator',
-            'Controleer op ontbrekende komma\'s en haakjes',
-            'Test met Google Rich Results Test'
-          ],
-          estimatedTime: '30 minuten',
-          expectedImpact: 'Werkende structured data'
+          category: 'structured-data'
         });
       }
     });
 
     if (validSchemas > 0) {
       findings.push({
-        type: 'success',
         title: `${validSchemas} JSON-LD schema's gevonden`,
         description: `Schema types: ${foundSchemaTypes.join(', ')}`,
-        impact: 'low',
+        priority: 'low',
         category: 'structured-data'
       });
 
-      this.checkEssentialSchemas(foundSchemaTypes, findings, recommendations);
+      this.checkEssentialSchemas(foundSchemaTypes, findings);
     }
   }
 
-  private validateSchemaType(schema: any, findings: Finding[], recommendations: Recommendation[]): void {
+  private validateSchemaType(schema: any, findings: Finding[]): void {
     const schemaType = Array.isArray(schema['@type']) ? schema['@type'][0] : schema['@type'];
 
     switch (schemaType) {
       case 'Organization':
-        this.validateOrganizationSchema(schema, findings, recommendations);
+        this.validateOrganizationSchema(schema, findings);
         break;
       case 'LocalBusiness':
-        this.validateLocalBusinessSchema(schema, findings, recommendations);
+        this.validateLocalBusinessSchema(schema, findings);
         break;
       case 'FAQ':
       case 'FAQPage':
-        this.validateFAQSchema(schema, findings, recommendations);
+        this.validateFAQSchema(schema, findings);
         break;
     }
   }
 
-  private validateOrganizationSchema(schema: any, findings: Finding[], recommendations: Recommendation[]): void {
+  private validateOrganizationSchema(schema: any, findings: Finding[]): void {
     const requiredFields = ['name', 'url'];
     const missingFields = requiredFields.filter(field => !schema[field]);
 
     if (missingFields.length === 0) {
       findings.push({
-        type: 'success',
         title: 'Organization schema compleet',
         description: 'Basis bedrijfsgegevens zijn aanwezig',
-        impact: 'low',
+        priority: 'low',
         category: 'structured-data'
       });
     } else {
       findings.push({
-        type: 'warning',
         title: 'Organization schema incompleet',
         description: `Ontbrekende velden: ${missingFields.join(', ')}`,
-        impact: 'medium',
-        category: 'structured-data'
-      });
-
-      recommendations.push({
         priority: 'medium',
-        title: 'Completeer Organization schema',
-        description: 'Voeg ontbrekende bedrijfsgegevens toe',
-        implementationSteps: [
-          'Voeg bedrijfsnaam toe (name)',
-          'Voeg website URL toe (url)',
-          'Overweeg logo en contactInfo toe te voegen'
-        ],
-        estimatedTime: '20 minuten',
-        expectedImpact: 'Betere bedrijfsherkenning door AI-assistenten'
+        category: 'structured-data'
       });
     }
   }
 
-  private validateLocalBusinessSchema(schema: any, findings: Finding[], recommendations: Recommendation[]): void {
-    const requiredFields = ['name', 'address', 'telephone'];
+  private validateLocalBusinessSchema(schema: any, findings: Finding[]): void {
+    const requiredFields = ['name', 'address'];
     const missingFields = requiredFields.filter(field => !schema[field]);
 
     if (missingFields.length === 0) {
       findings.push({
-        type: 'success',
         title: 'LocalBusiness schema compleet',
-        description: 'NAP-gegevens (Name, Address, Phone) zijn volledig',
-        impact: 'low',
+        description: 'Lokale bedrijfsgegevens zijn correct gestructureerd',
+        priority: 'low',
         category: 'structured-data'
       });
     } else {
       findings.push({
-        type: 'warning',
         title: 'LocalBusiness schema incompleet',
-        description: `Ontbrekende NAP-gegevens: ${missingFields.join(', ')}`,
-        impact: 'high',
+        description: `Ontbrekende velden: ${missingFields.join(', ')}`,
+        priority: 'medium',
         category: 'structured-data'
-      });
-
-      recommendations.push({
-        priority: 'high',
-        title: 'Completeer LocalBusiness schema',
-        description: 'Lokale bedrijven hebben volledige NAP-gegevens nodig',
-        implementationSteps: [
-          'Voeg exacte bedrijfsnaam toe',
-          'Voeg volledig adres toe',
-          'Voeg telefoonnummer toe',
-          'Overweeg openingstijden toe te voegen'
-        ],
-        estimatedTime: '30 minuten',
-        expectedImpact: 'Betere lokale SEO en Google Maps visibility'
       });
     }
   }
 
-  private validateFAQSchema(schema: any, findings: Finding[], recommendations: Recommendation[]): void {
+  private validateFAQSchema(schema: any, findings: Finding[]): void {
     if (schema.mainEntity && Array.isArray(schema.mainEntity) && schema.mainEntity.length > 0) {
       findings.push({
-        type: 'success',
-        title: 'FAQ schema geïmplementeerd',
+        title: 'FAQ schema gedetecteerd',
         description: `${schema.mainEntity.length} FAQ items gevonden`,
-        impact: 'low',
-        category: 'structured-data'
-      });
-    } else {
-      findings.push({
-        type: 'warning',
-        title: 'FAQ schema is leeg',
-        description: 'FAQ schema zonder inhoud heeft geen waarde',
-        impact: 'medium',
-        category: 'structured-data'
-      });
-    }
-  }
-
-  private checkEssentialSchemas(foundTypes: string[], findings: Finding[], recommendations: Recommendation[]): void {
-    const essentialSchemas = ['Organization', 'WebSite'];
-    const missingEssential = essentialSchemas.filter(type => !foundTypes.includes(type));
-
-    if (missingEssential.length > 0) {
-      recommendations.push({
-        priority: 'medium',
-        title: 'Implementeer basis schema types',
-        description: 'Organization en WebSite schema zijn essentieel',
-        implementationSteps: [
-          'Voeg Organization schema toe voor bedrijfsgegevens',
-          'Voeg WebSite schema toe voor site-informatie',
-          'Test met Google Rich Results Test'
-        ],
-        estimatedTime: '1 uur',
-        expectedImpact: 'Betere herkenning door zoekmachines en AI'
-      });
-    }
-  }
-
-  private analyzeOpenGraph($: cheerio.CheerioAPI, findings: Finding[], recommendations: Recommendation[]): void {
-    const ogTitle = $('meta[property="og:title"]').attr('content');
-    const ogDescription = $('meta[property="og:description"]').attr('content');
-
-    if (ogTitle && ogDescription) {
-      findings.push({
-        type: 'success',
-        title: 'Open Graph markup aanwezig',
-        description: 'Social media sharing markup is geconfigureerd',
-        impact: 'low',
-        category: 'social-markup'
-      });
-    } else {
-      findings.push({
-        type: 'warning',
-        title: 'Open Graph markup ontbreekt',
-        description: 'Geen social media preview markup',
-        impact: 'medium',
-        category: 'social-markup'
-      });
-
-      recommendations.push({
-        priority: 'medium',
-        title: 'Implementeer Open Graph markup',
-        description: 'Verbetert social media previews',
-        implementationSteps: [
-          'Voeg og:title meta tag toe',
-          'Voeg og:description meta tag toe',
-          'Voeg og:image meta tag toe',
-          'Voeg og:url toe'
-        ],
-        estimatedTime: '30 minuten',
-        expectedImpact: 'Betere social media previews'
-      });
-    }
-  }
-
-  private analyzeBusinessSchema($: cheerio.CheerioAPI, findings: Finding[], recommendations: Recommendation[]): void {
-    const content = $('body').text().toLowerCase();
-    
-    // Check for FAQ content without schema
-    if ((content.includes('vraag') || content.includes('faq') || content.includes('veelgesteld')) 
-        && !content.includes('"@type":"FAQ')) {
-      recommendations.push({
-        priority: 'medium',
-        title: 'FAQ content detecteerd - voeg FAQ schema toe',
-        description: 'Je hebt FAQ content maar geen structured data',
-        implementationSteps: [
-          'Identificeer veelgestelde vragen op je site',
-          'Implementeer FAQ schema markup',
-          'Structureer vragen en antwoorden correct'
-        ],
-        estimatedTime: '1 uur',
-        expectedImpact: 'FAQ rich snippets in zoekresultaten'
-      });
-    }
-
-    // Check for product/service content
-    if (content.includes('prijs') || content.includes('product') || content.includes('dienst')) {
-      recommendations.push({
         priority: 'low',
-        title: 'Overweeg Product/Service schema',
-        description: 'Product of service content kan specifieke markup gebruiken',
-        implementationSteps: [
-          'Bepaal of je Product of Service schema nodig hebt',
-          'Voeg prijsinformatie toe waar van toepassing',
-          'Voeg beschrijvingen en specificaties toe'
-        ],
-        estimatedTime: '2 uur',
-        expectedImpact: 'Product/service rich snippets'
+        category: 'structured-data'
+      });
+    } else {
+      findings.push({
+        title: 'FAQ schema incompleet',
+        description: 'FAQ schema mist mainEntity array met vragen',
+        priority: 'medium',
+        category: 'structured-data'
       });
     }
   }
 
-  calculateScore(findings: Finding[]): number {
+  private checkEssentialSchemas(foundTypes: string[], findings: Finding[]): void {
+    const essentialSchemas = ['Organization', 'WebSite'];
+    const missingEssentials = essentialSchemas.filter(type => !foundTypes.includes(type));
+
+    if (missingEssentials.length > 0) {
+      findings.push({
+        title: 'Ontbrekende essentiële schemas',
+        description: `Overweeg toe te voegen: ${missingEssentials.join(', ')}`,
+        priority: 'medium',
+        category: 'structured-data'
+      });
+    }
+  }
+
+  private analyzeOpenGraph($: cheerio.CheerioAPI, findings: Finding[]): void {
+    const ogTags = $('meta[property^="og:"]');
+    
+    if (ogTags.length === 0) {
+      findings.push({
+        title: 'Geen Open Graph tags gevonden',
+        description: 'Website mist Open Graph meta tags voor social sharing',
+        priority: 'medium',
+        category: 'meta-data'
+      });
+      return;
+    }
+
+    const requiredOgTags = ['og:title', 'og:description', 'og:image', 'og:url'];
+    const foundOgTags: string[] = [];
+
+    ogTags.each((_, tag) => {
+      const property = $(tag).attr('property');
+      if (property) {
+        foundOgTags.push(property);
+      }
+    });
+
+    const missingOgTags = requiredOgTags.filter(tag => !foundOgTags.includes(tag));
+
+    if (missingOgTags.length === 0) {
+      findings.push({
+        title: 'Open Graph tags compleet',
+        description: 'Alle essentiële OG tags aanwezig voor social sharing',
+        priority: 'low',
+        category: 'meta-data'
+      });
+    } else {
+      findings.push({
+        title: 'Open Graph tags incompleet',
+        description: `Ontbrekende tags: ${missingOgTags.join(', ')}`,
+        priority: 'medium',
+        category: 'meta-data'
+      });
+    }
+  }
+
+  private analyzeBusinessSchema($: cheerio.CheerioAPI, findings: Finding[]): void {
+    const bodyText = $('body').text().toLowerCase();
+    
+    // Check if business type content exists
+    const businessPatterns = [
+      /openingstijden|opening hours/gi,
+      /adres|address/gi,
+      /telefoon|phone/gi,
+      /contact|contacteer/gi,
+      /reviews|beoordelingen/gi
+    ];
+
+    let businessSignals = 0;
+    businessPatterns.forEach(pattern => {
+      const matches = bodyText.match(pattern);
+      if (matches) businessSignals += matches.length;
+    });
+
+    if (businessSignals >= 3) {
+      // Check if LocalBusiness schema is present
+      const jsonLdScripts = $('script[type="application/ld+json"]');
+      let hasLocalBusiness = false;
+
+      jsonLdScripts.each((_, script) => {
+        const content = $(script).html();
+        if (content && content.includes('LocalBusiness')) {
+          hasLocalBusiness = true;
+        }
+      });
+
+      if (!hasLocalBusiness) {
+        findings.push({
+          title: 'LocalBusiness schema aanbevolen',
+          description: 'Website toont bedrijfskenmerken maar mist LocalBusiness schema',
+          priority: 'medium',
+          category: 'structured-data'
+        });
+      }
+    }
+
+    // Check for FAQ content without FAQ schema
+    const faqPatterns = [
+      /veelgestelde vragen|frequently asked|faq/gi,
+      /\?.*\?.*\?/gi // Multiple question marks indicating FAQ-style content
+    ];
+
+    let faqSignals = 0;
+    faqPatterns.forEach(pattern => {
+      const matches = bodyText.match(pattern);
+      if (matches) faqSignals += matches.length;
+    });
+
+    if (faqSignals >= 2) {
+      const jsonLdScripts = $('script[type="application/ld+json"]');
+      let hasFAQSchema = false;
+
+      jsonLdScripts.each((_, script) => {
+        const content = $(script).html();
+        if (content && (content.includes('FAQ') || content.includes('Question'))) {
+          hasFAQSchema = true;
+        }
+      });
+
+      if (!hasFAQSchema) {
+        findings.push({
+          title: 'FAQ schema aanbevolen',
+          description: 'Website heeft FAQ-content maar mist FAQ schema markup',
+          priority: 'medium',
+          category: 'structured-data'
+        });
+      }
+    }
+  }
+
+  private calculateScore(findings: Finding[]): number {
     let score = 100;
     
     for (const finding of findings) {
-      if (finding.type === 'error') {
-        score -= finding.impact === 'high' ? 25 : finding.impact === 'medium' ? 15 : 8;
-      } else if (finding.type === 'warning') {
-        score -= finding.impact === 'high' ? 15 : finding.impact === 'medium' ? 8 : 3;
+      if (finding.priority === 'high') {
+        score -= 25;
+      } else if (finding.priority === 'medium') {
+        score -= 10;
+      } else if (finding.priority === 'low') {
+        score -= 5;
       }
     }
 

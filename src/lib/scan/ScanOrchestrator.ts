@@ -1,185 +1,172 @@
-import type { ScanModule, ScanResult, ModuleResult } from './types.js';
-import { ContentFetcher } from './ContentFetcher.js';
-import { TechnicalSEOModule } from './modules/TechnicalSEOModule.js';
-import { SchemaMarkupModule } from './modules/SchemaMarkupModule.js';
-import { AIContentModule } from './modules/AIContentModule.js';
-import { AICitationModule } from './modules/AICitationModule.js';
-import { getSupabaseClient } from '$lib/supabase';
+import type { EngineScanResult, ModuleResult } from '../types/scan';
+import type { ScanTier } from '../types/database';
+import { upsertUserScanHistory } from '../services/emailHistoryService';
+import { AIReportGenerator } from './AIReportGenerator';
+import { TechnicalSEOModule } from './modules/TechnicalSEOModule';
+import { SchemaMarkupModule } from './modules/SchemaMarkupModule';
+import { AIContentModule } from './modules/AIContentModule';
+import { AICitationModule } from './modules/AICitationModule';
+
+interface ScanModule {
+    execute(url: string): Promise<ModuleResult>;
+}
 
 export class ScanOrchestrator {
-  private contentFetcher = new ContentFetcher();
-  private modules: ScanModule[] = [];
-
-  constructor() {
-    // Initialize MVP modules (4 modules ready for testing)
-    this.modules = [
-      new TechnicalSEOModule(),    // Foundation module
-      new SchemaMarkupModule(),    // Foundation module  
-      new AIContentModule(),       // AI-enhancement module
-      new AICitationModule(),      // AI-enhancement module
+    private modules: ScanModule[] = [
+        new TechnicalSEOModule(),
+        new SchemaMarkupModule(),
+        new AIContentModule(),
+        new AICitationModule()
     ];
-    console.log('Initialized modules:', this.modules.map(m => m.name));
-  }
 
-  async executeScan(url: string, scanId: string): Promise<ScanResult> {
-    console.log(`Starting scan for ${url} with ID ${scanId}`);
-    console.log('Active modules:', this.modules.map(m => m.name));
-    const supabase = getSupabaseClient();
-    const numericScanId = parseInt(scanId, 10);
+    private aiReportGenerator = new AIReportGenerator();
 
-    try {
-      // 1. Set scan status to 'running'
-      await supabase
-        .from('scans')
-        .update({ status: 'running', progress: 5 })
-        .eq('id', numericScanId);
-
-      // 2. Fetch content
-      console.log('Fetching content...');
-      const { html, metadata } = await this.contentFetcher.fetchContent(url);
-      console.log(`Content fetched using ${metadata.fetchMethod} in ${metadata.responseTime}ms`);
-
-      // 3. Run modules and track progress
-      console.log('Starting module analysis...');
-      const moduleResults = await this.runModulesParallel(url, html, numericScanId, metadata);
-
-      // 4. Calculate overall score
-      const overallScore = this.calculateOverallScore(moduleResults);
-
-      // 5. Create final scan result object
-      const scanResult: ScanResult = {
-        scanId,
-        url,
-        status: 'completed',
-        overallScore,
-        moduleResults,
-        createdAt: new Date().toISOString(),
-        completedAt: new Date().toISOString()
-      };
-
-      // 6. Update scan to 'completed' in the database
-      await supabase
-        .from('scans')
-        .update({
-          status: 'completed',
-          progress: 100,
-          overall_score: overallScore,
-          result_json: scanResult as any, // Cast to any to avoid type issues for now
-          completed_at: new Date().toISOString()
-        })
-        .eq('id', numericScanId);
-
-      console.log(`Scan completed for ${url} with score ${overallScore}`);
-      return scanResult;
-
-    } catch (error) {
-      console.error(`Scan failed for ${url}:`, error);
-      // Update scan status to failed
-      await supabase
-        .from('scans')
-        .update({ status: 'failed', progress: 100 })
-        .eq('id', parseInt(scanId, 10));
-      throw error;
+    // Legacy method - blijft behouden voor backwards compatibility
+    async executeScan(url: string, scanId: string): Promise<void> {
+        try {
+            // Execute basic scan for anonymous users
+            await this.executeTierScan(url, 'basic', scanId);
+        } catch (error) {
+            console.error(`Scan execution failed for ${scanId}:`, error);
+            throw error; // Re-throw to be caught by caller
+        }
     }
-  }
 
-  private async runModulesParallel(
-    url: string, 
-    html: string, 
-    scanId: number, 
-    metadata: any
-  ): Promise<ModuleResult[]> {
-    const supabase = getSupabaseClient();
-    const totalModules = this.modules.length;
-    console.log(`Running ${totalModules} modules in sequence:`, this.modules.map(m => m.name));
-    const accumulatedResults: ModuleResult[] = [];
+    async executeTierScan(
+        url: string,
+        tier: ScanTier,
+        scanId: string,
+        email?: string,
+        paymentId?: string
+    ): Promise<EngineScanResult> {
+        // Validate required fields for paid tiers
+        if (tier !== 'basic' && (!email || !paymentId)) {
+            throw new Error('Email en paymentId zijn verplicht voor betaalde tiers');
+        }
 
-    for (let i = 0; i < this.modules.length; i++) {
-      const module = this.modules[i];
-      let result: ModuleResult;
+        let result: EngineScanResult;
 
-      try {
-        console.log(`[${i + 1}/${totalModules}] Starting ${module.name} analysis...`);
-        result = await this.runModuleWithTimeout(module, url, html, metadata);
-        console.log(`[${i + 1}/${totalModules}] ${module.name} completed with score ${result.score}`);
-      } catch (error) {
-        console.error(`[${i + 1}/${totalModules}] ${module.name} failed:`, error);
-        result = {
-          moduleName: module.name,
-          score: 0,
-          status: 'failed' as const,
-          findings: [{
-            type: 'error' as const,
-            title: 'Module kon niet worden uitgevoerd',
-            description: `${module.name} is mislukt vanwege een technische fout.`,
-            impact: 'high' as const,
-            category: 'system'
-          }],
-          recommendations: []
+        // Execute modules based on tier
+        switch (tier) {
+            case 'basic':
+                result = await this.executeBasicScan(url, scanId);
+                break;
+            case 'starter':
+                result = await this.executeStarterScan(url, scanId);
+                break;
+            case 'business':
+                result = await this.executeBusinessScan(url, scanId);
+                break;
+            case 'enterprise':
+                result = await this.executeEnterpriseScan(url, scanId);
+                break;
+            default:
+                throw new Error(`Niet-ondersteunde tier: ${tier}`);
+        }
+
+        // Update user scan history voor alle tiers
+        if (email) {
+            await upsertUserScanHistory({
+                email,
+                scanId: parseInt(scanId, 10),
+                isPaid: tier !== 'basic',
+                amount: this.getTierPrice(tier)
+            });
+        }
+
+        return result;
+    }
+
+    private async executeBasicScan(url: string, scanId: string): Promise<EngineScanResult> {
+        console.log(`🔍 Starting basic scan for ${url} (${scanId})`);
+        
+        // Execute core modules in parallel
+        const moduleResults = await Promise.all(
+            this.modules.slice(0, 2).map(module => module.execute(url))
+        );
+
+        // Calculate overall score
+        const overallScore = Math.round(
+            moduleResults.reduce((sum: number, result: ModuleResult) => sum + result.score, 0) / moduleResults.length
+        );
+
+        return {
+            scanId,
+            url,
+            status: 'completed',
+            createdAt: new Date().toISOString(),
+            overallScore,
+            moduleResults,
+            completedAt: new Date().toISOString(),
+            tier: 'basic' as const
         };
-      }
-
-      accumulatedResults.push(result);
-      const progress = 5 + Math.round(((i + 1) / totalModules) * 90); // Progress from 5% to 95%
-
-      // Update progress and partial results in the database
-      await supabase
-        .from('scans')
-        .update({
-          progress: progress,
-          // Storing partial results for the frontend to render
-          result_json: { moduleResults: accumulatedResults } as any // Cast to any to avoid type issues
-        })
-        .eq('id', scanId);
     }
 
-    return accumulatedResults;
-  }
+    private async executeStarterScan(url: string, scanId: string): Promise<EngineScanResult> {
+        console.log(`🔍 Starting starter scan for ${url} (${scanId})`);
+        
+        // Execute basic scan first
+        const basicResult = await this.executeBasicScan(url, scanId);
+        
+        // Generate AI report
+        const aiReport = await this.aiReportGenerator.generateReport(basicResult);
 
-  private async runModuleWithTimeout(
-    module: ScanModule, 
-    url: string, 
-    html: string, 
-    metadata: any
-  ): Promise<ModuleResult> {
-    
-    const timeout = new Promise<never>((_, reject) => 
-      setTimeout(() => reject(new Error('Module timeout')), 30000)
-    );
+        // Execute additional starter modules
+        const additionalResults = await Promise.all(
+            this.modules.slice(2, 3).map(module => module.execute(url))
+        );
 
-    return Promise.race([
-      module.analyze(url, html, metadata),
-      timeout
-    ]);
-  }
-
-  private calculateOverallScore(moduleResults: ModuleResult[]): number {
-    if (moduleResults.length === 0) return 0;
-
-    const validResults = moduleResults.filter(result => result.status === 'completed');
-    if (validResults.length === 0) return 0;
-
-    // Simple average for MVP - can be made more sophisticated later
-    const totalScore = validResults.reduce((sum, result) => sum + result.score, 0);
-    return Math.round(totalScore / validResults.length);
-  }
-
-  // Helper method om beschikbare modules te krijgen
-  getAvailableModules(): string[] {
-    return this.modules.map(module => module.name);
-  }
-
-  // Helper voor testing
-  async testModule(moduleName: string, url: string): Promise<ModuleResult | null> {
-    const module = this.modules.find(m => m.name === moduleName);
-    if (!module) return null;
-
-    try {
-      const { html, metadata } = await this.contentFetcher.fetchContent(url);
-      return await module.analyze(url, html, metadata);
-    } catch (error) {
-      console.error(`Test failed for ${moduleName}:`, error);
-      return null;
+        return {
+            ...basicResult,
+            moduleResults: [...basicResult.moduleResults, ...additionalResults],
+            aiReport,
+            tier: 'starter' as const
+        };
     }
-  }
+
+    private async executeBusinessScan(url: string, scanId: string): Promise<EngineScanResult> {
+        console.log(`🔍 Starting business scan for ${url} (${scanId})`);
+        
+        // Execute starter scan first
+        const starterResult = await this.executeStarterScan(url, scanId);
+        
+        // Execute all remaining modules
+        const businessResults = await Promise.all(
+            this.modules.slice(3).map(module => module.execute(url))
+        );
+
+        // Generate enhanced AI report
+        const aiReport = await this.aiReportGenerator.generateReport({
+            ...starterResult,
+            moduleResults: [...starterResult.moduleResults, ...businessResults]
+        });
+
+        return {
+            ...starterResult,
+            moduleResults: [...starterResult.moduleResults, ...businessResults],
+            aiReport,
+            tier: 'business' as const
+        };
+    }
+
+    private async executeEnterpriseScan(url: string, scanId: string): Promise<EngineScanResult> {
+        console.log(`🔍 Starting enterprise scan for ${url} (${scanId})`);
+        
+        // Execute business scan first
+        const businessResult = await this.executeBusinessScan(url, scanId);
+        
+        // Enterprise features worden in Phase 4 toegevoegd
+        throw new Error('Enterprise tier wordt geïmplementeerd in Phase 4');
+    }
+
+    private getTierPrice(tier: ScanTier): number {
+        const prices = {
+            'basic': 0,
+            'starter': 19.95,
+            'business': 49.95,
+            'enterprise': 149.95
+        } as const;
+        
+        return prices[tier];
+    }
 }

@@ -40,8 +40,8 @@
       const data = await response.json();
       console.log(`Scan started with ID: ${data.scanId}`);
       
-      // Redirect naar scan pagina met echte scan ID
-      goto(`/scan/${data.scanId}`);
+      // Redirect naar scan pagina met echte scan ID en URL als query param
+      goto(`/scan/${data.scanId}?url=${encodeURIComponent(url)}`);
       
     } catch (error) {
       console.error('Scan error:', error);

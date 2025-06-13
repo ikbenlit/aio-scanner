@@ -78,98 +78,34 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 
     console.log(`Created scan record with ID: ${scanRecord.id}`);
 
-    // 4. Start scan process (async)
+    // 4. Start scan process (async) - now includes screenshot capture
     const scanOrchestrator = new ScanOrchestrator();
     
     // Don't await - run in background
-    scanOrchestrator.executeScan(parsedUrl.toString(), scanRecord.id.toString())
-      .catch(scanError => {
+    void Promise.resolve(scanOrchestrator.executeScan(parsedUrl.toString(), scanRecord.id.toString()))
+      .catch(async (scanError: Error) => {
         console.error(`Background scan failed for ${scanRecord.id}:`, scanError);
-        
         // Update scan status to failed
-        supabase
-          .from('scans')
-          .update({ status: 'failed' })
-          .eq('id', scanRecord.id)
-          .then(({ error: updateError }) => {
-            if (updateError) {
-              console.error('Failed to update scan status:', updateError);
-            }
-          });
+        try {
+          await supabase
+            .from('scans')
+            .update({ status: 'failed', error_message: scanError.message })
+            .eq('id', scanRecord.id);
+          console.log(`Updated scan ${scanRecord.id} status to failed`);
+        } catch (err: unknown) {
+          console.error(`Failed to update scan status for ${scanRecord.id}:`, err);
+        }
       });
 
-    // 5. Return scan ID immediately for polling
-    return json({
-      success: true,
-      scanId: scanRecord.id,
-      status: 'pending',
-      message: 'Scan started successfully',
-      estimatedDuration: '30 seconds'
-    });
-
-  } catch (err) {
-    console.error('Anonymous scan API error:', err);
+    // 5. Return scan ID to the client
+    return json({ scanId: scanRecord.id });
     
-    if (err && typeof err === 'object' && 'status' in err) {
-      // Re-throw SvelteKit errors
-      throw err;
+  } catch (e: any) {
+    // SvelteKit's error helper throws a Response, so we need to handle that
+    if (e.status && e.body) {
+      return new Response(JSON.stringify(e.body), { status: e.status });
     }
-    
-    throw error(500, 'Internal server error');
+    console.error('Anonymous scan request failed:', e);
+    return json({ message: 'Internal Server Error' }, { status: 500 });
   }
 };
-
-export const GET: RequestHandler = async ({ url }) => {
-    try {
-        const supabase = getSupabaseClient();
-        const scanId = url.searchParams.get('scanId');
-
-        if (!scanId) {
-            throw error(400, 'Scan ID is vereist');
-        }
-
-        // data: scan as any to bypass type errors until supabase.ts is fixed
-        const { data: scan, error: dbError } = await supabase
-            .from('scans')
-            .select(`
-                id,
-                status,
-                progress,
-                overall_score,
-                result_json,
-                created_at,
-                completed_at
-            `)
-            .eq('id', scanId)
-            .single<any>();
-
-        if (dbError) {
-            console.error('Database error:', dbError);
-            throw error(500, 'Fout bij ophalen scan status');
-        }
-
-        if (!scan) {
-            throw error(404, 'Scan niet gevonden');
-        }
-
-        return json({
-            id: scan.id,
-            status: scan.status,
-            progress: scan.progress,
-            overallScore: scan.overall_score,
-            results: scan.result_json,
-            createdAt: scan.created_at,
-            completedAt: scan.completed_at,
-            estimatedTimeRemaining: scan.progress < 100 ? `${30 - Math.floor(scan.progress / 100 * 30)} seconds` : null
-        });
-
-    } catch (err) {
-        console.error('Scan status API error:', err);
-        
-        if (err && typeof err === 'object' && 'status' in err) {
-            throw err;
-        }
-        
-        throw error(500, 'Internal server error');
-    }
-}; 

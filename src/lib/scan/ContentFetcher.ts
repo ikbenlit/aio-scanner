@@ -2,11 +2,18 @@ import * as cheerio from 'cheerio';
 import { chromium } from 'playwright';
 import type { ScanMetadata } from './types.js';
 
+export interface ContentFetchResult {
+  html: string;
+  metadata: ScanMetadata;
+  screenshot?: string; // Base64 encoded screenshot
+}
+
 export class ContentFetcher {
   private static readonly USER_AGENT = 'AIO-Scanner/1.0 (+https://aio-scanner.nl/bot)';
   private static readonly TIMEOUT = 10000; // 10 seconden
+  private static readonly SCREENSHOT_TIMEOUT = 5000; // 5 seconden voor screenshot
 
-  async fetchContent(url: string): Promise<{ html: string; metadata: ScanMetadata }> {
+  async fetchContent(url: string, includeScreenshot = true): Promise<ContentFetchResult> {
     const startTime = Date.now();
     
     try {
@@ -31,11 +38,23 @@ export class ContentFetcher {
       // Check of site JavaScript-heavy is
       if (this.isJavaScriptHeavy(html)) {
         console.log(`JavaScript-heavy site gedetecteerd voor ${url}, fallback naar Playwright`);
-        return await this.fetchWithPlaywright(url);
+        return await this.fetchWithPlaywright(url, includeScreenshot);
+      }
+
+      // Voor statische sites: aparte screenshot met Playwright indien gewenst
+      let screenshot: string | undefined;
+      if (includeScreenshot) {
+        try {
+          screenshot = await this.captureScreenshot(url);
+        } catch (error) {
+          console.log(`Screenshot capture gefaald voor ${url}:`, error instanceof Error ? error.message : String(error));
+          // Continue zonder screenshot
+        }
       }
 
       return {
         html,
+        screenshot,
         metadata: {
           domain: new URL(url).hostname,
           userAgent: ContentFetcher.USER_AGENT,
@@ -48,7 +67,7 @@ export class ContentFetcher {
     } catch (error) {
       console.log(`Cheerio fetch gefaald voor ${url}:`, error instanceof Error ? error.message : String(error));
       // Fallback naar Playwright
-      return await this.fetchWithPlaywright(url);
+      return await this.fetchWithPlaywright(url, includeScreenshot);
     }
   }
 
@@ -78,7 +97,7 @@ export class ContentFetcher {
     return indicators.filter(Boolean).length >= 2;
   }
 
-  private async fetchWithPlaywright(url: string): Promise<{ html: string; metadata: ScanMetadata }> {
+  private async fetchWithPlaywright(url: string, includeScreenshot = true): Promise<ContentFetchResult> {
     const startTime = Date.now();
     let browser;
     
@@ -112,8 +131,25 @@ export class ContentFetcher {
       const html = await page.content();
       const responseTime = Date.now() - startTime;
 
+      // Screenshot capture (als browser al open is)
+      let screenshot: string | undefined;
+      if (includeScreenshot) {
+        try {
+          const screenshotBuffer = await page.screenshot({
+            type: 'png',
+            clip: { x: 0, y: 0, width: 1280, height: 720 },
+            timeout: ContentFetcher.SCREENSHOT_TIMEOUT
+          });
+          screenshot = `data:image/png;base64,${screenshotBuffer.toString('base64')}`;
+        } catch (error) {
+          console.log(`Screenshot capture gefaald in Playwright voor ${url}:`, error instanceof Error ? error.message : String(error));
+          // Continue zonder screenshot
+        }
+      }
+
       return {
         html,
+        screenshot,
         metadata: {
           domain: new URL(url).hostname,
           userAgent: ContentFetcher.USER_AGENT,
@@ -125,6 +161,47 @@ export class ContentFetcher {
 
     } catch (error: unknown) {
       throw new Error(`Playwright fetch failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } finally {
+      if (browser) {
+        await browser.close();
+      }
+    }
+  }
+
+  /**
+   * Standalone screenshot capture voor statische sites
+   * Gebruikt minimale Playwright setup voor snelheid
+   */
+  private async captureScreenshot(url: string): Promise<string> {
+    let browser;
+    
+    try {
+      browser = await chromium.launch({ 
+        headless: true,
+        args: ['--no-sandbox', '--disable-setuid-sandbox']
+      });
+      
+      const page = await browser.newPage({
+        viewport: { width: 1280, height: 720 }
+      });
+
+      // Snelle screenshot - geen wachten op complex JS
+      await page.goto(url, { 
+        waitUntil: 'domcontentloaded',
+        timeout: ContentFetcher.SCREENSHOT_TIMEOUT 
+      });
+
+      // Korte wachttijd voor basic rendering
+      await page.waitForTimeout(1000);
+      
+      const screenshotBuffer = await page.screenshot({
+        type: 'png',
+        clip: { x: 0, y: 0, width: 1280, height: 720 },
+        timeout: ContentFetcher.SCREENSHOT_TIMEOUT
+      });
+
+      return `data:image/png;base64,${screenshotBuffer.toString('base64')}`;
+
     } finally {
       if (browser) {
         await browser.close();
@@ -175,4 +252,4 @@ export class ContentFetcher {
     
     return null;
   }
-} 
+}

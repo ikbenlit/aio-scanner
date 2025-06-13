@@ -27,8 +27,7 @@ export class PaymentVerificationService {
     if (!this.mollie) {
       console.log('🔧 Initializing Mollie client...');
       this.mollie = createMollieClient({
-        apiKey: MOLLIE_API_KEY,
-        testMode: MOLLIE_TEST_MODE === 'true'
+        apiKey: MOLLIE_API_KEY
       });
       console.log('✅ Mollie client initialized');
     }
@@ -94,10 +93,10 @@ export class PaymentVerificationService {
       };
     }
 
-    // Extract metadata
-    const metadata = payment.metadata || {};
+    // Extract metadata - cast to any since Mollie metadata is flexible
+    const metadata = (payment.metadata || {}) as any;
     const paidTier = metadata.tier as ScanTier;
-    const userEmail = metadata.userEmail || payment.billingEmail;
+    const userEmail = metadata.userEmail || (payment as any).billingEmail;
     const amount = parseFloat(payment.amount.value);
 
     // Validate tier matches payment

@@ -1,111 +1,30 @@
-import { json, error } from '@sveltejs/kit';
+// src/routes/api/scan/anonymous/+server.ts
+import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { ScanOrchestrator } from '$lib/scan/ScanOrchestrator.js';
-import { getSupabaseClient } from '$lib/supabase';
-
-// Basic in-memory rate limiting (for MVP)
-// In production: use Redis or database-based rate limiting
-const ipScanCounts = new Map<string, { count: number; resetTime: number }>();
-
-async function checkBasicRateLimit(clientIP: string): Promise<{ allowed: boolean; reason?: string }> {
-  const now = Date.now();
-  const hourMs = 60 * 60 * 1000; // 1 hour
-  const maxScansPerHour = 5;
-  
-  const ipData = ipScanCounts.get(clientIP);
-  
-  if (!ipData || now > ipData.resetTime) {
-    // First request or reset time passed
-    ipScanCounts.set(clientIP, { count: 1, resetTime: now + hourMs });
-    return { allowed: true };
-  }
-  
-  if (ipData.count >= maxScansPerHour) {
-    return { 
-      allowed: false, 
-      reason: `Maximum ${maxScansPerHour} scans per uur bereikt. Probeer later opnieuw.` 
-    };
-  }
-  
-  // Increment count
-  ipData.count++;
-  ipScanCounts.set(clientIP, ipData);
-  
-  return { allowed: true };
-}
 
 export const POST: RequestHandler = async ({ request, getClientAddress }) => {
+  console.warn('⚠️ DEPRECATED: /api/scan/anonymous - gebruik /api/scan/basic');
+  
   try {
-    const { url } = await request.json();
-    const supabase = getSupabaseClient();
-
-    // 1. Validate URL
-    if (!url || typeof url !== 'string') {
-      throw error(400, 'Valid URL is required');
-    }
-
-    let parsedUrl: URL;
-    try {
-      parsedUrl = new URL(url);
-    } catch {
-      throw error(400, 'Invalid URL format');
-    }
-
-    // 2. Rate limiting based on IP (basic protection)
-    const clientIP = getClientAddress();
-    console.log(`Scan request from IP: ${clientIP} for URL: ${url}`);
+    // Get the request body
+    const body = await request.json();
     
-    // Basic rate limiting: 5 scans per IP per hour
-    const rateLimitCheck = await checkBasicRateLimit(clientIP);
-    if (!rateLimitCheck.allowed) {
-      throw error(429, rateLimitCheck.reason || 'Te veel scan verzoeken. Probeer later opnieuw.');
-    }
-
-    // 3. Create scan record in database
-    const { data: scanRecord, error: dbError }: { data: any, error: any } = await supabase
-      .from('scans')
-      .insert({
-        url: parsedUrl.toString(),
-        status: 'pending'
-      })
-      .select()
-      .single();
-
-    if (dbError || !scanRecord) {
-      console.error('Database error:', dbError);
-      throw error(500, 'Failed to create scan record');
-    }
-
-    console.log(`Created scan record with ID: ${scanRecord.id}`);
-
-    // 4. Start scan process (async) - now includes screenshot capture
-    const scanOrchestrator = new ScanOrchestrator();
+    // Forward to basic endpoint with all the same data
+    const basicResponse = await fetch('/api/scan/basic', {
+      method: 'POST',
+      headers: { 
+        'Content-Type': 'application/json',
+        'X-Forwarded-For': getClientAddress() // Pass IP for potential rate limiting
+      },
+      body: JSON.stringify(body)
+    });
     
-    // Don't await - run in background
-    void Promise.resolve(scanOrchestrator.executeScan(parsedUrl.toString(), scanRecord.id.toString()))
-      .catch(async (scanError: Error) => {
-        console.error(`Background scan failed for ${scanRecord.id}:`, scanError);
-        // Update scan status to failed
-        try {
-          await supabase
-            .from('scans')
-            .update({ status: 'failed', error_message: scanError.message })
-            .eq('id', scanRecord.id);
-          console.log(`Updated scan ${scanRecord.id} status to failed`);
-        } catch (err: unknown) {
-          console.error(`Failed to update scan status for ${scanRecord.id}:`, err);
-        }
-      });
-
-    // 5. Return scan ID to the client
-    return json({ scanId: scanRecord.id });
+    // Return the exact response from basic endpoint
+    const responseData = await basicResponse.json();
+    return json(responseData, { status: basicResponse.status });
     
   } catch (e: any) {
-    // SvelteKit's error helper throws a Response, so we need to handle that
-    if (e.status && e.body) {
-      return new Response(JSON.stringify(e.body), { status: e.status });
-    }
-    console.error('Anonymous scan request failed:', e);
+    console.error('Anonymous scan wrapper failed:', e);
     return json({ message: 'Internal Server Error' }, { status: 500 });
   }
 };

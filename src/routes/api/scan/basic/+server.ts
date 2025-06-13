@@ -35,9 +35,14 @@ export async function POST({ request }) {
     );
 
     return json({
-      ...result,
       scanId,
-      tier: 'basic'
+      tier: 'basic',
+      url: result.url,
+      status: result.status,
+      overallScore: result.overallScore,
+      moduleResults: result.moduleResults,
+      createdAt: result.createdAt,
+      completedAt: result.completedAt
     });
 
   } catch (error: any) {

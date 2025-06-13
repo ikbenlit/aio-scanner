@@ -1,3 +1,4 @@
+// src/routes/api/scan/business/+server.ts
 import { json } from '@sveltejs/kit';
 import type { RequestEvent } from '@sveltejs/kit';
 import { ScanOrchestrator } from '$lib/scan/ScanOrchestrator.js';

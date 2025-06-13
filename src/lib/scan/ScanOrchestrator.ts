@@ -1,3 +1,4 @@
+// src/lib/scan/ScanOrchestrator.ts
 import type { EngineScanResult, ModuleResult } from '../types/scan';
 import type { ScanTier } from '../types/database';
 import { upsertUserScanHistory } from '../services/emailHistoryService';

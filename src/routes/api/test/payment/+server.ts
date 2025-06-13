@@ -29,8 +29,7 @@ export async function POST({ request }) {
     // Test Mollie import with SvelteKit env
     const { createMollieClient } = await import('@mollie/api-client');
     const mollie = createMollieClient({
-      apiKey: MOLLIE_API_KEY,
-      testMode: MOLLIE_TEST_MODE === 'true'
+      apiKey: MOLLIE_API_KEY
     });
 
     return json({

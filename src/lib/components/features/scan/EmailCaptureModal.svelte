@@ -3,10 +3,10 @@
   import { createEventDispatcher, onMount } from 'svelte';
   import { goto } from '$app/navigation';
   import { Button } from '$lib/components/ui/button';
-  import type { ScanResult } from '$lib/scan/types';
+  import type { EngineScanResult } from '$lib/types/scan';
   
   // Props
-  export let scanResults: ScanResult;
+  export let scanResults: EngineScanResult;
   export let isOpen = false;
   
   // Local state
@@ -51,10 +51,11 @@
     return 'text-red-600';
   }
   
-  function getTopFindings(results: ScanResult) {
-    // Extract top 2 most impactful findings across all modules
-    const allFindings = results.moduleResults.flatMap(module => 
-      module.findings.filter(finding => finding.impact === 'high' || finding.impact === 'medium')
+    function getTopFindings(results: EngineScanResult) {
+    // Extract top 2 most impactful findings across all modules  
+    // TODO: Add proper typing for module and finding parameters (MVP: any types acceptable)
+    const allFindings = results.moduleResults.flatMap((module: any) =>
+      module.findings.filter((finding: any) => finding.impact === 'high' || finding.impact === 'medium')
     );
     
     return allFindings.slice(0, 2);

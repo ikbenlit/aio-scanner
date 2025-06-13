@@ -6,10 +6,10 @@
   import { createEventDispatcher } from 'svelte';
   import { BackgroundOverlay } from '$lib/components/ui/overlay';
   import EmailForm from '../../features/scan/EmailForm.svelte';
-  import type { ScanResult } from '$lib/scan/types';
+  import type { EngineScanResult } from '$lib/types/scan';
   
   // Props
-  export let scanResults: ScanResult;
+  export let scanResults: EngineScanResult;
   export let isOpen = false;
   // Event dispatcher
   const dispatch = createEventDispatcher<{
@@ -36,10 +36,11 @@
     return 'text-red-600';
   }
   
-  function getTopFindings(results: ScanResult) {
+  function getTopFindings(results: EngineScanResult) {
     // Extract top 2 most impactful findings across all modules
-    const allFindings = results.moduleResults.flatMap(module => 
-      module.findings.filter(finding => finding.impact === 'high' || finding.impact === 'medium')
+    // TODO: Add proper typing for module and finding parameters (MVP: any types acceptable)
+    const allFindings = results.moduleResults.flatMap((module: any) => 
+      module.findings.filter((finding: any) => finding.impact === 'high' || finding.impact === 'medium')
     );
     
     return allFindings.slice(0, 2);

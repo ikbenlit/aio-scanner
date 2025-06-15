@@ -5,8 +5,8 @@ export type ScanTier = 'basic' | 'starter' | 'business' | 'enterprise';
 
 // Interface voor scan_payments
 export interface ScanPayment {
-  id: number;
-  scan_id: number;
+  id: string;
+  scan_id: string;
   user_email: string;
   amount: number;
   status: 'pending' | 'paid' | 'failed';
@@ -19,7 +19,7 @@ export interface ScanPayment {
 // Interface voor user_scan_history
 export interface UserScanHistory {
   email: string;
-  scan_ids: number[];
+  scan_ids: string[];
   total_scans: number;
   paid_scans: number;
   total_spent: number;

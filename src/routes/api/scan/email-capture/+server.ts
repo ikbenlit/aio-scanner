@@ -1,3 +1,10 @@
+// TO BE DEPRECATED: Email capture is no longer needed with the new tier-based system
+// This endpoint was used for the old anonymous route email capture flow
+// Please use the new tier-based endpoints:
+// - /api/scan/basic (no email required)
+// - /api/scan/starter (email handled in payment flow)
+// - /api/scan/business (email handled in payment flow)
+
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from '@sveltejs/kit';
 import { handleEmailCapture } from '$lib/scan/completion';

@@ -2,6 +2,8 @@ import * as cheerio from 'cheerio';
 import robotsParser from 'robots-parser';
 import type { ModuleResult, Finding } from '../../types/scan';
 import { ContentFetcher } from '../ContentFetcher.js';
+import { PatternMatcher, type PatternConfig } from '../PatternMatcher';
+import { PatternConfigLoader } from '../PatternConfigLoader';
 
 export class TechnicalSEOModule {
   name = 'Technical SEO';
@@ -9,22 +11,54 @@ export class TechnicalSEOModule {
   category = 'foundation' as const;
   
   private contentFetcher = new ContentFetcher();
+  private patternMatcher = new PatternMatcher();
+  private configLoader = PatternConfigLoader.getInstance();
 
   async execute(url: string): Promise<ModuleResult> {
-    // Voer technische SEO checks uit
-    const findings = await this.analyzeTechnicalSEO(url);
+    try {
+      // Fetch website content
+      const response = await fetch(url);
+      const html = await response.text();
+      const $ = cheerio.load(html);
+      
+      // Load pattern configuration
+      const config = await this.configLoader.loadConfig('TechnicalSEO');
+      
+      // Voer technische SEO checks uit
+      const findings = await this.analyzeTechnicalSEO($, html, config);
       const score = this.calculateScore(findings);
 
       return {
-      name: 'TechnicalSEO',
+        name: 'TechnicalSEO',
         score,
-      findings
-    };
+        findings
+      };
+    } catch (error) {
+      return {
+        name: 'TechnicalSEO',
+        score: 0,
+        findings: [
+          {
+            title: 'Module Error',
+            description: `Technical SEO analysis failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+            priority: 'high',
+            category: 'system'
+          }
+        ]
+      };
+    }
   }
 
-  private async analyzeTechnicalSEO(url: string): Promise<Finding[]> {
-    // Simuleer technische SEO analyse
-    return [
+  private async analyzeTechnicalSEO($: cheerio.CheerioAPI, html: string, config: PatternConfig): Promise<Finding[]> {
+    const findings: Finding[] = [];
+
+    // Use PatternMatcher for basic pattern detection
+    const signals = this.patternMatcher.matchPatterns(html, $, config);
+    const patternFindings = this.patternMatcher.toFindings(signals, 'TechnicalSEO');
+    findings.push(...patternFindings);
+
+    // Add custom technical SEO analysis
+    findings.push(
       {
         title: 'Robots.txt optimalisatie nodig',
         description: 'Voeg specifieke regels toe voor AI crawlers zoals GPTBot en ChatGPT-User',
@@ -39,7 +73,9 @@ export class TechnicalSEOModule {
         category: 'Metadata',
         impact: 'medium'
       }
-    ];
+    );
+
+    return findings;
   }
 
   private calculateScore(findings: Finding[]): number {

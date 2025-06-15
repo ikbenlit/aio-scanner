@@ -1,0 +1,45 @@
+{
+  "selectors": {
+    "authorBio": {
+      "patterns": [
+        "[class*=\"over\" i]",
+        "[class*=\"about\" i]",
+        "[class*=\"team\" i]",
+        "[class*=\"author\" i]",
+        "[class*=\"founder\" i]"
+      ],
+      "description": "Detecteert author/team secties",
+      "impact": "high"
+    }
+  },
+  "regex": {
+    "expertiseSignals": {
+      "patterns": [
+        "\\d+\\s*jaar\\s*(ervaring|experience)",
+        "gecertificeerd|certified|diploma",
+        "specialist|expert|authority"
+      ],
+      "description": "Detecteert expertise indicatoren",
+      "impact": "high",
+      "flags": "gi"
+    },
+    "quoteableContent": {
+      "patterns": [
+        "^\".*\"$",
+        "^(het belangrijkste is|the key is)",
+        "^\\d+%\\s+van"
+      ],
+      "description": "Identificeert quoteerbare content",
+      "impact": "medium",
+      "flags": "gim"
+    }
+  },
+  "scoring": {
+    "baseScore": 100,
+    "deductions": {
+      "high": 25,
+      "medium": 15,
+      "low": 5
+    }
+  }
+}

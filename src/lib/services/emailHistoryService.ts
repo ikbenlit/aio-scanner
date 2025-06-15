@@ -5,7 +5,7 @@ const supabase = getSupabaseClient();
 
 type UserScanHistoryRow = {
   email: string;
-  scan_ids: number[];
+  scan_ids: string[];
   total_scans: number;
   paid_scans: number;
   total_spent: number;
@@ -22,7 +22,7 @@ export async function upsertUserScanHistory({
   amount
 }: {
   email: string;
-  scanId: number;
+  scanId: string;
   isPaid?: boolean;
   amount?: number;
 }) {
@@ -53,7 +53,7 @@ export async function upsertUserScanHistory({
   };
 
   const newScanIds = Array.from(
-    new Set([...(current.scan_ids as number[] ?? []), scanId])
+    new Set([...(current.scan_ids as string[] ?? []), scanId])
   );
   
   const update = {

@@ -1,7 +1,12 @@
 import * as cheerio from 'cheerio';
 import type { ModuleResult, Finding } from '../../types/scan';
+import { PatternMatcher, type PatternConfig } from '../PatternMatcher';
+import { PatternConfigLoader } from '../PatternConfigLoader';
 
 export class AICitationModule {
+  private patternMatcher = new PatternMatcher();
+  private configLoader = PatternConfigLoader.getInstance();
+
   async execute(url: string): Promise<ModuleResult> {
     try {
       // Fetch website content
@@ -9,7 +14,10 @@ export class AICitationModule {
       const html = await response.text();
       const $ = cheerio.load(html);
       
-      const findings = await this.analyzeAICitation($, url);
+      // Load pattern configuration
+      const config = await this.configLoader.loadConfig('AICitation');
+      
+      const findings = await this.analyzeAICitation($, html, config);
       const score = this.calculateScore(findings);
 
       return {
@@ -33,23 +41,19 @@ export class AICitationModule {
     }
   }
 
-  private async analyzeAICitation($: cheerio.CheerioAPI, url: string): Promise<Finding[]> {
+  private async analyzeAICitation($: cheerio.CheerioAPI, html: string, config: PatternConfig): Promise<Finding[]> {
     const findings: Finding[] = [];
-    const bodyText = $('body').text().toLowerCase();
 
-    // 1. Author Bio & Team Detection
+    // 1. Use PatternMatcher for basic pattern detection
+    const signals = this.patternMatcher.matchPatterns(html, $, config);
+    const patternFindings = this.patternMatcher.toFindings(signals, 'AICitation');
+    findings.push(...patternFindings);
+
+    // 2. Custom analysis that requires complex logic
     this.analyzeAuthorBio($, findings);
-
-    // 2. Expertise Signals
     this.analyzeExpertiseSignals($, findings);
-
-    // 3. Quoteable Content Analysis
     this.analyzeQuoteableContent($, findings);
-
-    // 4. Authority Markers
     this.analyzeAuthorityMarkers($, findings);
-
-    // 5. Business Transparency
     this.analyzeBusinessTransparency($, findings);
 
     return findings;

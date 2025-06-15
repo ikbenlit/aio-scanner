@@ -1,0 +1,28 @@
+{
+  "selectors": {
+    "robotsTxt": {
+      "patterns": [
+        "meta[name=\"robots\"]",
+        "link[rel=\"robots\"]"
+      ],
+      "description": "Detecteert robots meta tags",
+      "impact": "medium"
+    },
+    "metaTags": {
+      "patterns": [
+        "meta[name=\"description\"]",
+        "meta[property=\"og:description\"]"
+      ],
+      "description": "Controleert aanwezigheid van meta descriptions",
+      "impact": "high"
+    }
+  },
+  "scoring": {
+    "baseScore": 100,
+    "deductions": {
+      "high": 15,
+      "medium": 10,
+      "low": 5
+    }
+  }
+}

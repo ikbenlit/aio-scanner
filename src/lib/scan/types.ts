@@ -11,7 +11,7 @@ export type DBScan = Database['public']['Tables']['scans']['Row'] & {
 };
 
 export type DBModuleResult = {
-    scan_id: number;
+    scan_id: string;
     module_name: string;
     status: 'waiting' | 'running' | 'completed' | 'failed';
     score: number;
@@ -170,7 +170,7 @@ export function transformDBToEngine(
     dbModules: DBModuleResult[]
 ): EngineScanResult {
     return {
-        scanId: dbScan.id.toString(),
+        scanId: dbScan.id,
         url: dbScan.url,
         status: dbScan.status as any,
         overallScore: dbScan.overall_score || 0,

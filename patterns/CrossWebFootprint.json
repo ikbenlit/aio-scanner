@@ -1,0 +1,43 @@
+{
+  "selectors": {
+    "sameAs": {
+      "patterns": [
+        "script[type=\"application/ld+json\"]",
+        "a[href*=\"linkedin.com\"]",
+        "a[href*=\"twitter.com\"]",
+        "a[href*=\"facebook.com\"]"
+      ],
+      "description": "Detecteert cross-platform links",
+      "impact": "high"
+    },
+    "socialProfiles": {
+      "patterns": [
+        "[class*=\"social\" i] a",
+        "[id*=\"social\" i] a",
+        "footer a[href*=\"linkedin\"]",
+        "footer a[href*=\"twitter\"]"
+      ],
+      "description": "Detecteert social media profielen",
+      "impact": "medium"
+    }
+  },
+  "regex": {
+    "inlineMentions": {
+      "patterns": [
+        "(?:volg ons|follow us) op\\s+\\w+",
+        "@[\\w\\.]+"
+      ],
+      "description": "Detecteert inline social mentions",
+      "impact": "low",
+      "flags": "gi"
+    }
+  },
+  "scoring": {
+    "baseScore": 100,
+    "deductions": {
+      "high": 25,
+      "medium": 15,
+      "low": 5
+    }
+  }
+}

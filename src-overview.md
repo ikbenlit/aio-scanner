@@ -3,6 +3,7 @@
 ```
 src/app.css
 src/app.d.ts
+src/lib/ai/vertexTest.ts
 src/lib/components/core/URLInput.svelte
 src/lib/components/features/email/EmailCaptureForm.svelte
 src/lib/components/features/email/EmailCaptureModal.svelte
@@ -91,6 +92,7 @@ src/routes/api/test/email/+server.ts
 src/routes/api/test/email/preview/+server.ts
 src/routes/api/test/payment/+server.ts
 src/routes/api/test/test-conn.js
+src/routes/api/test/vertex/+server.ts
 src/routes/scan/[scanId]/+page.svelte
 src/routes/scan/[scanId]/+page.ts
 src/routes/scan/[scanId]/results/+page.server.ts

@@ -25,6 +25,9 @@ interface DatabaseScan {
   created_at: string;
   completed_at: string | null;
   email: string | null;
+  email_sent: boolean | null;
+  email_sent_at: string | null;
+  user_email: string | null;
 }
 
 export const load = (async ({ params }: { params: { scanId: string } }) => {
@@ -46,7 +49,10 @@ export const load = (async ({ params }: { params: { scanId: string } }) => {
         result_json,
         created_at,
         completed_at,
-        email
+        email,
+        email_sent,
+        email_sent_at,
+        user_email
       `)
       .eq('id', scanId)
       .single();
@@ -86,7 +92,7 @@ export const load = (async ({ params }: { params: { scanId: string } }) => {
           completedAt: null
         },
         emailStatus: {
-          email: null,
+          email: typedScan.email || typedScan.user_email || null,
           sentAt: null
         }
       };
@@ -105,18 +111,8 @@ export const load = (async ({ params }: { params: { scanId: string } }) => {
       throw error(500, 'Scan resultaten niet beschikbaar');
     }
 
-    // 2. Haal email status op
-    console.log('📧 Fetching email status...');
-    const { data: emailStatus, error: emailError } = await supabase
-      .from('email_status')
-      .select('email, sent_at')
-      .eq('scan_id', scanId)
-      .single();
-
-    if (emailError) {
-      console.error('❌ Error fetching email status:', emailError);
-      // Don't throw here, just log and continue without email status
-    }
+    // 2. Email status is already in scan data
+    console.log('📧 Using email status from scan data...');
 
     console.log('✅ Data loaded successfully');
     
@@ -132,8 +128,9 @@ export const load = (async ({ params }: { params: { scanId: string } }) => {
         completedAt: typedScan.completed_at
       },
       emailStatus: {
-        email: emailStatus?.email || typedScan.email || null,
-        sentAt: emailStatus?.sent_at || null
+        email: typedScan.email || typedScan.user_email || null,
+        sentAt: typedScan.email_sent_at || null,
+        sent: typedScan.email_sent || false
       }
     };
 

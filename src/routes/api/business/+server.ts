@@ -1,3 +1,7 @@
+// TO BE DEPRECATED: REPLACED BY /api/scan/business/
+// This endpoint is an experimental version and will be removed in favor of the official endpoint
+// Please use /api/scan/business/ for all business tier scans
+
 // src/routes/api/scan/business/+server.ts
 import { json } from '@sveltejs/kit';
 import { ScanOrchestrator } from '$lib/scan/ScanOrchestrator.js';

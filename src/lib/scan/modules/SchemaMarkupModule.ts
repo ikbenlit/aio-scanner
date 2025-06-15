@@ -1,7 +1,12 @@
 import * as cheerio from 'cheerio';
 import type { ModuleResult, Finding } from '../../types/scan';
+import { PatternMatcher, type PatternConfig } from '../PatternMatcher';
+import { PatternConfigLoader } from '../PatternConfigLoader';
 
 export class SchemaMarkupModule {
+  private patternMatcher = new PatternMatcher();
+  private configLoader = PatternConfigLoader.getInstance();
+
   async execute(url: string): Promise<ModuleResult> {
     try {
       // Fetch website content
@@ -9,7 +14,10 @@ export class SchemaMarkupModule {
       const html = await response.text();
       const $ = cheerio.load(html);
       
-      const findings = await this.analyzeSchemaMarkup($, url);
+      // Load pattern configuration
+      const config = await this.configLoader.loadConfig('SchemaMarkup');
+      
+      const findings = await this.analyzeSchemaMarkup($, html, config);
       const score = this.calculateScore(findings);
 
       return {
@@ -33,16 +41,17 @@ export class SchemaMarkupModule {
     }
   }
 
-  private async analyzeSchemaMarkup($: cheerio.CheerioAPI, url: string): Promise<Finding[]> {
+  private async analyzeSchemaMarkup($: cheerio.CheerioAPI, html: string, config: PatternConfig): Promise<Finding[]> {
     const findings: Finding[] = [];
 
-    // 1. JSON-LD Analysis
+    // Use PatternMatcher for basic pattern detection
+    const signals = this.patternMatcher.matchPatterns(html, $, config);
+    const patternFindings = this.patternMatcher.toFindings(signals, 'SchemaMarkup');
+    findings.push(...patternFindings);
+
+    // Custom analysis that requires complex logic
     this.analyzeJsonLd($, findings);
-
-    // 2. Open Graph Analysis
     this.analyzeOpenGraph($, findings);
-
-    // 3. Business Schema Opportunities
     this.analyzeBusinessSchema($, findings);
 
     return findings;

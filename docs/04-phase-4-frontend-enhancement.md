@@ -8,29 +8,190 @@
 
 | Sub-fase | Taak | Status | Tijdsinschatting | Opmerkingen |
 |----------|------|--------|------------------|-------------|
-| **4.1 Landing Page Enhancement** | Tier selector component | 🔴 To do | 60 min | Pricing table met tier comparison |
-| | URL input integration | 🔴 To do | 30 min | Connect met nieuwe tier endpoints |
-| | CTA button logic | 🔴 To do | 20 min | Basic vs payment flow routing |
-| **4.2 Results Page Refactoring** | Tier-specific content display | 🔴 To do | 75 min | Show/hide based on scan tier |
-| | AI insights presentation | 🔴 To do | 45 min | Business tier LLM results |
+| **🟢 PLANNING COMPLETE** | **Architecture Design** | **🟢 Done** | **25 min** | **✅ Tier differentiation & technical specs voltooid** |
+| **🟢 ENTERPRISE TIER COMPLETION** | **Enterprise Lite Implementation** | **🟢 Done** | **30 min** | **✅ Multi-page + competitive intelligence** |
+| **4.1 PricingSection Fix (PRIORITEIT 1)** | **Tier-based pricing update** | **🔴 To do** | **60 min** | **Credit-based → Tier-based (Basic €0, Starter €19.95, Business €49.95, Enterprise €149.95)** |
+| | **"Koop nu" buttons fix** | **🔴 To do** | **30 min** | **Werkende payment flow (nu gaan ze nergens naartoe!)** |
+| | **Basic tier CTA** | **🔴 To do** | **20 min** | **"Gratis Scan" button voor direct scan** |
+| | URL input integration | 🔴 To do | 30 min | ✅ URLInput component bestaat al |
+| **4.2 User Flow Refactor** | **Basic tier email removal** | **🔴 To do** | **45 min** | **Direct naar resultaten (geen email gate)** |
+| | Paid tier routing | 🔴 To do | 30 min | Tier selectie → Payment flow |
+| **4.3 Results Page Enhancement** | **Tier-specific content display** | **🔴 To do** | **75 min** | **Basic: basis resultaten + upgrade prompts** |
+| | **AI insights presentation** | **🔴 To do** | **45 min** | **Business/Enterprise: AI insights + PDF** |
 | | Upgrade prompts integration | 🔴 To do | 30 min | Strategic conversion points |
-| **4.3 Payment Flow Implementation** | Pricing page creation | 🔴 To do | 60 min | Package comparison & selection |
-| | Mollie integration frontend | 🔴 To do | 45 min | Payment initiation flow |
+| **4.4 Payment Flow Integration** | Existing Mollie integration | 🟢 Done | 45 min | ✅ Mollie client + payment flow werkend |
 | | Success/failure pages | 🔴 To do | 30 min | Post-payment user journey |
-| **4.4 Email Capture Refactoring** | Basic tier email removal | 🔴 To do | 20 min | Remove email gate for free scans |
-| | Paid tier email integration | 🔴 To do | 25 min | Email for PDF delivery only |
+| **4.5 Email System Refactor** | Basic tier email removal | 🔴 To do | 20 min | Geen email voor gratis scans |
+| | Paid tier email integration | 🔴 To do | 25 min | Email alleen voor PDF delivery |
 | **4.5 Component Integration** | Existing component updates | 🔴 To do | 45 min | Update props/interfaces |
 | | Mobile responsiveness | 🔴 To do | 30 min | Test & fix tier selector UI |
 
-**Totale tijd:** ~6.5 uur  
-**Dependencies:** Phase 1-3 backend, bestaande UI components  
+**Totale tijd:** ~6 uur (aligned met correcte Phase 3 uitgangspunten)  
+**Dependencies:** Phase 1-3 backend ✅, bestaande UI components ✅  
+**Implementation Status:** 🎯 **READY FOR IMPLEMENTATION** - Aligned met Phase 3 tier-based system  
 **Next Phase:** Phase 5 (Deployment & Monitoring)
 
 **Status Legenda:**
-- 🔴 To do - Nog niet gestart
+- 🔴 To do - Nog te implementeren
 - 🟡 In Progress - Bezig met implementatie  
 - 🟢 Done - Voltooid en getest
+- ⚠️ Conflict - Niet aligned met huidige codebase
 - ⚪ Blocked - Wacht op dependency
+
+## 🎯 **PHASE 3 ALIGNMENT COMPLETE**
+
+### **✅ CORRECTE UITGANGSPUNTEN BEVESTIGD:**
+1. **Tier-based pricing:** Basic €0, Starter €19.95, Business €49.95, Enterprise €149.95 ✅
+2. **Basic tier flow:** Geen email requirement → Direct resultaten op scherm ✅  
+3. **User journey:** Tier selectie → Scan → Tier-specific resultaten ✅
+
+### **✅ BACKEND READY:**
+- Tier endpoints geïmplementeerd en werkend
+- Mollie payment integration operationeel
+- AI enhancement services voor business/enterprise tiers
+- Type system volledig gedefinieerd
+
+### **🔧 FRONTEND ALIGNMENT NEEDED:**
+- PricingSection update naar correcte tier pricing
+- Email gate removal voor basic tier  
+- Results page tier-specific rendering
+
+### **📁 DOEL VAN NIEUWE `pricing/` PAGES:**
+
+#### **HUIDIGE FLOW (Credit-based):**
+```
+Landing Page → PricingSection (€9.95, €19.95, €49.95) → "Koop nu" button → ??? (niet geïmplementeerd)
+```
+
+#### **GEWENSTE FLOW (Tier-based):**
+```
+Landing Page → Tier selectie → pricing/+page.svelte → Payment → Scan
+```
+
+#### **SPECIFIEKE DOELEN:**
+
+**`src/routes/pricing/+page.svelte`:**
+- **Dedicated pricing page** voor tier comparison en selectie
+- **URL preservation:** Gebruiker komt van landing page met URL parameter
+- **Payment initiation:** Mollie payment flow starten voor gekozen tier
+- **Clear value proposition:** Wat krijg je precies per tier
+
+**Voorbeeld flow:**
+1. Gebruiker voert URL in op landing page
+2. Kiest "Business Tier" → `goto('/pricing?tier=business&url=example.com')`
+3. Pricing page toont tier details + payment button
+4. Na payment → Enhanced scan met AI insights
+
+**BEIDE AANPAKKEN COMBINEREN:**
+- **PricingSection (Landing):** Primaire conversion point - MOET gefixed worden
+- **Pricing page:** Secondary/dedicated flow voor complexere tier vergelijking
+- **Voordeel:** Meerdere conversion paths = hogere conversie
+
+## 🔧 **ALIGNMENT STRATEGY**
+
+### **CORRECTE PHASE 3 UITGANGSPUNTEN:**
+✅ **Tier-based pricing:** Basic €0, Starter €19.95, Business €49.95, Enterprise €149.95  
+✅ **Basic tier flow:** Geen email → Direct scan → Resultaten op scherm  
+✅ **Paid tier flow:** Tier selectie → Payment → Enhanced scan → Resultaten + PDF  
+
+### **FRONTEND ALIGNMENT PLAN:**
+
+#### **4.1 PricingSection Refactor (60 min) - PRIORITEIT 1**
+- **Replace:** Credit-based cards → Tier-based cards (Basic €0, Starter €19.95, Business €49.95, Enterprise €149.95)
+- **Fix:** "Koop nu" buttons → Werkende payment flow
+- **Add:** "Gratis Scan" CTA voor Basic tier (direct naar scan)
+- **Add:** Paid tier buttons → Mollie payment initiation
+- **Keep:** Bestaande styling en layout (glassmorphism cards)
+
+#### **4.2 User Flow Refactor (45 min)**
+- **Basic tier:** URL input → Direct scan → Results page (geen email)
+- **Paid tiers:** URL input → Pricing selection → Payment → Enhanced scan
+- **Remove:** Email gate voor basic scans
+
+#### **4.3 Results Page Enhancement (75 min)**
+- **Basic tier:** Toon basis resultaten + upgrade prompts
+- **Paid tiers:** Toon AI insights + PDF download
+- **Add:** Tier-specific content rendering
+
+### **DUAL CONVERSION STRATEGY:**
+
+#### **Path 1: Landing Page (Primair) - MOET GEFIXED**
+```
+PricingSection → "Gratis Scan" (Basic) → Direct scan
+PricingSection → "Koop Starter €19.95" → Mollie payment → Enhanced scan
+```
+
+#### **Path 2: Dedicated Pricing Page (Secundair)**
+```
+Landing → "Vergelijk alle opties" → pricing/+page.svelte → Payment → Scan
+```
+
+**VOORDEEL:** Meerdere conversion opportunities = hogere conversie rate
+
+**TOTAL ALIGNMENT TIME:** ~4 uur (3u alignment + 1u dual strategy)
+
+---
+
+## 🏢 **ENTERPRISE TIER COMPLETION (Phase 3.3)**
+
+> **🎯 STRATEGIC DECISION:** Enterprise tier voltooien vóór frontend werk voor complete tier ladder
+
+### **Enterprise Lite Features (30 min implementatie):**
+
+#### **Enhanced Analysis Depth:**
+- **Multi-page sampling:** Scan homepage + 2 belangrijkste subpages
+- **Competitive insights:** Basic competitor comparison
+- **Industry benchmarking:** Score vs industry average
+- **Advanced reporting:** Extended narrative met strategic recommendations
+
+#### **Technical Implementation:**
+```typescript
+private async executeEnterpriseScan(url: string, scanId: string): Promise<EngineScanResult> {
+    console.log('🏢 Starting enterprise tier scan for', url);
+    const scanStartTime = Date.now();
+
+    try {
+        // 1. Start with business tier analysis
+        const businessResult = await this.executeBusinessScan(url, scanId);
+        
+        // 2. Enterprise enhancements
+        const enterpriseEnhancements = await this.addEnterpriseFeatures(url, businessResult);
+        
+        // 3. Enhanced narrative for enterprise
+        const enterpriseNarrative = await this.generateEnterpriseNarrative(
+            businessResult, 
+            enterpriseEnhancements
+        );
+
+        return {
+            ...businessResult,
+            tier: 'enterprise',
+            enterpriseFeatures: enterpriseEnhancements,
+            narrativeReport: enterpriseNarrative,
+            costTracking: {
+                ...businessResult.costTracking,
+                aiCost: (businessResult.costTracking?.aiCost || 0) * 1.5, // 50% more for enterprise
+                scanDuration: Date.now() - scanStartTime
+            }
+        };
+
+    } catch (error: any) {
+        console.error('❌ Enterprise scan failed, falling back to business tier');
+        const fallbackResult = await this.executeBusinessScan(url, scanId);
+        
+        return {
+            ...fallbackResult,
+            tier: 'enterprise',
+            error: `Enterprise features partially failed: ${error?.message}. Business tier analysis completed.`
+        };
+    }
+}
+```
+
+#### **Enterprise Value Proposition:**
+- **Business Tier:** AI insights voor 1 pagina (€49.95)
+- **Enterprise Tier:** AI insights + multi-page + competitive analysis (€149.95)
+- **ROI Justification:** 3x meer data voor 3x prijs = fair value
 
 ---
 
@@ -60,24 +221,31 @@
 
 ## 📁 BESTAANDE COMPONENTS ANALYSE
 
-### **Huidige Component Structure (uit project tree):**
+### **WERKELIJKE Component Structure (geverifieerd):**
 ```
 src/lib/components/
-├── core/URLInput.svelte                    # UITBREIDEN voor tier routing
+├── core/URLInput.svelte                    # ✅ BESTAAT - kan uitgebreid worden
 ├── features/
-│   ├── landing/*.svelte                    # UITBREIDEN met tier selector
-│   ├── scan/*.svelte                       # BEHOUDEN, props aanpassen
-│   └── email/EmailCapture*.svelte          # REFACTOR voor paid tiers only
-├── layout/                                 # BEHOUDEN
-└── ui/                                     # UITBREIDEN voor payment flow
+│   ├── landing/
+│   │   ├── PricingSection.svelte          # ⚠️ CONFLICT - credit-based pricing
+│   │   ├── FeatureSection.svelte          # ✅ HERBRUIKBAAR
+│   │   └── HeroSection.svelte             # ✅ HERBRUIKBAAR
+│   ├── scan/*.svelte                      # ✅ BESTAAT - props aanpassen
+│   ├── email/EmailCapture*.svelte         # ⚠️ MAJOR REFACTOR - email-first flow
+│   └── checkout/                          # ✅ LEEG - kan hergebruikt worden
+├── layout/Header.svelte                   # ✅ HERBRUIKBAAR
+└── ui/                                    # ✅ UITBREIDEN voor payment flow
 ```
 
-### **Huidige Pages (uit project tree):**
+### **WERKELIJKE Pages (geverifieerd):**
 ```
 src/routes/
-├── +page.svelte                           # UITBREIDEN met tier selector
-├── scan/[scanId]/+page.svelte            # MINIMAAL aanpassen
-└── scan/[scanId]/results/+page.svelte    # GROTE REFACTOR voor tier display
+├── +page.svelte                           # ⚠️ CONFLICT - gebruikt PricingSection
+├── scan/
+│   ├── [scanId]/+page.svelte             # ⚠️ EMAIL-FIRST - major refactor needed
+│   ├── [scanId]/results/+page.svelte     # ✅ TIER SUPPORT - minor aanpassingen
+│   └── payment-return/                   # ✅ MOLLIE INTEGRATION - werkend
+└── api/                                   # ✅ TIER ENDPOINTS - werkend
 ```
 
 ---

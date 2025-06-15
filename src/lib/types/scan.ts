@@ -1,15 +1,22 @@
 // src/lib/types/scan.ts
 import type { Database } from '../supabase';
-import { ScanTier } from '../types/database';
+import type { ScanTier } from '../types/database';
+import type { MissedOpportunity, AuthorityEnhancement, CitabilityImprovement } from '../scan/LLMEnhancementService';
 
 // Database row types - extended with new columns from Phase 1
+// TODO: Add these columns to the actual database schema
 export type DBScan = Database['public']['Tables']['scans']['Row'] & {
-    tier: ScanTier;
-    payment_reference: string | null;
-    user_email: string | null;
+	tier: ScanTier;
+	payment_reference: string | null;
+	user_email: string | null;
+	ai_report?: any;
+	error?: any;
+	ai_insights?: any;
+	narrative_report?: any;
+	cost_tracking?: any;
 };
 export type DBModuleResult = {
-    scan_id: number;
+    scan_id: string;
     module_name: string;
     status: 'waiting' | 'running' | 'completed' | 'failed';
     score: number;
@@ -27,6 +34,7 @@ export interface Finding {
     impact?: string;
     category?: string;
     technicalDetails?: string;
+    estimatedTime?: string;
 }
 
 export interface ModuleResult {
@@ -61,6 +69,21 @@ export interface EngineScanResult extends BaseScanResult {
     tier: ScanTier;
     aiReport?: AIReport;
     error?: string;
+    // Phase 3 - Business Tier
+    aiInsights?: AIInsights;
+    narrativeReport?: NarrativeReport;
+    costTracking?: {
+        aiCost: number;
+        scanDuration: number;
+        fallbackUsed?: boolean;
+        enterpriseFeatures?: {
+            multiPageAnalysis: number;
+            competitiveInsights: boolean;
+            strategicRoadmap: boolean;
+        };
+    };
+    // Enterprise Tier
+    enterpriseFeatures?: EnterpriseFeatures;
 }
 
 // Voor email templates - simplified interface
@@ -85,13 +108,13 @@ export interface QuickWin {
 
 // Tier-specific result extensions
 export interface StarterScanResult extends EngineScanResult {
-    tier: ScanTier.Starter;
+    tier: 'starter';
     aiReport: AIReport;
     pdfUrl?: string;
 }
 
 export interface BusinessScanResult extends EngineScanResult {
-    tier: ScanTier.Business;
+    tier: 'business';
     aiReport: AIReport;
     llmInsights?: any;
     pdfUrl?: string;
@@ -147,11 +170,11 @@ export interface TransformedScanResults {
 
 // Type guards for tier checking
 export function isStarterResult(result: EngineScanResult): result is StarterScanResult {
-    return result.tier === ScanTier.Starter && result.aiReport !== undefined;
+    return result.tier === 'starter' && result.aiReport !== undefined;
 }
 
 export function isBusinessResult(result: EngineScanResult): result is BusinessScanResult {
-    return result.tier === ScanTier.Business && result.aiReport !== undefined;
+    return result.tier === 'business' && result.aiReport !== undefined;
 }
 
 // Helper: Transform DB results to engine format
@@ -160,7 +183,7 @@ export function transformDBToEngine(
     dbModules: DBModuleResult[]
 ): EngineScanResult {
     return {
-        scanId: dbScan.id.toString(),
+        scanId: dbScan.id,
         url: dbScan.url,
         status: dbScan.status as any,
         overallScore: dbScan.overall_score || 0,
@@ -176,7 +199,12 @@ export function transformDBToEngine(
             completedAt: dbModule.completed_at || undefined
         })),
         aiReport: dbScan.ai_report ? JSON.parse(dbScan.ai_report) : undefined,
-        error: dbScan.error
+        error: dbScan.error,
+        aiInsights: dbScan.ai_insights ? JSON.parse(dbScan.ai_insights) : undefined,
+        narrativeReport: dbScan.narrative_report
+            ? JSON.parse(dbScan.narrative_report)
+            : undefined,
+        costTracking: dbScan.cost_tracking ? JSON.parse(dbScan.cost_tracking) : undefined
     };
 }
 
@@ -198,4 +226,79 @@ export function validateAIReport(report: any): report is AIReport {
         Array.isArray(report.recommendations) &&
         typeof report.estimatedImpact === 'string'
     );
+}
+
+// Phase 3 - Business Tier
+export interface AIInsights {
+    missedOpportunities: MissedOpportunity[];
+    authorityEnhancements: AuthorityEnhancement[];
+    citabilityImprovements: CitabilityImprovement[];
+    implementationPriority: string[];
+    generatedAt: string;
+    confidence: number;
+}
+
+export interface NarrativeReport {
+    executiveSummary: string;
+    detailedAnalysis: string;
+    implementationRoadmap: string;
+    conclusionNextSteps: string;
+    generatedAt: string;
+    wordCount: number;
+    // Enterprise-specific additions
+    strategicRoadmap?: string;
+    competitivePositioning?: string;
+    keyMetrics?: {
+        estimatedROI: string;
+        implementationTimeframe: string;
+        priorityActions: string[];
+    };
+}
+
+// Enterprise Tier Types
+export interface EnterpriseFeatures {
+    multiPageAnalysis: MultiPageContent[];
+    siteWidePatterns: SiteWidePatterns;
+    competitiveContext: CompetitiveContext;
+    industryBenchmark: IndustryBenchmark;
+    analysisDepth: AnalysisDepth;
+    error?: string;
+}
+
+export interface MultiPageContent {
+    url: string;
+    content: any; // Enhanced content from ContentExtractor
+    relativePath: string;
+}
+
+export interface SiteWidePatterns {
+    authoritySignals: any[];
+    contentThemes: string[];
+    consistencyIssues: string[];
+    consistencyScore: number;
+    patterns?: any[];
+}
+
+export interface CompetitiveContext {
+    industryCategory?: string;
+    benchmarkScore?: number;
+    currentScore?: number;
+    competitivePosition?: string;
+    insights?: string[];
+    benchmark?: string;
+}
+
+export interface IndustryBenchmark {
+    category: string;
+    benchmarkScore: number;
+    currentScore: number;
+    percentile: string;
+    improvementPotential: number;
+    score?: number;
+}
+
+export interface AnalysisDepth {
+    totalPagesAnalyzed: number;
+    contentSamples: number;
+    patternConsistency: number;
 }

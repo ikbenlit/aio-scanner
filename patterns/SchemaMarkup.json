@@ -1,0 +1,26 @@
+{
+  "selectors": {
+    "jsonLd": {
+      "patterns": [
+        "script[type=\"application/ld+json\"]"
+      ],
+      "description": "Detecteert JSON-LD structured data",
+      "impact": "high"
+    },
+    "openGraph": {
+      "patterns": [
+        "meta[property^=\"og:\"]"
+      ],
+      "description": "Controleert Open Graph tags",
+      "impact": "medium"
+    }
+  },
+  "scoring": {
+    "baseScore": 100,
+    "deductions": {
+      "high": 20,
+      "medium": 10,
+      "low": 5
+    }
+  }
+}

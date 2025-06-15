@@ -6,7 +6,7 @@ import type { ScanPayment, UserScanHistory } from '$lib/types/database';
 const supabase = getSupabaseClient();
 
 type ScanRow = {
-  id: number;
+  id: string;
   created_at: string;
 };
 

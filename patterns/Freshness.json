@@ -1,0 +1,42 @@
+{
+  "selectors": {
+    "datePublished": {
+      "patterns": [
+        "meta[property=\"article:published_time\"]",
+        "meta[name=\"date\"]",
+        "time[datetime]"
+      ],
+      "description": "Detecteert published date meta tags",
+      "impact": "high"
+    },
+    "dateModified": {
+      "patterns": [
+        "meta[property=\"article:modified_time\"]",
+        "meta[name=\"last-modified\"]",
+        "time[itemprop=\"dateModified\"]"
+      ],
+      "description": "Detecteert modified date meta tags",
+      "impact": "medium"
+    }
+  },
+  "regex": {
+    "inlineDate": {
+      "patterns": [
+        "laatst bijgewerkt op\\s+\\d{1,2}[-/]\\d{1,2}[-/]\\d{4}",
+        "updated:\\s+\\w+\\s+\\d{1,2},\\s+\\d{4}",
+        "gepubliceerd op\\s+\\d{1,2}[-/]\\d{1,2}[-/]\\d{4}"
+      ],
+      "description": "Detecteert inline datum patronen",
+      "impact": "low",
+      "flags": "gi"
+    }
+  },
+  "scoring": {
+    "baseScore": 100,
+    "deductions": {
+      "high": 20,
+      "medium": 10,
+      "low": 5
+    }
+  }
+}

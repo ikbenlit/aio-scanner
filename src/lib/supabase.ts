@@ -32,7 +32,7 @@ export interface Database {
       };
       scans: {
         Row: {
-          id: number;
+          id: string;
           user_id: number | null;
           url: string;
           status: string;
@@ -67,7 +67,7 @@ export interface Database {
       scan_modules: {
         Row: {
             id: number;
-            scan_id: number;
+            scan_id: string;
             module_name: string;
             status: string;
             score: number;
@@ -77,7 +77,7 @@ export interface Database {
             completed_at: string | null;
         };
         Insert: {
-            scan_id: number;
+            scan_id: string;
             module_name: string;
             status?: string;
             score?: number;
@@ -131,16 +131,16 @@ export const db = {
   },
 
   // Scans
-  async createScan(url: string, user_id?: number) {
+  async createScan(url: string, scanId: string, user_id?: number, tier: string = 'basic') {
     const supabase = getSupabaseClient();
     return await supabase
       .from('scans')
-      .insert({ url, user_id, status: 'pending', progress: 0 })
+      .insert({ id: scanId, url, user_id, status: 'pending', progress: 0, tier })
       .select()
       .single();
   },
 
-  async updateScanStatus(scanId: number, status: string, result_json?: Json, overall_score?: number) {
+  async updateScanStatus(scanId: string, status: string, result_json?: Json, overall_score?: number) {
     const supabase = getSupabaseClient();
     const updateData: any = { status };
     if (result_json) updateData.result_json = result_json;
@@ -155,7 +155,7 @@ export const db = {
       .single();
   },
 
-  async getScan(scanId: number) {
+  async getScan(scanId: string) {
     const supabase = getSupabaseClient();
     return await supabase
       .from('scans')

@@ -1,0 +1,57 @@
+{
+  "selectors": {
+    "faq": {
+      "patterns": [
+        "[class*=\"faq\" i]",
+        "[id*=\"faq\" i]",
+        "[class*=\"veelgesteld\" i]",
+        "[class*=\"questions\" i]"
+      ],
+      "description": "Detecteert FAQ secties",
+      "impact": "high"
+    },
+    "headings": {
+      "patterns": [
+        "h1",
+        "h2",
+        "h3",
+        "h4",
+        "h5",
+        "h6"
+      ],
+      "description": "Analyseert heading structuur",
+      "impact": "medium"
+    }
+  },
+  "regex": {
+    "personalPronouns": {
+      "patterns": [
+        "\\bje\\b",
+        "\\bjij\\b",
+        "\\bjouw\\b",
+        "\\bu\\b",
+        "\\bwe\\b",
+        "\\bwij\\b"
+      ],
+      "description": "Detecteert conversational tone via persoonlijke voornaamwoorden",
+      "impact": "medium",
+      "flags": "gi"
+    },
+    "questionMarks": {
+      "patterns": [
+        "\\?"
+      ],
+      "description": "Telt vraagmarkeringen voor engagement",
+      "impact": "low",
+      "flags": "g"
+    }
+  },
+  "scoring": {
+    "baseScore": 100,
+    "deductions": {
+      "high": 20,
+      "medium": 10,
+      "low": 5
+    }
+  }
+}

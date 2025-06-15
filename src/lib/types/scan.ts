@@ -41,6 +41,9 @@ export interface ModuleResult {
     name: string;
     score: number;
     findings: Finding[];
+    status?: 'waiting' | 'running' | 'completed' | 'failed';
+    progress?: number;
+    completedAt?: string;
 }
 
 // AI Report interface - moved here for central access
@@ -301,4 +304,14 @@ export interface AnalysisDepth {
     totalPagesAnalyzed: number;
     contentSamples: number;
     patternConsistency: number;
+}
+
+// Helper types voor score berekening
+export interface ScoredResult {
+    score: number;
+}
+
+// Scan module interface
+export interface ScanModule {
+    execute(url: string): Promise<ModuleResult>;
 }

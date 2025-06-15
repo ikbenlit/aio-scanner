@@ -1,6 +1,6 @@
 // src/lib/email/resend.ts
 import { Resend } from 'resend';
-import type { ScanResult } from './templates';
+import type { EmailTemplateResult } from './templates';
 import { generateScanEmailTemplate, generateScanEmailText } from './templates';
 
 interface EmailOptions {
@@ -56,7 +56,7 @@ export class ResendClient {
     }
   }
 
-  async sendScanReport(email: string, scanResult: ScanResult) {
+  async sendScanReport(email: string, scanResult: EmailTemplateResult) {
     try {
       // Generate both HTML and plain text versions
       const html = generateScanEmailTemplate(scanResult);

@@ -1,11 +1,4 @@
-import type { EmailScanResult } from '$lib/types/scan';
-import type { ScanResult as ScanEngineResult } from '$lib/scan/types';
-
-interface Finding {
-  title: string;
-  description: string;
-  impact: 'high' | 'medium' | 'low';
-}
+import type { EmailScanResult, EngineScanResult, Finding } from '$lib/types/scan';
 
 export interface EmailTemplateResult {
   scanId: string;
@@ -21,7 +14,7 @@ export interface EmailTemplateResult {
 }
 
 // Helper functie om scan engine result te converteren naar email template format
-export function convertToEmailFormat(scanResult: ScanEngineResult): EmailTemplateResult {
+export function convertToEmailFormat(scanResult: EngineScanResult): EmailTemplateResult {
   return {
     scanId: scanResult.scanId,
     url: scanResult.url,
@@ -29,7 +22,7 @@ export function convertToEmailFormat(scanResult: ScanEngineResult): EmailTemplat
     createdAt: scanResult.createdAt,
     status: scanResult.status,
     moduleResults: scanResult.moduleResults.map(module => ({
-      name: module.moduleName,
+      name: module.name,
       score: module.score,
       findings: module.findings
     }))
@@ -62,14 +55,15 @@ export function generateScanEmailTemplate(scanResults: EmailTemplateResult): str
         }))
     );
     
-    const impactOrder: Record<Finding['impact'], number> = { 
+    const impactOrder: Record<string, number> = { 
       'high': 0, 
       'medium': 1, 
       'low': 2 
     };
     
     return allFindings
-      .sort((a, b) => impactOrder[a.impact] - impactOrder[b.impact])
+      .filter(finding => finding.impact && impactOrder.hasOwnProperty(finding.impact))
+      .sort((a, b) => impactOrder[a.impact!] - impactOrder[b.impact!])
       .slice(0, 3);
   };
 

@@ -6,7 +6,7 @@
 import { VertexAI } from '@google-cloud/vertexai';
 import { GOOGLE_CLOUD_PROJECT, VERTEX_AI_LOCATION, GOOGLE_APPLICATION_CREDENTIALS } from '$env/static/private';
 import { resolve } from 'path';
-import type { ModuleResult } from '../scan/types.js';
+import type { ModuleResult } from '../types/scan.js';
 import type { EnhancedContent } from '../scan/ContentExtractor.js';
 
 // Phase 3.2A Types

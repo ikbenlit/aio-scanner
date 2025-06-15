@@ -3,7 +3,7 @@ import { getSupabaseConfig } from './config';
 import { PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY } from '$env/static/public';
 
 // Supabase Json type definition, as it's not directly exported in some versions.
-type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
+export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
 
 // Database Types voor TypeScript
 export interface Database {

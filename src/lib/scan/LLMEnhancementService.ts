@@ -1,4 +1,4 @@
-import type { ModuleResult } from './types.js';
+import type { ModuleResult } from '../types/scan.js';
 import type { EnhancedContent } from './ContentExtractor';
 import { VertexAIClient } from '../ai/vertexClient.js';
 import type { 
@@ -197,7 +197,7 @@ export class LLMEnhancementService {
         let analysis = 'Gedetailleerde analyse van je website:\n\n';
         
         moduleResults.forEach(module => {
-            analysis += `${module.moduleName}: ${module.score}/100 - `;
+            analysis += `${module.name}: ${module.score}/100 - `;
             analysis += module.findings.length > 0 ? 
                 `${module.findings.length} verbeterpunten gevonden.\n` : 
                 'Geen grote problemen gevonden.\n';

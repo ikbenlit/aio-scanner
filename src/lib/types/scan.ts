@@ -14,6 +14,11 @@ export type DBScan = Database['public']['Tables']['scans']['Row'] & {
 	ai_insights?: any;
 	narrative_report?: any;
 	cost_tracking?: any;
+	// Phase 3.5 - PDF Tracking
+	pdf_generation_status?: 'pending' | 'generating' | 'completed' | 'failed';
+	last_pdf_generated_at?: string | null;
+	pdf_template_version?: string | null;
+	pdf_url?: string | null;
 };
 export type DBModuleResult = {
     scan_id: string;
@@ -98,6 +103,28 @@ export interface EmailScanResult extends BaseScanResult {
     }[];
     tier?: ScanTier;
     quickWins?: QuickWin[];
+    // Phase 3.5 - PDF Template Support
+    aiNarrative?: {
+        executiveSummary: string;
+        detailedAnalysis: string;
+        implementationRoadmap: string;
+        conclusionNextSteps: string;
+    };
+    includeRecommendations?: boolean;
+    enhancedInsights?: boolean;
+}
+
+// Phase 3.5 - PDF Generation Options
+export interface PDFGenerationOptions {
+    tier: ScanTier;
+    narrativeContent?: NarrativeReport;
+    format?: 'A4' | 'Letter';
+    margin?: {
+        top: number;
+        bottom: number;
+        left: number;
+        right: number;
+    };
 }
 
 // Quick wins voor email templates

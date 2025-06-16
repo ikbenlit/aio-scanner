@@ -593,6 +593,63 @@ GET /api/test/vertex
 
 ---
 
+### 12. PDF Generatie Test - `/api/test/pdf-generation/`
+
+**Doel:** Test de PDF-generatiecapaciteiten per tier.
+
+**Hoe het werkt:**
+- Test de PDF-generatie voor verschillende tiers.
+- Valideert de gegenereerde PDF's voor de business tier.
+- Meet de prestaties van de PDF-generatie voor de enterprise tier.
+
+**Hoe uit te voeren:**
+```bash
+# PDF generatie voor starter tier
+GET /api/test/pdf-generation?tier=starter&test=generate
+
+# PDF validatie voor business tier
+GET /api/test/pdf-generation?tier=business&test=validate
+
+# PDF prestatie test voor enterprise tier
+GET /api/test/pdf-generation?tier=enterprise&test=performance
+```
+
+### 13. Complete PDF Flow Test - `/api/test/pdf-flow/`
+
+**Doel:** Test de complete PDF-verwerkingsflow.
+
+**Hoe het werkt:**
+- Test de PDF-verwerkingsflow met mock data voor de business tier.
+- Test de PDF-verwerkingsflow met een echte URL voor de enterprise tier.
+
+**Hoe uit te voeren:**
+```bash
+# PDF flow test met mock data voor business tier
+GET /api/test/pdf-flow?tier=business&mock=true
+
+# PDF flow test met echte URL voor enterprise tier
+GET /api/test/pdf-flow?tier=enterprise&url=https://example.com
+```
+
+### 14. PDF Toegang - `/api/pdf/[scanId]`
+
+**Doel:** Toegang tot de gegenereerde PDF's.
+
+**Hoe het werkt:**
+- Haal de gegenereerde PDF op via een scanId.
+- Download de PDF met een specifieke e-mail.
+
+**Hoe uit te voeren:**
+```bash
+# Toegang tot PDF met scanId
+GET /api/pdf/[scanId]?email=user@example.com
+
+# Download PDF met scanId
+GET /api/pdf/[scanId]/download?email=user@example.com
+```
+
+---
+
 ## Testing Strategy Overview
 
 ### Development Phases

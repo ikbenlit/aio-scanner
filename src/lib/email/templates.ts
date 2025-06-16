@@ -1,4 +1,4 @@
-import type { EmailScanResult, EngineScanResult, Finding } from '$lib/types/scan';
+import type { EmailScanResult, EngineScanResult, Finding, ScanTier, NarrativeReport } from '$lib/types/scan';
 
 export interface EmailTemplateResult {
   scanId: string;
@@ -11,6 +11,16 @@ export interface EmailTemplateResult {
     score: number;
     findings: Finding[];
   }[];
+  // Phase 3.5 - Tier Support
+  tier?: ScanTier;
+  aiNarrative?: {
+    executiveSummary: string;
+    detailedAnalysis: string;
+    implementationRoadmap: string;
+    conclusionNextSteps: string;
+  };
+  includeRecommendations?: boolean;
+  enhancedInsights?: boolean;
 }
 
 // Helper functie om scan engine result te converteren naar email template format
@@ -25,8 +35,158 @@ export function convertToEmailFormat(scanResult: EngineScanResult): EmailTemplat
       name: module.name,
       score: module.score,
       findings: module.findings
-    }))
+    })),
+    tier: scanResult.tier,
+    aiNarrative: scanResult.narrativeReport ? {
+      executiveSummary: scanResult.narrativeReport.executiveSummary,
+      detailedAnalysis: scanResult.narrativeReport.detailedAnalysis,
+      implementationRoadmap: scanResult.narrativeReport.implementationRoadmap,
+      conclusionNextSteps: scanResult.narrativeReport.conclusionNextSteps
+    } : undefined
   };
+}
+
+// Phase 3.5 - Generate tier-specific content for PDFs
+function generateTierSpecificContent(scanResult: EmailTemplateResult): string {
+  const { tier, aiNarrative } = scanResult;
+  
+  // Basic tier - geen PDF content nodig
+  if (!tier || tier === 'basic') return '';
+  
+  // Starter tier - pattern-based recommendations
+  if (tier === 'starter') {
+    return `
+      <div class="recommendations-section" style="margin-top: 40px; padding: 2rem; background: #f8fafc; border-radius: 12px;">
+        <h2 style="color: #2E9BDA; font-family: 'Orbitron', sans-serif; font-size: 1.25rem; margin-bottom: 1rem; text-align: center;">
+          📋 Aanbevelingen voor Verbetering
+        </h2>
+        ${generatePatternRecommendations(scanResult)}
+      </div>
+    `;
+  }
+  
+  // Business & Enterprise - AI narrative content
+  if ((tier === 'business' || tier === 'enterprise') && aiNarrative) {
+    return `
+      <div class="ai-narrative-container" style="margin-top: 40px;">
+        <div class="narrative-section" style="padding: 2rem; background: #f8fafc; border-radius: 12px; margin-bottom: 2rem;">
+          <h2 style="color: #2E9BDA; font-family: 'Orbitron', sans-serif; font-size: 1.25rem; margin-bottom: 1rem;">
+            🎯 Executive Summary
+          </h2>
+          <div style="line-height: 1.6; color: #333; font-size: 1rem;">
+            ${formatTextForHTML(aiNarrative.executiveSummary)}
+          </div>
+        </div>
+        
+        <div class="narrative-section" style="padding: 2rem; background: white; border: 1px solid #e2e8f0; border-radius: 12px; margin-bottom: 2rem;">
+          <h2 style="color: #2E9BDA; font-family: 'Orbitron', sans-serif; font-size: 1.25rem; margin-bottom: 1rem;">
+            🔍 Detailed Analysis
+          </h2>
+          <div style="line-height: 1.6; color: #333; font-size: 0.95rem; white-space: pre-wrap;">
+            ${formatTextForHTML(aiNarrative.detailedAnalysis)}
+          </div>
+        </div>
+        
+        <div class="roadmap-section" style="padding: 2rem; background: linear-gradient(135deg, rgba(46, 155, 218, 0.05), rgba(0, 245, 255, 0.05)); border-radius: 12px; border-left: 4px solid #2E9BDA; margin-bottom: 2rem;">
+          <h2 style="color: #2E9BDA; font-family: 'Orbitron', sans-serif; font-size: 1.25rem; margin-bottom: 1rem;">
+            🗺️ Implementation Roadmap
+          </h2>
+          <div style="line-height: 1.6; color: #333; font-size: 0.95rem;">
+            ${formatRoadmapSteps(aiNarrative.implementationRoadmap)}
+          </div>
+        </div>
+        
+        <div class="conclusion-section" style="padding: 2rem; background: #f0f9ff; border-radius: 12px; border: 1px solid #2E9BDA;">
+          <h2 style="color: #2E9BDA; font-family: 'Orbitron', sans-serif; font-size: 1.25rem; margin-bottom: 1rem;">
+            🚀 Next Steps
+          </h2>
+          <div style="line-height: 1.6; color: #333; font-size: 0.95rem;">
+            ${formatTextForHTML(aiNarrative.conclusionNextSteps)}
+          </div>
+        </div>
+        
+        ${tier === 'enterprise' ? generateEnhancedInsights(scanResult) : ''}
+      </div>
+    `;
+  }
+  
+  return '';
+}
+
+// Helper functions for content formatting
+function generatePatternRecommendations(scanResult: EmailTemplateResult): string {
+  const allFindings = scanResult.moduleResults.flatMap(module => 
+    module.findings.filter(finding => finding.recommendation)
+  );
+  
+  if (allFindings.length === 0) {
+    return '<p style="color: #64748b; text-align: center;">Geen specifieke aanbevelingen beschikbaar.</p>';
+  }
+  
+  return allFindings.slice(0, 5).map((finding, index) => `
+    <div style="margin-bottom: 1.5rem; padding: 1rem; background: white; border-radius: 8px; border-left: 4px solid #2E9BDA;">
+      <h4 style="color: #1a1a1a; margin-bottom: 0.5rem; font-weight: 600;">
+        ${index + 1}. ${finding.title}
+      </h4>
+      <p style="color: #64748b; margin-bottom: 0.5rem; font-size: 0.9rem;">
+        ${finding.description}
+      </p>
+      ${finding.recommendation ? `
+        <p style="color: #2E9BDA; font-size: 0.9rem; font-weight: 500;">
+          💡 Aanbeveling: ${finding.recommendation}
+        </p>
+      ` : ''}
+    </div>
+  `).join('');
+}
+
+function formatTextForHTML(text: string): string {
+  // Convert line breaks to paragraphs and handle basic formatting
+  return text
+    .split('\n\n')
+    .filter(paragraph => paragraph.trim())
+    .map(paragraph => `<p style="margin-bottom: 1rem;">${paragraph.trim()}</p>`)
+    .join('');
+}
+
+function formatRoadmapSteps(roadmap: string): string {
+  // Try to detect if roadmap contains numbered steps or bullet points
+  const lines = roadmap.split('\n').filter(line => line.trim());
+  
+  if (lines.some(line => /^\d+\./.test(line.trim()))) {
+    // Handle numbered lists
+    return lines.map(line => {
+      if (/^\d+\./.test(line.trim())) {
+        return `<div style="margin-bottom: 1rem; padding: 0.75rem; background: white; border-radius: 6px; border-left: 3px solid #10b981;">
+          <strong style="color: #10b981;">${line.trim()}</strong>
+        </div>`;
+      }
+      return `<p style="margin-bottom: 0.5rem; margin-left: 1rem; color: #64748b;">${line.trim()}</p>`;
+    }).join('');
+  }
+  
+  // Default paragraph formatting
+  return formatTextForHTML(roadmap);
+}
+
+function generateEnhancedInsights(scanResult: EmailTemplateResult): string {
+  return `
+    <div class="enhanced-insights" style="margin-top: 2rem; padding: 2rem; background: linear-gradient(135deg, #1e293b, #334155); color: white; border-radius: 12px;">
+      <h2 style="color: #f1f5f9; font-family: 'Orbitron', sans-serif; font-size: 1.25rem; margin-bottom: 1rem; text-align: center;">
+        ⭐ Enterprise Enhanced Insights
+      </h2>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem;">
+        <div style="padding: 1rem; background: rgba(255, 255, 255, 0.1); border-radius: 8px;">
+          <h4 style="color: #60a5fa; margin-bottom: 0.5rem;">🏆 Competitive Advantage</h4>
+          <p style="font-size: 0.9rem; line-height: 1.5;">Advanced AI-powered analysis identifies unique optimization opportunities not available in standard reports.</p>
+        </div>
+        <div style="padding: 1rem; background: rgba(255, 255, 255, 0.1); border-radius: 8px;">
+          <h4 style="color: #34d399; margin-bottom: 0.5rem;">📊 Strategic Metrics</h4>
+          <p style="font-size: 0.9rem; line-height: 1.5;">Detailed ROI calculations and implementation timelines for each recommendation.</p>
+        </div>
+      </div>
+    </div>
+  `;
 }
 
 export function generateScanEmailTemplate(scanResults: EmailTemplateResult): string {
@@ -68,6 +228,9 @@ export function generateScanEmailTemplate(scanResults: EmailTemplateResult): str
   };
 
   const topFindings = getPriorityFindings(moduleResults);
+
+  // Phase 3.5 - Tier-specific content generation
+  const tierSpecificContent = generateTierSpecificContent(scanResults);
 
   return `
 <!DOCTYPE html>
@@ -392,6 +555,9 @@ export function generateScanEmailTemplate(scanResults: EmailTemplateResult): str
       `).join('')}
     </div>
     ` : ''}
+
+    <!-- Phase 3.5 - Tier-specific content -->
+    ${tierSpecificContent}
 
     <!-- CTA Section -->
     <div class="cta-section">

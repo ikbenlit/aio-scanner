@@ -2,19 +2,27 @@
 -- Table order and constraints may not be valid for execution.
 
 CREATE TABLE public.scan_modules (
-  scan_id bigint NOT NULL,
   module_name text NOT NULL,
   status text DEFAULT 'waiting'::text,
   score integer,
   findings jsonb,
   progress integer DEFAULT 0,
   completed_at timestamp with time zone,
-  CONSTRAINT scan_modules_pkey PRIMARY KEY (scan_id, module_name),
+  scan_id uuid NOT NULL,
+  CONSTRAINT scan_modules_pkey PRIMARY KEY (module_name, scan_id),
   CONSTRAINT scan_modules_scan_id_fkey FOREIGN KEY (scan_id) REFERENCES public.scans(id)
+);
+CREATE TABLE public.scan_modules_backup (
+  scan_id bigint,
+  module_name text,
+  status text,
+  score integer,
+  findings jsonb,
+  progress integer,
+  completed_at timestamp with time zone
 );
 CREATE TABLE public.scan_payments (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
-  scan_id bigint NOT NULL,
   tier text NOT NULL CHECK (tier = ANY (ARRAY['starter'::text, 'business'::text, 'enterprise'::text])),
   amount numeric NOT NULL,
   mollie_payment_id text UNIQUE,
@@ -23,11 +31,11 @@ CREATE TABLE public.scan_payments (
   created_at timestamp with time zone DEFAULT now(),
   paid_at timestamp with time zone,
   metadata jsonb DEFAULT '{}'::jsonb,
+  scan_id uuid,
   CONSTRAINT scan_payments_pkey PRIMARY KEY (id),
   CONSTRAINT scan_payments_scan_id_fkey FOREIGN KEY (scan_id) REFERENCES public.scans(id)
 );
 CREATE TABLE public.scans (
-  id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
   user_id bigint,
   url text NOT NULL,
   status text DEFAULT 'pending'::text,
@@ -49,13 +57,38 @@ CREATE TABLE public.scans (
   tier text DEFAULT 'basic'::text CHECK (tier = ANY (ARRAY['basic'::text, 'starter'::text, 'business'::text, 'enterprise'::text])),
   payment_reference text,
   user_email text,
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
   CONSTRAINT scans_pkey PRIMARY KEY (id),
   CONSTRAINT scans_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id)
+);
+CREATE TABLE public.scans_backup (
+  id bigint,
+  user_id bigint,
+  url text,
+  status text,
+  overall_score integer,
+  result_json jsonb,
+  created_at timestamp with time zone,
+  completed_at timestamp with time zone,
+  email_sent boolean,
+  email_sent_at timestamp without time zone,
+  email_template_version text,
+  progress integer,
+  email_captured text,
+  email_captured_at timestamp with time zone,
+  enforcement_key text,
+  email character varying,
+  email_error text,
+  email_message_id character varying,
+  screenshot text,
+  tier text,
+  payment_reference text,
+  user_email text
 );
 CREATE TABLE public.user_scan_history (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
   email text NOT NULL UNIQUE,
-  scan_ids ARRAY DEFAULT ARRAY[]::bigint[],
+  scan_ids ARRAY DEFAULT ARRAY[]::uuid[],
   first_scan_at timestamp with time zone DEFAULT now(),
   last_scan_at timestamp with time zone DEFAULT now(),
   total_scans integer DEFAULT 0,

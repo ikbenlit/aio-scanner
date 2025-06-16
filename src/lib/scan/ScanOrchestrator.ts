@@ -13,7 +13,8 @@ import { CrossWebFootprintModule } from './modules/CrossWebFootprintModule';
 import { ContentExtractor } from './ContentExtractor';
 import { LLMEnhancementService, type AIInsights, type MissedOpportunity, type AuthorityEnhancement } from './LLMEnhancementService.js';
 import type { NarrativeReport } from '../types/scan.js';
-// import { NarrativePDFGenerator } from '../pdf/narrativeGenerator.js'; // Wordt in latere stap geactiveerd
+import { TierAwarePDFGenerator } from '../pdf/generator.js';
+import { supabase } from '../supabase.js';
 
 export class ScanOrchestrator {
     private modules: ScanModule[] = [
@@ -28,6 +29,7 @@ export class ScanOrchestrator {
     private aiReportGenerator = new AIReportGenerator();
     private contentExtractor = new ContentExtractor();
     private llmEnhancementService = new LLMEnhancementService();
+    private pdfGenerator = new TierAwarePDFGenerator();
 
     // Legacy method - blijft behouden voor backwards compatibility
     async executeScan(url: string, scanId: string): Promise<void> {
@@ -156,11 +158,19 @@ export class ScanOrchestrator {
             moduleResults: allResults
         });
 
-        return {
+        const starterResult = {
             ...basicResult,
             moduleResults: allResults,
             aiReport,
             tier: 'starter' as const
+        };
+
+        // Phase 3.5 - Generate PDF for starter tier
+        const pdfUrl = await this.generateAndStorePDF(starterResult, 'starter');
+        
+        return {
+            ...starterResult,
+            pdfUrl
         };
     }
 
@@ -213,7 +223,7 @@ export class ScanOrchestrator {
             console.log(`✅ Business scan completed in ${costTracking.scanDuration}ms`);
             console.log(`💰 Estimated AI cost: €${costTracking.aiCost.toFixed(4)}`);
 
-            return {
+            const businessResult = {
                 scanId,
                 url,
                 status: 'completed',
@@ -226,6 +236,14 @@ export class ScanOrchestrator {
                 aiInsights: insights,
                 narrativeReport: narrative,
                 costTracking
+            };
+
+            // Phase 3.5 - Generate PDF for business tier
+            const pdfUrl = await this.generateAndStorePDF(businessResult, 'business', narrative);
+
+            return {
+                ...businessResult,
+                pdfUrl
             };
 
         } catch (error: unknown) {
@@ -292,7 +310,7 @@ export class ScanOrchestrator {
             console.log(`✅ Enterprise scan completed in ${enterpriseCostTracking.scanDuration}ms`);
             console.log(`💰 Enterprise AI cost: €${enterpriseCostTracking.aiCost.toFixed(4)}`);
 
-            return {
+            const enterpriseResult = {
                 ...businessResult,
                 tier: 'enterprise',
                 enterpriseFeatures: enterpriseEnhancements,
@@ -305,6 +323,14 @@ export class ScanOrchestrator {
                     enterpriseNarrative,
                     enterpriseEnhancements
                 )
+            };
+
+            // Phase 3.5 - Generate PDF for enterprise tier
+            const pdfUrl = await this.generateAndStorePDF(enterpriseResult, 'enterprise', enterpriseNarrative);
+
+            return {
+                ...enterpriseResult,
+                pdfUrl
             };
 
         } catch (error: unknown) {
@@ -898,6 +924,144 @@ RESPONSE FORMAT (JSON):
             };
         } catch (error) {
             console.error('LLM content generation failed:', error);
+            return null;
+        }
+    }
+
+    /**
+     * Phase 3.5 - Generate and store PDF for paid tiers
+     */
+    private async generateAndStorePDF(
+        scanResult: EngineScanResult,
+        tier: ScanTier,
+        narrative?: NarrativeReport
+    ): Promise<string | null> {
+        
+        if (tier === 'basic') {
+            console.log('📄 PDF generation skipped for basic tier');
+            return null;
+        }
+        
+        console.log(`📄 Starting PDF generation for ${tier} tier...`);
+        
+        try {
+            // Update PDF generation status
+            await supabase
+                .from('scans')
+                .update({ 
+                    pdf_generation_status: 'generating',
+                    pdf_template_version: '1.0'
+                })
+                .eq('id', scanResult.scanId);
+            
+            // Generate PDF using TierAwarePDFGenerator
+            const pdfBuffer = await this.pdfGenerator.generatePDF(scanResult, tier, narrative);
+            
+            // Generate unique file path
+            const timestamp = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+            const pdfPath = `reports/${timestamp}/${scanResult.scanId}/${tier}-report.pdf`;
+            
+            console.log(`💾 Uploading PDF to storage: ${pdfPath}`);
+            
+            // Upload to Supabase Storage
+            const { data: uploadData, error: uploadError } = await supabase.storage
+                .from('scan-reports')
+                .upload(pdfPath, pdfBuffer, {
+                    contentType: 'application/pdf',
+                    upsert: true
+                });
+                
+            if (uploadError) {
+                console.error('PDF upload failed:', uploadError);
+                throw uploadError;
+            }
+            
+            console.log('✅ PDF uploaded successfully:', uploadData);
+            
+            // Get public URL
+            const { data: { publicUrl } } = supabase.storage
+                .from('scan-reports')
+                .getPublicUrl(pdfPath);
+                
+            console.log('🔗 PDF public URL generated:', publicUrl);
+            
+            // Update scan record with PDF details
+            await supabase
+                .from('scans')
+                .update({ 
+                    pdf_generation_status: 'completed',
+                    last_pdf_generated_at: new Date().toISOString(),
+                    pdf_url: publicUrl,
+                    pdf_file_size: pdfBuffer.length
+                })
+                .eq('id', scanResult.scanId);
+                
+            console.log(`✅ PDF generation completed for ${tier} tier: ${publicUrl}`);
+            return publicUrl;
+            
+        } catch (error: unknown) {
+            console.error(`❌ PDF generation failed for ${tier} tier:`, error);
+            
+            // Update status to failed
+            await supabase
+                .from('scans')
+                .update({ 
+                    pdf_generation_status: 'failed'
+                })
+                .eq('id', scanResult.scanId);
+                
+            // Don't throw error - PDF generation failure shouldn't fail the entire scan
+            return null;
+        }
+    }
+
+    /**
+     * Phase 3.5 - Generate PDF after scan completion for paid tiers
+     */
+    async generatePDFForScan(scanId: string): Promise<string | null> {
+        try {
+            // Fetch scan details from database
+            const { data: scan, error } = await supabase
+                .from('scans')
+                .select('*')
+                .eq('id', scanId)
+                .single();
+                
+            if (error || !scan) {
+                console.error('Scan not found for PDF generation:', scanId);
+                return null;
+            }
+            
+            if (scan.tier === 'basic') {
+                console.log('PDF generation not available for basic tier');
+                return null;
+            }
+            
+            // Reconstruct scan result from database
+            const scanResult: EngineScanResult = {
+                scanId: scan.id,
+                url: scan.url,
+                status: scan.status as any,
+                overallScore: scan.overall_score || 0,
+                createdAt: scan.created_at,
+                completedAt: scan.completed_at || undefined,
+                tier: scan.tier as ScanTier,
+                moduleResults: [], // Would need to fetch from scan_modules table
+                aiReport: scan.ai_report ? JSON.parse(scan.ai_report) : undefined,
+                aiInsights: scan.ai_insights ? JSON.parse(scan.ai_insights) : undefined,
+                narrativeReport: scan.narrative_report ? JSON.parse(scan.narrative_report) : undefined,
+                costTracking: scan.cost_tracking ? JSON.parse(scan.cost_tracking) : undefined
+            };
+            
+            // Generate PDF
+            return await this.generateAndStorePDF(
+                scanResult,
+                scan.tier as ScanTier,
+                scanResult.narrativeReport
+            );
+            
+        } catch (error) {
+            console.error('PDF generation for scan failed:', error);
             return null;
         }
     }

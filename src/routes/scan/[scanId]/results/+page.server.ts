@@ -8,8 +8,11 @@ interface ScanModule {
   icon?: string;
   score: number;
   findings: Array<{
-    type: 'success' | 'warning' | 'error';
-    message: string;
+    type?: 'success' | 'warning' | 'error';
+    priority?: 'high' | 'medium' | 'low';
+    title: string;
+    description: string;
+    message?: string;
   }>;
 }
 

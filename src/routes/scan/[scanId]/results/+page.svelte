@@ -12,11 +12,13 @@
   
   interface ScanModule {
     id?: string;
-    moduleName: string;
+    moduleName?: string;
+    name?: string;
     icon?: string;
     score: number;
     findings: Array<{
-      type: 'success' | 'warning' | 'error';
+      type?: 'success' | 'warning' | 'error';
+      priority?: 'high' | 'medium' | 'low';
       title: string;
       description: string;
     }>;
@@ -127,6 +129,40 @@
     expandedStates[moduleId] = !expandedStates[moduleId];
   }
 
+  // Module name normalization function
+  function normalizeModuleName(name: string): string {
+    // Convert camelCase to space-separated words
+    return name
+      .replace(/([A-Z])/g, ' $1')
+      .replace(/^\s+/, '')
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+
+  // Find matching module data for each moduleItem
+  function getModuleData(moduleItem: ModuleItem): ScanModule | undefined {
+    return scan.moduleResults.find(result => {
+      const normalizedResultName = normalizeModuleName(result.moduleName || result.name || '');
+      const normalizedItemName = moduleItem.name;
+      
+      // Direct name match
+      if (normalizedResultName === normalizedItemName) return true;
+      
+      // Specific mappings for edge cases
+      const mappings: Record<string, string[]> = {
+        'Technical SEO': ['TechnicalSEO', 'Technical SEO'],
+        'Schema Markup': ['SchemaMarkup', 'Schema Markup'],
+        'AI Content': ['AIContent', 'AI Content'],
+        'AI Citation': ['AICitation', 'AI Citation'],
+        'Cross-web Presence': ['CrossWebFootprint', 'Cross Web Footprint'],
+        'Content Freshness': ['Freshness', 'Content Freshness']
+      };
+      
+      const possibleNames = mappings[normalizedItemName] || [];
+      return possibleNames.includes(result.moduleName || result.name || '');
+    });
+  }
+
   // Helper functie voor default icons (kan verwijderd worden als we de nieuwe mapping gebruiken)
   function getDefaultIcon(moduleName: string): string {
     const icons: Record<string, string> = {
@@ -140,6 +176,20 @@
       'Analytics': '📊'
     };
     return icons[moduleName] || '📊';
+  }
+
+  // Convert priority to type for consistent display
+  function priorityToType(priority: string): 'success' | 'warning' | 'error' {
+    switch (priority) {
+      case 'low':
+        return 'success';
+      case 'medium':
+        return 'warning';
+      case 'high':
+        return 'error';
+      default:
+        return 'warning';
+    }
   }
 </script>
 
@@ -237,7 +287,7 @@
             </div>
             
             <div class="flex items-center gap-3">
-              {#if module.id === 'technical_seo' || module.id === 'schema_markup' || module.id === 'ai_content' || module.id === 'ai_citation'}
+              {#if getModuleData(module)}
                 <span class="px-3 py-1 rounded-full text-sm font-semibold bg-green-100 text-green-700">
                   Geïmplementeerd
                 </span>
@@ -263,56 +313,48 @@
           <!-- Module Content - Collapsible -->
           {#if expandedStates[module.id]}
             <div class="mt-4 pl-4 border-l-2 border-gray-100">
-              {#if module.id === 'technical_seo' || module.id === 'schema_markup' || module.id === 'ai_content' || module.id === 'ai_citation'}
-                {#each scan.moduleResults.filter(m => {
-                  console.log('Checking module:', m.moduleName, 'against', module.id);
-                  return (
-                    (module.id === 'technical_seo' && m.moduleName === 'Technical SEO') ||
-                    (module.id === 'schema_markup' && m.moduleName === 'Schema Markup') ||
-                    (module.id === 'ai_content' && m.moduleName === 'AI Content') ||
-                    (module.id === 'ai_citation' && m.moduleName === 'AI Citation')
-                  );
-                }) as result}
-                  {#if result.findings && result.findings.length > 0}
-                    <div class="space-y-3">
-                      {#each result.findings as finding}
-                        <div class="flex items-start gap-3 p-4 rounded-lg" 
-                          class:bg-green-50={finding.type === 'success'}
-                          class:bg-yellow-50={finding.type === 'warning'}
-                          class:bg-red-50={finding.type === 'error'}
-                        >
-                          <span class="mt-0.5 text-lg">
-                            {#if finding.type === 'success'}
-                              <span class="text-green-500">✓</span>
-                            {:else if finding.type === 'warning'}
-                              <span class="text-yellow-500">⚠️</span>
-                            {:else}
-                              <span class="text-red-500">✗</span>
-                            {/if}
-                          </span>
-                          <div class="flex-1">
-                            <p class="text-sm font-medium mb-1" 
-                              class:text-green-700={finding.type === 'success'}
-                              class:text-yellow-700={finding.type === 'warning'}
-                              class:text-red-700={finding.type === 'error'}
-                            >
-                              {finding.title}
-                            </p>
-                            <p class="text-sm" 
-                              class:text-green-600={finding.type === 'success'}
-                              class:text-yellow-600={finding.type === 'warning'}
-                              class:text-red-600={finding.type === 'error'}
-                            >
-                              {finding.description}
-                            </p>
-                          </div>
+              {#if getModuleData(module)}
+                {@const moduleData = getModuleData(module)}
+                {#if moduleData && moduleData.findings && moduleData.findings.length > 0}
+                  <div class="space-y-3">
+                    {#each moduleData.findings as finding}
+                      {@const displayType = finding.type || priorityToType(finding.priority || 'medium')}
+                      <div class="flex items-start gap-3 p-4 rounded-lg" 
+                        class:bg-green-50={displayType === 'success'}
+                        class:bg-yellow-50={displayType === 'warning'}
+                        class:bg-red-50={displayType === 'error'}
+                      >
+                        <span class="mt-0.5 text-lg">
+                          {#if displayType === 'success'}
+                            <span class="text-green-500">✓</span>
+                          {:else if displayType === 'warning'}
+                            <span class="text-yellow-500">⚠️</span>
+                          {:else}
+                            <span class="text-red-500">✗</span>
+                          {/if}
+                        </span>
+                        <div class="flex-1">
+                          <p class="text-sm font-medium mb-1" 
+                            class:text-green-700={displayType === 'success'}
+                            class:text-yellow-700={displayType === 'warning'}
+                            class:text-red-700={displayType === 'error'}
+                          >
+                            {finding.title}
+                          </p>
+                          <p class="text-sm" 
+                            class:text-green-600={displayType === 'success'}
+                            class:text-yellow-600={displayType === 'warning'}
+                            class:text-red-600={displayType === 'error'}
+                          >
+                            {finding.description}
+                          </p>
                         </div>
-                      {/each}
-                    </div>
-                  {:else}
-                    <p class="text-sm text-gray-500 italic p-4">Geen specifieke bevindingen voor deze module.</p>
-                  {/if}
-                {/each}
+                      </div>
+                    {/each}
+                  </div>
+                {:else}
+                  <p class="text-sm text-gray-500 italic p-4">Geen specifieke bevindingen voor deze module.</p>
+                {/if}
               {:else}
                 <div class="p-4 bg-gray-50 rounded-lg">
                   <p class="text-sm text-gray-600">

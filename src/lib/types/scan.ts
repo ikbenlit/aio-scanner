@@ -3,6 +3,9 @@ import type { Database } from '../supabase';
 import type { ScanTier } from '../types/database';
 import type { MissedOpportunity, AuthorityEnhancement, CitabilityImprovement } from '../scan/LLMEnhancementService';
 
+// Re-export ScanTier for convenience
+export type { ScanTier } from '../types/database';
+
 // Database row types - extended with new columns from Phase 1
 // TODO: Add these columns to the actual database schema
 export type DBScan = Database['public']['Tables']['scans']['Row'] & {

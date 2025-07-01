@@ -2,6 +2,7 @@
 import { chromium } from 'playwright';
 import type { EngineScanResult, ScanTier, NarrativeReport, PDFGenerationOptions } from '$lib/types/scan';
 import { generateScanEmailTemplate, convertToEmailFormat, type EmailTemplateResult } from '$lib/email/templates';
+import { NarrativePDFGenerator } from './narrativeGenerator.js';
 
 interface PDFOptions {
   filename: string;
@@ -114,6 +115,8 @@ export async function generateSimplePDF(htmlContent: string): Promise<Buffer> {
 
 // Phase 3.5 - Tier-aware PDF Generator
 export class TierAwarePDFGenerator {
+  private narrativeGenerator = new NarrativePDFGenerator();
+
   async generatePDF(
     scanResult: EngineScanResult,
     tier: ScanTier,
@@ -160,88 +163,19 @@ export class TierAwarePDFGenerator {
     scanResult: EngineScanResult, 
     narrative: NarrativeReport
   ): Promise<Buffer> {
-    const templateData: EmailTemplateResult = {
-      ...convertToEmailFormat(scanResult),
-      aiNarrative: this.formatNarrativeForPDF(narrative),
-      includeRecommendations: true,
-      tier: 'business'
-    };
-    
-    const html = generateScanEmailTemplate(templateData);
-    return await generatePDFFromHTML(html, {
-      filename: `ai-report-business-${scanResult.scanId}.pdf`,
-      websiteUrl: scanResult.url,
-      format: 'A4',
-      margin: { top: '0.8in', bottom: '0.8in', left: '0.6in', right: '0.6in' }
-    });
+    // Use dedicated narrative PDF generator instead of email template
+    return await this.narrativeGenerator.generateBusinessReport(scanResult, narrative);
   }
   
   private async generateEnterprisePDF(
     scanResult: EngineScanResult,
     narrative: NarrativeReport
   ): Promise<Buffer> {
-    const templateData: EmailTemplateResult = {
-      ...convertToEmailFormat(scanResult),
-      aiNarrative: this.formatNarrativeForPDF(narrative),
-      enhancedInsights: true,
-      includeRecommendations: true,
-      tier: 'enterprise'
-    };
-    
-    const html = generateScanEmailTemplate(templateData);
-    return await generatePDFFromHTML(html, {
-      filename: `ai-report-enterprise-${scanResult.scanId}.pdf`,
-      websiteUrl: scanResult.url,
-      format: 'A4',
-      margin: { top: '0.8in', bottom: '0.8in', left: '0.6in', right: '0.6in' }
-    });
+    // Use dedicated narrative PDF generator instead of email template
+    return await this.narrativeGenerator.generateEnterpriseReport(scanResult, narrative);
   }
   
-  private formatNarrativeForPDF(narrative: NarrativeReport) {
-    return {
-      executiveSummary: this.wrapTextForPDF(narrative.executiveSummary),
-      detailedAnalysis: this.formatAnalysisSection(narrative.detailedAnalysis),
-      implementationRoadmap: this.formatRoadmap(narrative.implementationRoadmap),
-      conclusionNextSteps: this.wrapTextForPDF(narrative.conclusionNextSteps)
-    };
-  }
-  
-  private wrapTextForPDF(text: string): string {
-    // Ensure proper line breaks and paragraph spacing for PDF rendering
-    return text
-      .replace(/\n{3,}/g, '\n\n') // Limit consecutive line breaks
-      .replace(/(.{80,100})\s/g, '$1\n') // Soft wrap long lines
-      .trim();
-  }
-  
-  private formatAnalysisSection(analysis: string): string {
-    // Handle longer analysis text with better formatting
-    const paragraphs = analysis.split('\n\n').filter(p => p.trim());
-    
-    return paragraphs
-      .map(paragraph => this.wrapTextForPDF(paragraph))
-      .join('\n\n');
-  }
-  
-  private formatRoadmap(roadmap: string): string {
-    // Preserve numbered lists and bullet points
-    const lines = roadmap.split('\n').filter(line => line.trim());
-    
-    return lines
-      .map(line => {
-        // Preserve numbered items
-        if (/^\d+\./.test(line.trim())) {
-          return line.trim();
-        }
-        // Preserve bullet points
-        if (/^[-•*]/.test(line.trim())) {
-          return line.trim();
-        }
-        // Wrap regular text
-        return this.wrapTextForPDF(line.trim());
-      })
-      .join('\n');
-  }
+  // Legacy methods removed - now handled by NarrativePDFGenerator
   
   // Utility method for getting PDF options by tier
   static getPDFOptionsByTier(tier: ScanTier, scanId: string, url: string): PDFOptions {

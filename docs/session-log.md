@@ -1,6 +1,5 @@
-
 SESSIONLOG-Template
-### <📅 yyyy-mm-dd UU:MM - Session #> | <Session omschrijving>
+### <📅 DATUM UU:MM - Session #> | <Session omschrijving>
 
 **Focus:** <wat was de focus van deze sessie>
 **Goal:** <Wat is bereikt in deze sessie>
@@ -18,48 +17,85 @@ SESSIONLOG-Template
 
 **Lessons Learned:**
 
-**Next Phase:** 
-
 ---
-### 📅 16-06-2025 14:15 - Session #4 | Phase 3.5 AI-Powered PDF Assembly Implementation
 
-**Focus:** Complete implementatie van tier-based PDF generatie systeem
-**Goal:** Voltooien van alle 7 sub-fasen van Phase 3.5 voor production-ready PDF functionality
+### 📅 01-07-2025 07:25 - Session 2 | PDF Storage Upload Fix - Production Ready
+
+**Focus:** PDF upload storage error diagnose en definitieve oplossing  
+**Goal:** Volledige PDF pipeline werkend maken voor alle betaalde tiers
 
 **🏆 MAJOR ACHIEVEMENTS:**
-- [x] **Complete Phase 3.5 AI-Powered PDF Assembly implementatie**
-  - ✅ Alle 7 sub-fasen volledig geïmplementeerd (2u10min totaal)
-  - ✅ TypeScript types uitgebreid voor tier-based PDFs
-  - ✅ Email templates uitgebreid met AI narrative content rendering
-  - ✅ TierAwarePDFGenerator class met tier-specific PDF generatie
-  - ✅ Database migration voor PDF tracking kolommen
-  - ✅ Supabase Storage integratie met georganiseerde file paths
-  - ✅ Secure API endpoints voor PDF access en download
-  - ✅ Comprehensive test infrastructure voor validatie
+- [x] **PDF Upload Error Root Cause Geïdentificeerd**
+  - ✅ Storage bucket `scan-reports` bestond wel
+  - ✅ RLS (Row Level Security) policies blokkeerden uploads 
+  - ✅ 403 Unauthorized error door missing INSERT policies
+  - ✅ Code implementatie was correct, infrastructuur ontbrak
+
+- [x] **Storage Policies Geconfigureerd**
+  - ✅ SELECT policy voor public URL toegang
+  - ✅ INSERT policy voor PDF uploads
+  - ✅ Target roles: alle publieke gebruikers
+  - ✅ Policy definition: `bucket_id = 'scan-reports'`
+
+- [x] **Complete PDF Pipeline Verificatie**
+  - ✅ Starter tier: PDF genereert en upload succesvol
+  - ✅ Business tier: PDF genereert en upload succesvol  
+  - ✅ Enterprise tier: PDF genereert en upload succesvol
+  - ✅ Public URLs toegankelijk (HTTP 200, application/pdf)
 
 **Key Technical Wins:**
-- ✅ **Hergebruik bestaand PDF systeem**: Playwright-based generator bleek al enterprise-grade - geen nieuwe engine nodig
-- ✅ **Tier-specific content rendering**: Conditional HTML rendering voor Starter (pattern-based) vs Business/Enterprise (AI narrative)
-- ✅ **Production-ready storage**: Organized file paths (reports/YYYY-MM-DD/scanId/tier-report.pdf) met proper metadata tracking
-- ✅ **Secure access control**: Email-based PDF access met comprehensive error handling
-- ✅ **Complete test coverage**: Mock testing, performance benchmarks, error handling validation
+- ✅ **Smart Debugging**: Test script isoleerde storage van code issues
+- ✅ **Supabase RLS Understanding**: Default security policies vereisen expliciete configuratie
+- ✅ **End-to-End Validation**: Alle tiers getest van generatie tot download
+- ✅ **Public URL Access**: PDFs direct downloadbaar via browser
 
 **Scope Management Success:**
-- 🚫 **"Nieuwe PDF layout engine" mythe**: Documentatie was incorrect - bestaande Playwright system perfect geschikt
-- ✅ **Pragmatische aanpak**: Hergebruik van bestaande email template system voor PDF content
-- ✅ **Efficient implementation**: 2u10min vs geschatte complexiteit door smart reuse
+- 🚫 **Code Refactoring**: PDF generation code was al correct, geen wijzigingen nodig
+- ✅ **Infrastructure Fix**: 5-minuten oplossing vs dagen code debugging
+- ✅ **Production Ready**: Immediate deploy mogelijk na policy fix
 
 **Lessons Learned:**
-- Bestaande infrastructure analyse voorkomt onnodige complexity - Playwright PDF system was al production-grade
-- Template sharing tussen email en PDF systemen zorgt voor consistency en minder maintenance
-- Tier-based conditional rendering in templates eleganter dan separate template bestanden
-- Database migrations voor feature tracking (PDF status) essentieel voor production monitoring
-- Test endpoints kritiek voor validatie van complexe PDF generation flows
+- Supabase storage buckets hebben default RLS enabled - altijd policies configureren
+- 403 errors bij storage uploads zijn meestal policy issues, niet code bugs
+- Infrastructure problems kunnen code problems imiteren - isoleer componenten bij debugging
+- Test scripts voor storage zijn essentieel voor infrastructure validation
 
-**Next Phase:** 
-Phase 4 Frontend Enhancement - PricingSection fix (Priority 1) en tier-specific results page rendering
+**Next Phase:** Frontend download UI implementatie en email PDF link integratie
 
 ---
+
+### 📅 01-07-2025 - Session 1 | PDF Pipeline Cleanup & Production Ready
+
+**Focus:** PDF implementatie finaliseren en production-ready maken  
+**Goal:** Schone database setup en werkende PDF pipeline voor nieuwe scans
+
+**🏆 MAJOR ACHIEVEMENTS:**
+- [x] **PDF Database Cleanup Volledig**
+  - ✅ Alle 68 test/dev scans geclassificeerd als development/N/A
+  - ✅ Database constraint gefixed voor nieuwe PDF statuses
+  - ✅ Migration scripts succesvol uitgevoerd (003 + 004)
+  - ✅ Schone state voor toekomstige production scans
+
+**Key Technical Wins:**
+- ✅ **Smart Development Approach**: Erkend dat test scans geen PDF nodig hebben
+- ✅ **Constraint Fix Strategy**: Eerst constraint updaten, dan data wijzigen
+- ✅ **Migration Dependency Resolution**: Supabase migrations table dependency verwijderd
+- ✅ **Production-Ready State**: PDF pipeline klaar voor echte gebruikers
+
+**Scope Management Success:**
+- 🚫 **Onnodige PDF generatie voor test data**: 68 scans hoefden geen PDF (tijd bespaard)
+- ✅ **Focus op nieuwe scans**: Vanaf nu krijgen alleen betaalde scans automatisch PDFs
+
+**Lessons Learned:**
+- Development vs production data heeft verschillende behandeling nodig
+- Constraint violations kunnen voorkomen worden door goede migratie volgorde
+- Supabase migrations table is optioneel voor onze setup
+- Pragmatische aanpak (test scans = development) bespaart veel tijd en complexiteit
+
+**Next Phase:** 
+
+---
+
 ### 📅 15-06-2025 20:30 - Session #3 | ScanOrchestrator TypeScript & Linting Cleanup
 
 **Focus:** TypeScript compliance en linting issues oplossen in ScanOrchestrator.ts
@@ -99,6 +135,7 @@ Resterende 155 TypeScript errors zijn voornamelijk test file issues (Jest/Vitest
 
 ---
 
+
 ## Probleem
 `npm run check` faalde met 182 TypeScript errors door conflicterende type definities tussen `src/lib/scan/types.ts` en `src/lib/types/scan.ts`.
 
@@ -136,3 +173,34 @@ Resterende 155 TypeScript errors zijn voornamelijk test file issues (Jest/Vitest
 - `src/lib/scan/types.ts` - Verwijderd
 
 ## Tijd: 15 minuten
+
+### 📅 01-07-2025 08:30 - Session #3 | PDF Template Refactor & On-Demand Download
+
+**Focus:** Implement AI-specific PDF templates and enable visual validation of generated reports.
+**Goal:** Refactor PDF generation logic for maintainability and provide a way to directly download/view test PDFs.
+
+**🏆 MAJOR ACHIEVEMENTS:**
+- [x] **PDF Template Architecture Refactored**
+  - ✅ Created `NarrativePDFGenerator` for AI-enhanced `business` & `enterprise` reports.
+  - ✅ Separated AI content templating from core PDF generation logic (SoC).
+  - ✅ `TierAwarePDFGenerator` now delegates to the specialist generator, cleaning up the main class.
+
+- [x] **On-Demand PDF Download Implemented**
+  - ✅ Enhanced the `/api/test/pdf-generation` endpoint with a `?download=true` parameter.
+  - ✅ Developers can now instantly download and visually inspect generated PDFs for any tier.
+  - ✅ Eliminates the need to check storage buckets for visual validation during development.
+
+**Key Technical Wins:**
+- ✅ **Separation of Concerns (SoC)**: `narrativeGenerator.ts` now exclusively handles AI content layout, making the system more modular and easier to maintain.
+- ✅ **Improved Developer Experience (DX)**: The on-demand download feature significantly speeds up the feedback loop for template design and debugging.
+- ✅ **Hot Reload Debugging**: Successfully diagnosed and resolved a Vite server hot-reload issue by forcing a restart, a crucial troubleshooting step.
+
+**Scope Management Success:**
+- 🚫 **No changes to core AI logic**: The focus remained purely on the presentation layer (the PDF template) without altering the underlying data generation.
+- ✅ **Leveraged existing infrastructure**: Built upon the existing test endpoint instead of creating a new one from scratch.
+
+**Lessons Learned:**
+- When API behavior doesn't match code changes, a stale server process (hot-reload failure) is a primary suspect. A quick restart is often the fastest fix.
+- Providing developers with tools to *see* the output of their work (like a direct download) is a massive productivity booster.
+
+---

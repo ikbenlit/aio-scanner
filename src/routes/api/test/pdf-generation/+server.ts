@@ -6,8 +6,9 @@ import type { RequestHandler } from './$types';
 export const GET: RequestHandler = async ({ url }) => {
   const tier = url.searchParams.get('tier') || 'starter';
   const test = url.searchParams.get('test') || 'basic';
+  const download = url.searchParams.get('download') === 'true';
   
-  console.log(`🧪 Testing PDF generation for tier: ${tier}, test: ${test}`);
+  console.log(`🧪 Testing PDF generation for tier: ${tier}, test: ${test}, download: ${download}`);
   
   try {
     const pdfGenerator = new TierAwarePDFGenerator();
@@ -17,6 +18,11 @@ export const GET: RequestHandler = async ({ url }) => {
     
     // Create mock narrative for business/enterprise tiers
     const mockNarrative = (tier === 'business' || tier === 'enterprise') ? createMockNarrative(tier) : undefined;
+    
+    // Handle download request separately
+    if (download) {
+      return await downloadPDF(pdfGenerator, mockScanResult, tier as any, mockNarrative);
+    }
     
     switch (test) {
       case 'generate':
@@ -233,6 +239,34 @@ async function testErrorHandling(generator: TierAwarePDFGenerator, tier: any) {
     },
     message: allPassed ? 'All error handling tests passed' : 'Some error handling tests failed'
   });
+}
+
+async function downloadPDF(
+  generator: TierAwarePDFGenerator,
+  scanResult: EngineScanResult,
+  tier: any,
+  narrative?: NarrativeReport
+) {
+  try {
+    const pdfBuffer = await generator.generatePDF(scanResult, tier, narrative);
+    const filename = `AIO_Scanner_Report_${tier}_${new URL(scanResult.url).hostname}.pdf`;
+
+    return new Response(pdfBuffer, {
+      status: 200,
+      headers: {
+        'Content-Type': 'application/pdf',
+        'Content-Disposition': `attachment; filename="${filename}"`,
+        'Content-Length': pdfBuffer.length.toString()
+      }
+    });
+
+  } catch (error) {
+    return json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+      message: `PDF download failed for ${tier} tier`
+    }, { status: 500 });
+  }
 }
 
 function createMockScanResult(tier: string): EngineScanResult {

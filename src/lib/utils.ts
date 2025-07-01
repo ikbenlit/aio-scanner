@@ -67,3 +67,36 @@ export const flyAndScale = (
 		easing: cubicOut
 	};
 };
+
+/**
+ * Normalize URL by adding https:// prefix if missing
+ * Used across all scan modules for consistent URL handling
+ */
+export function normalizeUrl(url: string): string {
+	if (!url) return url;
+	
+	// Return as-is if already has protocol
+	if (url.startsWith('http://') || url.startsWith('https://')) {
+		return url;
+	}
+	
+	// Add https:// prefix for relative URLs
+	const normalized = 'https://' + url;
+	console.log(`URL normalized: ${url} -> ${normalized}`);
+	return normalized;
+}
+
+/**
+ * Validate URL format and normalize if needed
+ * Returns normalized URL or throws error for invalid URLs
+ */
+export function validateAndNormalizeUrl(url: string): string {
+	const normalized = normalizeUrl(url);
+	
+	try {
+		new URL(normalized);
+		return normalized;
+	} catch (error) {
+		throw new Error(`Invalid URL format: ${url}`);
+	}
+}

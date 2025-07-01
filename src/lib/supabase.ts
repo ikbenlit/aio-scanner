@@ -1,6 +1,13 @@
 import { createClient } from '@supabase/supabase-js';
-import { getSupabaseConfig } from './config';
 import { PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY } from '$env/static/public';
+
+// Debug environment variables
+console.log('🔧 Supabase Environment Check:', {
+  url: PUBLIC_SUPABASE_URL?.substring(0, 20) + '...',
+  keyLength: PUBLIC_SUPABASE_ANON_KEY?.length || 0,
+  hasUrl: !!PUBLIC_SUPABASE_URL,
+  hasKey: !!PUBLIC_SUPABASE_ANON_KEY
+});
 
 export const supabase = createClient(
   PUBLIC_SUPABASE_URL,

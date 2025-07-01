@@ -40,6 +40,7 @@
 		"@mollie/api-client": "^4.3.2",
 		"@supabase/supabase-js": "^2.50.0",
 		"cheerio": "^1.1.0",
+		"dotenv": "^17.0.0",
 		"lucide-svelte": "^0.514.0",
 		"playwright": "^1.52.0",
 		"resend": "^4.5.2",

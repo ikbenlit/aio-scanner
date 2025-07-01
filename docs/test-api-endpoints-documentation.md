@@ -1,752 +1,893 @@
 # Test API Endpoints Documentation
 
-This document provides comprehensive documentation for all test endpoints in the AIO Scanner system. These endpoints are designed to validate functionality across different development phases and system components.
+## 📑 Inhoudsopgave
 
-## Overview
+1. [🚀 Quick Reference](#-quick-reference)
+   - [Development Testing Checklist](#development-testing-checklist)
+   - [Quick Test URLs](#quick-test-urls)
 
-The test endpoints are organized under `/api/test/` and serve different purposes:
-- System integration testing
-- Component validation
-- Phase-specific feature testing
-- Development debugging
-- Production readiness verification
+2. [📋 Test Endpoints Overview](#-test-endpoints-overview)
+   - [System Integration Tests](#system-integration-tests)
+   - [Component Tests](#component-tests)
+   - [Service Tests](#service-tests)
+   - [Production Tests](#production-tests)
 
-## Test Endpoints Reference
+3. [🔧 Test Execution Guide](#-test-execution-guide)
+   - [Prerequisites](#prerequisites)
+   - [Test Methods](#test-methods)
+   - [Test Execution Flow](#test-execution-flow)
 
-### 1. Main Test Endpoint - `/api/test/`
+4. [🎯 Praktische Test Voorbeelden](#-praktische-test-voorbeelden)
+   - [Scenario 1: System Health Check](#scenario-1-snelle-system-health-check-browser)
+   - [Scenario 2: Business Tier Test](#scenario-2-business-tier-test-powershell)
+   - [Scenario 3: PDF Pipeline Test](#scenario-3-pdf-pipeline-test-command-line)
+   - [Scenario 4: Complete Development Workflow](#scenario-4-complete-development-workflow-mixed)
 
-**Purpose:** Comprehensive scan orchestration testing and module validation
+5. [🛠️ Test Command Troubleshooting](#️-test-command-troubleshooting)
+   - [Browser Testing Issues](#browser-testing-issues)
+   - [PowerShell Issues](#powershell-issues)
+   - [Command Line Issues](#command-line-issues)
+   - [Frontend Testing Issues](#frontend-testing-issues)
 
-**How it works:**
-- Tests the complete ScanOrchestrator system
-- Can run full scans or test individual modules 
-- Validates module availability and execution
-- Provides detailed performance metrics
+6. [📊 Expected Results Reference](#-expected-results-reference)
+   - [Success Indicators](#success-indicators)
+   - [Tier-Specific Results](#basic-scan-results)
+   - [Error Response Format](#error-response-format)
 
-**How to execute:**
+7. [📑 Detailed Endpoint Documentation](#-detailed-endpoint-documentation)
+   - [System Tests](#apitestmain-system-test)
+   - [Tier Tests](#apitestbusiness-tierbusiness-tier-integration)
+   - [Component Tests](#apitestcontent-extractorpattern-detection)
+   - [Service Tests](#apitestemail-email-system)
+   - [PDF Tests](#apitestpdf-generation-pdf-generation)
+   - [Production Endpoints](#apipdfscaniidpdf-status)
+
+8. [⚠️ Troubleshooting Guide](#️-troubleshooting-guide)
+   - [Common Issues](#common-issues)
+   - [Success Validation Checklist](#success-validation-checklist)
+
+9. [📝 Best Practices](#-best-practices-voor-testing)
+   - [Do's en Don'ts](#-dos)
+   - [Efficient Testing Workflow](#-efficient-testing-workflow)
+
+10. [🏭 Production Readiness](#-production-readiness)
+    - [Database Migration Verification](#database-migration-verification)
+    - [Fresh Production Scan Test](#fresh-production-scan-test)
+    - [Complete User Journey](#complete-user-journey)
+
+11. [📈 Performance Monitoring](#-performance-monitoring)
+    - [AI Cost Tracking](#ai-cost-tracking)
+    - [Scan Duration Benchmarks](#scan-duration-benchmarks)
+    - [PDF Generation Performance](#pdf-generation-performance)
+
+---
+
+## 🚀 Quick Reference
+
+### Development Testing Checklist
 ```bash
-# Full scan test
-GET /api/test?url=https://example.com
+# 1. Basic System Health
+GET /api/test/payment           # Database connection
+GET /api/test/vertex            # AI services
+GET /api/test/email?action=template  # Email system
 
-# Individual module test
-GET /api/test?url=https://example.com&module=TechnicalSEO
+# 2. Core Functionality  
+GET /api/test?url=https://example.com                    # Basic scan
+GET /api/test/business-tier?mode=quick                   # Business tier
+GET /api/test/enterprise-tier?mode=quick                 # Enterprise tier
 
-# Test with default URL
-GET /api/test
+# 3. PDF Pipeline
+GET /api/test/pdf-generation?tier=business&test=validate # PDF generation
+GET /api/test/pdf-flow?tier=business&mock=true          # Complete flow
 
-# POST test for JSON handling
-POST /api/test
-Content-Type: application/json
-{"test": "data"}
+# 4. Production Readiness
+GET /api/test/llm-integration?mode=full                 # AI integration
+GET /api/test/email?action=send&email=test@example.com  # Email delivery
 ```
 
-**Parameters:**
-- `url` (optional): Website URL to scan (default: https://example.com)
-- `module` (optional): Specific module to test (TechnicalSEO, SchemaMarkup, etc.)
+### Quick Test URLs
+```bash
+# Replace [endpoint] with test endpoint name
+http://localhost:5173/api/test/[endpoint]
 
-**Expected result:**
+# Recommended test URLs:
+- https://example.com         # Fast, reliable
+- https://httpbin.org/html    # Test responses  
+- https://google.com          # Real-world complex
+
+# Avoid: localhost URLs, non-existent domains
+```
+
+---
+
+## 📋 Test Endpoints Overview
+
+### System Integration Tests
+| Endpoint | Purpose | Quick Test |
+|----------|---------|------------|
+| `/api/test/` | Complete scan orchestration | `?url=https://example.com` |
+| `/api/test/business-tier/` | Business tier AI integration | `?mode=quick` |
+| `/api/test/enterprise-tier/` | Enterprise features validation | `?mode=quick` |
+| `/api/test/llm-integration/` | AI pipeline end-to-end | `?mode=full` |
+
+### Component Tests
+| Endpoint | Purpose | Quick Test |
+|----------|---------|------------|
+| `/api/test/content-extractor/` | Pattern detection | No parameters |
+| `/api/test/enhanced-extractor/` | Enhanced extraction | No parameters |
+| `/api/test/vertex-client/` | AI client functionality | `?mode=insights` |
+| `/api/test/vertex/` | Basic AI connectivity | No parameters |
+
+### Service Tests
+| Endpoint | Purpose | Quick Test |
+|----------|---------|------------|
+| `/api/test/email/` | Email template system | `?action=template` |
+| `/api/test/payment/` | Payment integration | No parameters |
+| `/api/test/pdf-generation/` | PDF generation | `?tier=business&test=validate` |
+| `/api/test/pdf-flow/` | Complete PDF pipeline | `?tier=business&mock=true` |
+
+### Production Tests
+| Endpoint | Purpose | Quick Test |
+|----------|---------|------------|
+| `/api/pdf/[scanId]` | PDF status check | `?email=test@example.com` |
+| `/api/pdf/[scanId]/download` | PDF download | `?email=test@example.com` |
+
+---
+
+## 🔧 Test Execution Guide
+
+### Prerequisites
+```bash
+# 1. Start development server
+npm run dev  # Available on http://localhost:5173
+
+# 2. Verify Supabase active (not paused)
+# 3. Use reliable test URLs (avoid localhost/non-existent domains)
+```
+
+### Test Methods
+
+#### 🌐 Browser Testing (Aanbevolen)
+**Voordeel:** Gemakkelijk, visueel, geen extra tools nodig
+
+**Stap 1:** Open je browser (Chrome, Firefox, Edge)
+**Stap 2:** Kopieer de test URL naar de adresbalk
+**Stap 3:** Vervang `[endpoint]` met het gewenste test endpoint
+
+```
+# Basis formaat:
+http://localhost:5173/api/test/[endpoint]
+
+# Voorbeelden:
+http://localhost:5173/api/test/business-tier?mode=quick
+http://localhost:5173/api/test/vertex
+http://localhost:5173/api/test/pdf-generation?tier=business&test=validate
+```
+
+**Resultaat:** JSON response wordt getoond in de browser
+
+#### 💻 PowerShell Commands (Windows)
+**Voordeel:** Scriptbaar, gemakkelijk te herhalen, output naar variabelen
+
+**Basis commando:**
+```powershell
+Invoke-RestMethod -Uri "http://localhost:5173/api/test/vertex" -Method GET
+```
+
+**Uitgebreide voorbeelden:**
+```powershell
+# Simple GET request
+Invoke-RestMethod -Uri "http://localhost:5173/api/test/business-tier?mode=quick"
+
+# GET request met output naar variabele
+$result = Invoke-RestMethod -Uri "http://localhost:5173/api/test/vertex"
+Write-Host "Success: $($result.success)"
+
+# POST request met JSON body
+$body = @{ test = "data" } | ConvertTo-Json
+Invoke-RestMethod -Uri "http://localhost:5173/api/test/payment" -Method POST -Body $body -ContentType "application/json"
+
+# Opslaan response naar bestand
+Invoke-RestMethod -Uri "http://localhost:5173/api/test/business-tier" | ConvertTo-Json -Depth 10 | Out-File "test-result.json"
+
+# Meerdere tests achter elkaar
+@(
+    "http://localhost:5173/api/test/vertex",
+    "http://localhost:5173/api/test/payment", 
+    "http://localhost:5173/api/test/business-tier?mode=quick"
+) | ForEach-Object {
+    Write-Host "Testing: $_"
+    try {
+        $result = Invoke-RestMethod -Uri $_
+        Write-Host "✅ Success: $($result.success)" -ForegroundColor Green
+    } catch {
+        Write-Host "❌ Failed: $($_.Exception.Message)" -ForegroundColor Red
+    }
+}
+```
+
+#### 🖥️ Command Prompt/Terminal (Alternative)
+**Voordeel:** Universeel, werkt op alle platformen
+
+**Windows Command Prompt:**
+```cmd
+curl "http://localhost:5173/api/test/vertex"
+curl -X POST "http://localhost:5173/api/test/payment" -H "Content-Type: application/json" -d "{\"test\":\"data\"}"
+```
+
+**Linux/Mac Terminal:**
+```bash
+curl "http://localhost:5173/api/test/vertex"
+curl -X POST "http://localhost:5173/api/test/payment" -H "Content-Type: application/json" -d '{"test":"data"}'
+```
+
+#### 🎯 Frontend Interface Testing
+**Voordeel:** Test de complete user experience
+
+**Stap 1:** Ga naar `http://localhost:5173`
+**Stap 2:** Gebruik de website interface voor scans
+**Stap 3:** Monitor browser console (F12) voor logs
+
+```javascript
+// Browser Console (F12 > Console tab)
+// Monitor real-time logs tijdens frontend tests:
+console.log("Watching for scan logs...");
+
+// Handmatige API call vanuit browser console:
+fetch('/api/test/vertex').then(r => r.json()).then(console.log);
+```
+
+### Test Execution Flow
+
+#### 1. Basic System Health
+```bash
+# Test in this order:
+GET /api/test/payment     # Database connection
+GET /api/test/vertex      # AI services  
+GET /api/test/email       # Email system
+```
+
+#### 2. Core Functionality
+```bash
+# Basic scan
+GET /api/test?url=https://example.com
+
+# Individual module
+GET /api/test?url=https://example.com&module=TechnicalSEO
+
+# AI integration
+GET /api/test/llm-integration?mode=quick
+```
+
+#### 3. Tier-Specific Testing
+```bash
+# Business tier
+GET /api/test/business-tier?mode=full&url=https://example.com
+
+# Enterprise tier  
+GET /api/test/enterprise-tier?mode=full&url=https://example.com
+```
+
+#### 4. PDF Pipeline Testing
+```bash
+# PDF generation only
+GET /api/test/pdf-generation?tier=business&test=validate
+
+# Complete PDF workflow
+GET /api/test/pdf-flow?tier=business&mock=true
+
+# PDF access
+GET /api/pdf/[scanId]?email=test@example.com
+```
+
+---
+
+## 🎯 Praktische Test Voorbeelden
+
+### Scenario 1: Snelle System Health Check (Browser)
+**Doel:** Controleren of alle services draaien
+
+```
+1. Open browser en ga naar: http://localhost:5173/api/test/payment
+   ✅ Verwacht: {"hasApiKey": true, "testMode": "true"}
+
+2. Ga naar: http://localhost:5173/api/test/vertex  
+   ✅ Verwacht: {"success": true, "message": "Vertex AI working!"}
+
+3. Ga naar: http://localhost:5173/api/test/email?action=template
+   ✅ Verwacht: Email template wordt getoond
+```
+
+### Scenario 2: Business Tier Test (PowerShell)
+**Doel:** Test complete business tier functionaliteit
+
+```powershell
+# Stap 1: Quick validation
+$quickTest = Invoke-RestMethod -Uri "http://localhost:5173/api/test/business-tier?mode=quick"
+Write-Host "Quick test success: $($quickTest.status)"
+
+# Stap 2: Full business scan
+$fullTest = Invoke-RestMethod -Uri "http://localhost:5173/api/test/business-tier?mode=full&url=https://example.com"
+Write-Host "Full test - AI Report: $($fullTest.scanResult.hasAIReport)"
+Write-Host "AI Cost: €$($fullTest.aiEnhancement.costTracking.aiCost)"
+
+# Stap 3: Opslaan resultaat
+$fullTest | ConvertTo-Json -Depth 10 | Out-File "business-test-result.json"
+Write-Host "✅ Results saved to business-test-result.json"
+```
+
+### Scenario 3: PDF Pipeline Test (Command Line)
+**Doel:** Test complete PDF generatie workflow
+
+```bash
+# Windows Command Prompt:
+curl "http://localhost:5173/api/test/pdf-generation?tier=business&test=validate"
+curl "http://localhost:5173/api/test/pdf-flow?tier=business&mock=true"
+
+# Linux/Mac Terminal:
+curl "http://localhost:5173/api/test/pdf-generation?tier=business&test=validate"
+curl "http://localhost:5173/api/test/pdf-flow?tier=business&mock=true"
+```
+
+### Scenario 4: Complete Development Workflow (Mixed)
+**Doel:** Volledige test van development naar production
+
+```powershell
+# 1. System health (PowerShell)
+Write-Host "🔍 Testing system health..."
+$services = @("payment", "vertex", "email")
+foreach ($service in $services) {
+    try {
+        $result = Invoke-RestMethod -Uri "http://localhost:5173/api/test/$service"
+        Write-Host "✅ $service: OK" -ForegroundColor Green
+    } catch {
+        Write-Host "❌ $service: FAILED" -ForegroundColor Red
+    }
+}
+
+# 2. Core functionality (Browser - open these URLs manually)
+Write-Host "`n📊 Test these URLs in browser:"
+Write-Host "http://localhost:5173/api/test?url=https://example.com"
+Write-Host "http://localhost:5173/api/test/llm-integration?mode=full"
+
+# 3. PDF workflow (PowerShell)
+Write-Host "`n📄 Testing PDF workflow..."
+$pdfTest = Invoke-RestMethod -Uri "http://localhost:5173/api/test/pdf-flow?tier=business&mock=true"
+Write-Host "PDF Generation: $($pdfTest.pdfGeneration.status)"
+Write-Host "File size: $($pdfTest.pdfGeneration.fileSizeHuman)"
+
+# 4. Frontend test (Manual)
+Write-Host "`n🖥️ Manual frontend test:"
+Write-Host "1. Go to http://localhost:5173"
+Write-Host "2. Test basic scan with 'example.com'"
+Write-Host "3. Check browser console for logs"
+```
+
+---
+
+## 🛠️ Test Command Troubleshooting
+
+### Browser Testing Issues
+
+**Probleem:** JSON wordt niet mooi weergegeven
+```
+Oplossing: Installeer JSON Viewer browser extensie
+Of: Kopieer response naar jsonformatter.org
+```
+
+**Probleem:** CORS errors in browser console
+```
+Oplossing: Test endpoints werken alleen als SvelteKit dev server draait
+Check: npm run dev moet actief zijn op port 5173
+```
+
+### PowerShell Issues
+
+**Probleem:** `Invoke-RestMethod` commando niet gevonden
+```
+Oplossing: PowerShell versie < 3.0
+Alternatief: Gebruik Invoke-WebRequest
+```
+
+**Probleem:** SSL/TLS errors
+```powershell
+# Tijdelijke oplossing voor localhost testing:
+[System.Net.ServicePointManager]::ServerCertificateValidationCallback = {$true}
+```
+
+**Probleem:** JSON parsing errors
+```powershell
+# Expliciete JSON parsing:
+$response = Invoke-RestMethod -Uri "http://localhost:5173/api/test/vertex"
+$json = $response | ConvertTo-Json -Depth 10
+Write-Host $json
+```
+
+### Command Line Issues
+
+**Probleem:** `curl` niet gevonden in Windows
+```
+Oplossing 1: Gebruik PowerShell in plaats van Command Prompt
+Oplossing 2: Installeer Git Bash of WSL
+Oplossing 3: Download curl voor Windows
+```
+
+**Probleem:** JSON responses zijn onleesbaar
+```bash
+# Linux/Mac - pipe naar jq voor mooie formatting:
+curl "http://localhost:5173/api/test/vertex" | jq '.'
+
+# Windows - pipe naar PowerShell:
+curl "http://localhost:5173/api/test/vertex" | powershell -Command "ConvertFrom-Json | ConvertTo-Json"
+```
+
+### Frontend Testing Issues
+
+**Probleem:** Console logs verdwijnen snel
+```
+Oplossing: Browser Console (F12) > Console tab > Preserve log aanzetten
+```
+
+**Probleem:** Network errors tijdens scan
+```
+Oplossing: Browser Network tab (F12) > Check voor failed requests
+Look for: 500 errors, timeout errors, CORS issues
+```
+
+---
+
+## 📝 Best Practices voor Testing
+
+### ✅ Do's
+- **Start altijd met system health check** (`/payment`, `/vertex`)
+- **Gebruik `mode=quick` voor snelle validatie** voordat je full tests doet
+- **Test met betrouwbare URLs** (`example.com`, `google.com`)
+- **Save test results** naar bestanden voor later vergelijken
+- **Monitor browser console** tijdens frontend tests
+- **Test in logical order**: System → Components → Integration → End-to-end
+
+### ❌ Don'ts  
+- **Gebruik geen localhost URLs** in scan tests (circular references)
+- **Test niet met non-existent domains** (timeout errors)
+- **Run geen full AI tests teveel** (cost implications)
+- **Negeer geen error responses** - ze bevatten waardevolle debug info
+- **Test niet alleen in browser** - gebruik mix van methods
+- **Skip geen prerequisites** - ensure dev server is running
+
+### 🔄 Efficient Testing Workflow
+```
+1. Quick health check (30 sec)
+2. Component validation (2 min)  
+3. Integration testing (5 min)
+4. End-to-end validation (10 min)
+5. Production readiness (manual)
+```
+
+---
+
+## 📊 Expected Results Reference
+
+### Success Indicators
+```json
+// All endpoints should return:
+{
+  "success": true,
+  "status": "success", 
+  // ... specific data
+}
+```
+
+### Basic Scan Results
 ```json
 {
   "success": true,
-  "type": "full_scan" | "module_test",
-  "url": "https://example.com",
-  "duration": 2500,
+  "type": "full_scan",
   "result": {
     "overallScore": 75,
     "moduleCount": 4,
     "completedModules": 4,
-    "totalFindings": 12,
-    "totalRecommendations": 8,
     "moduleResults": [...]
   }
 }
 ```
 
-**Success/Failure indicators:**
-- ✅ Success: `success: true`, modules execute without errors
-- ❌ Failure: `success: false`, error details in response
-
----
-
-### 2. Business Tier Test - `/api/test/business-tier/`
-
-**Purpose:** Validates Phase 3.2 Business Tier integration with AI enhancement services
-
-**How it works:**
-- Tests ScanOrchestrator business tier execution
-- Validates AI-enhanced report generation
-- Tests cost tracking and fallback mechanisms
-- Validates integration with LLMEnhancementService
-
-**How to execute:**
-```bash
-# Quick validation test
-GET /api/test/business-tier?mode=quick
-
-# Full business tier scan
-GET /api/test/business-tier?mode=full&url=https://gifsvoorinsta.nl
-
-# Default test
-GET /api/test/business-tier
-```
-
-**Parameters:**
-- `mode` (optional): `quick` for instantiation test, `full` for complete scan (default: full)
-- `url` (optional): Test URL (default: https://gifsvoorinsta.nl)
-
-**Expected result:**
+### Business Tier Results
 ```json
 {
   "status": "success",
-  "phase": "3.2 Business Tier Integration Test",
   "scanResult": {
-    "scanId": "test-business-1234567890",
     "tier": "business",
-    "overallScore": 75,
     "hasAIReport": true,
     "hasAIInsights": true,
     "hasNarrativeReport": true
   },
   "aiEnhancement": {
     "insightsGenerated": true,
-    "missedOpportunities": 3,
     "confidence": 0.85
-  },
-  "implementation": {
-    "status": "COMPLETED",
-    "readyForNextStep": "Phase 3.3 - Narrative PDF Enhancement"
   }
 }
 ```
 
-**Success/Failure indicators:**
-- ✅ Success: `status: "success"`, AI enhancements working
-- ❌ Failure: `status: "error"`, fallback to starter tier
-
----
-
-### 3. Content Extractor Test - `/api/test/content-extractor/`
-
-**Purpose:** Tests Phase 2.5 ContentExtractor pattern detection capabilities
-
-**How it works:**
-- Tests complex Dutch business content extraction
-- Validates specific pattern detection (time signals, quality claims, authority markers)
-- Verifies critical detection patterns from development plan
-- Tests conversational content detection (FAQ patterns)
-
-**How to execute:**
-```bash
-# Full extraction test with predefined content
-GET /api/test/content-extractor
-
-# Test specific pattern type
-POST /api/test/content-extractor
-Content-Type: application/json
-{
-  "text": "Wij zijn al 25 jaar actief...",
-  "patternType": "time"
-}
-```
-
-**Parameters (POST):**
-- `text` (required): Text content to analyze
-- `patternType` (required): `all`, `time`, `quality`, `authority`, `business`
-
-**Expected result:**
+### Enterprise Tier Results
 ```json
 {
   "status": "success",
-  "contentExtractorVersion": "2.5.1",
-  "samples": {
-    "timeSignals": {
-      "count": 2,
-      "detectedEenEeuwLang": true,
-      "detectedSinds1924": true
-    },
-    "qualityClaims": {
-      "count": 3,
-      "detectedHeelErgGoed": true,
-      "detected98Percent": true
-    },
-    "authorityMarkers": {
-      "count": 2,
-      "detectedSpecialist": true
-    }
-  },
-  "criticalDetectionResults": {
-    "eenEeuwLang": true,
-    "sinds1924": true,
-    "heelErgGoed": true,
-    "percentage98": true
-  },
-  "readyForAiEnhancement": true
+  "enterpriseFeatures": {
+    "multiPageAnalysis": {"enabled": true},
+    "competitiveContext": {"enabled": true},
+    "strategicRoadmap": true
+  }
 }
 ```
 
-**Success/Failure indicators:**
-- ✅ Success: All critical patterns detected, `readyForAiEnhancement: true`
-- ❌ Failure: Missing critical patterns, extraction errors
-
----
-
-### 4. Email Test - `/api/test/email/`
-
-**Purpose:** Tests email template generation and delivery system
-
-**How it works:**
-- Tests email template generation with mock scan data
-- Can generate and send actual emails for testing
-- Tests integration with Resend email service
-- Validates PDF report attachment functionality
-
-**How to execute:**
-```bash
-# Generate email template (default)
-GET /api/test/email
-
-# Send test email with PDF report
-GET /api/test/email?action=send&email=test@example.com
-
-# Template generation only
-GET /api/test/email?action=template
-```
-
-**Parameters:**
-- `action` (optional): `template` (default) or `send`
-- `email` (required for send): Recipient email address
-
-**Expected result:**
+### PDF Generation Results
 ```json
 {
   "success": true,
-  "action": "send",
-  "message": "✅ Email met PDF rapport succesvol verstuurd!",
-  "details": {
-    "messageId": "msg_123...",
-    "pdfGenerated": true,
-    "emailSent": true
-  },
-  "testData": {
-    "scanId": "test-123",
-    "recipientEmail": "test@example.com",
-    "score": 75
+  "tier": "business",
+  "fileSize": 280000,
+  "fileSizeHuman": "273.4 KB",
+  "generationTime": "3200ms",
+  "validation": {
+    "isValidPDF": true,
+    "hasContent": true
   }
 }
 ```
 
-**Success/Failure indicators:**
-- ✅ Success: `success: true`, `emailSent: true`, messageId present
-- ❌ Failure: `success: false`, error details provided
-
----
-
-### 5. Email Preview Test - `/api/test/email/preview/`
-
-**Purpose:** Visual preview of email templates and PDF generation
-
-**How it works:**
-- Generates HTML email template for visual inspection
-- Can generate PDF version of email for download
-- Uses mock scan data for consistent testing
-- Returns actual HTML/PDF content, not JSON
-
-**How to execute:**
-```bash
-# HTML email preview (default)
-GET /api/test/email/preview
-
-# PDF email report download
-GET /api/test/email/preview?format=pdf
-
-# Specify different email
-GET /api/test/email/preview?email=custom@example.com
-```
-
-**Parameters:**
-- `format` (optional): `html` (default) or `pdf`
-- `email` (optional): Email address for template (default: test@example.com)
-
-**Expected result:**
-- HTML format: Returns rendered HTML email template
-- PDF format: Returns PDF file download with proper headers
-
-**Success/Failure indicators:**
-- ✅ Success: HTML renders properly or PDF downloads
-- ❌ Failure: HTTP 500 error with error message
-
----
-
-### 6. Enhanced Extractor Test - `/api/test/enhanced-extractor/`
-
-**Purpose:** Tests Phase 3.1A Enhanced ContentExtractor features
-
-**How it works:**
-- Tests enhanced content extraction capabilities
-- Validates content quality assessment features
-- Tests missed opportunity detection
-- Tests AI optimization hints generation
-- Validates backward compatibility with basic extractor
-
-**How to execute:**
-```bash
-# Full enhanced extraction test
-GET /api/test/enhanced-extractor
-```
-
-**Parameters:** None
-
-**Expected result:**
+### Error Response Format
 ```json
 {
-  "status": "success",
-  "phase": "3.1A Enhanced Content Extraction",
-  "basicSamples": {
-    "timeSignals": 2,
-    "qualityClaims": 3,
-    "authorityMarkers": 2,
-    "questionPatterns": 4
-  },
-  "enhancedFeatures": {
-    "contentQuality": {
-      "overallScore": 0.75,
-      "temporalClaims": 2,
-      "vagueStatements": 3,
-      "unsupportedClaims": 1
-    },
-    "missedOpportunities": 4,
-    "aiOptimizationHints": 6
-  },
-  "backwardCompatibility": {
-    "status": "PASSED"
-  },
-  "implementation": {
-    "phase": "3.1A",
-    "status": "COMPLETED",
-    "readyForIntegration": true
-  }
+  "success": false,
+  "error": "Specific error message",
+  "details": "Additional context",
+  "fallback": "Available alternatives"
 }
 ```
 
-**Success/Failure indicators:**
-- ✅ Success: Enhanced features working, backward compatibility passed
-- ❌ Failure: `status: "error"`, implementation status failed
+---
+
+## 📑 Detailed Endpoint Documentation
+
+### `/api/test/` - Main System Test
+
+**Purpose:** Complete scan orchestration validation
+
+**Parameters:**
+- `url` (optional): Website URL (default: https://example.com)
+- `module` (optional): Specific module to test
+
+**Test Variations:**
+```bash
+GET /api/test                                    # Default test
+GET /api/test?url=https://example.com            # Specific URL
+GET /api/test?module=TechnicalSEO                # Single module
+```
 
 ---
 
-### 7. Enterprise Tier Test - `/api/test/enterprise-tier/`
+### `/api/test/business-tier/` - Business Tier Integration
 
-**Purpose:** Validates Phase 3.3 Enterprise Tier implementation
-
-**How it works:**
-- Tests enterprise-level scanning capabilities
-- Validates multi-page content analysis
-- Tests competitive context analysis
-- Tests enhanced strategic narrative generation
-- Validates enterprise AI report features
-
-**How to execute:**
-```bash
-# Quick enterprise validation
-GET /api/test/enterprise-tier?mode=quick
-
-# Full enterprise tier scan
-GET /api/test/enterprise-tier?mode=full&url=https://example.com
-
-# Default test
-GET /api/test/enterprise-tier
-```
+**Purpose:** Phase 3.2 Business Tier with AI enhancement
 
 **Parameters:**
 - `mode` (optional): `quick` or `full` (default: full)
 - `url` (optional): Test URL (default: https://gifsvoorinsta.nl)
 
-**Expected result:**
-```json
-{
-  "status": "success",
-  "phase": "3.3 Enterprise Tier Implementation Test",
-  "scanResult": {
-    "tier": "enterprise",
-    "hasEnterpriseFeatures": true,
-    "overallScore": 85
-  },
-  "enterpriseFeatures": {
-    "multiPageAnalysis": {
-      "enabled": true,
-      "pagesAnalyzed": 5,
-      "totalPages": 12
-    },
-    "competitiveContext": {
-      "enabled": true,
-      "industryCategory": "consultancy",
-      "competitivePosition": "established"
-    }
-  }
-}
+**Test Variations:**
+```bash
+GET /api/test/business-tier?mode=quick           # Quick validation
+GET /api/test/business-tier?mode=full&url=https://example.com  # Full scan
 ```
-
-**Success/Failure indicators:**
-- ✅ Success: Enterprise features enabled and working
-- ❌ Failure: `status: "error"`, enterprise features not available
 
 ---
 
-### 8. LLM Integration Test - `/api/test/llm-integration/`
+### `/api/test/enterprise-tier/` - Enterprise Features
 
-**Purpose:** Tests Phase 3.1 LLM Enhancement Service integration
+**Purpose:** Phase 3.3 Enterprise Tier implementation
 
-**How it works:**
-- Tests ContentExtractor → LLMEnhancementService → VertexAI pipeline
-- Validates AI service instantiation and integration
-- Tests enhanced content processing with AI
-- Validates fallback mechanisms when AI fails
+**Parameters:**
+- `mode` (optional): `quick` or `full` (default: full)
+- `url` (optional): Test URL
 
-**How to execute:**
+**Test Variations:**
 ```bash
-# Quick service instantiation test
-GET /api/test/llm-integration?mode=quick
-
-# Full LLM integration pipeline test
-GET /api/test/llm-integration?mode=full
-
-# Default test
-GET /api/test/llm-integration
+GET /api/test/enterprise-tier?mode=quick         # Quick validation
+GET /api/test/enterprise-tier?mode=full&url=https://example.com  # Full features
 ```
+
+---
+
+### `/api/test/content-extractor/` - Pattern Detection
+
+**Purpose:** Phase 2.5 ContentExtractor capabilities
+
+**Parameters:** None for GET, POST supports custom content
+
+**Test Variations:**
+```bash
+GET /api/test/content-extractor                 # Predefined content test
+POST /api/test/content-extractor                # Custom content (JSON body)
+```
+
+---
+
+### `/api/test/enhanced-extractor/` - Enhanced Extraction
+
+**Purpose:** Phase 3.1A Enhanced ContentExtractor features
+
+**Parameters:** None
+
+**Test Variations:**
+```bash
+GET /api/test/enhanced-extractor                # Full enhanced test
+```
+
+---
+
+### `/api/test/llm-integration/` - AI Pipeline
+
+**Purpose:** Phase 3.1 LLM Enhancement Service integration
 
 **Parameters:**
 - `mode` (optional): `quick` or `full` (default: full)
 
-**Expected result:**
-```json
-{
-  "status": "success",
-  "phase": "3.1 LLM Integration Test",
-  "pipeline": [
-    "✅ ContentExtractor - Enhanced pattern detection working",
-    "✅ LLMEnhancementService - AI integration active",
-    "✅ VertexAI Client - AI insights generation working",
-    "✅ Fallback mechanism - Pattern-based analysis ready"
-  ],
-  "implementation": {
-    "phase": "3.1",
-    "status": "COMPLETED",
-    "features": [
-      "Enhanced ContentExtractor output connected to VertexAI",
-      "LLMEnhancementService with real AI processing",
-      "Cost monitoring and budget controls",
-      "Graceful fallback to pattern-based analysis"
-    ],
-    "readyForNextStep": "Phase 3.2 - Business Tier Integration"
-  }
-}
+**Test Variations:**
+```bash
+GET /api/test/llm-integration?mode=quick        # Service instantiation
+GET /api/test/llm-integration?mode=full         # Complete pipeline
 ```
-
-**Success/Failure indicators:**
-- ✅ Success: All pipeline components working, AI integration active
-- ❌ Failure: Pipeline components failing, fallback should activate
 
 ---
 
-### 9. Payment Test - `/api/test/payment/`
+### `/api/test/vertex-client/` - AI Client
 
-**Purpose:** Tests Mollie payment integration and environment configuration
-
-**How it works:**
-- Tests Mollie API client instantiation
-- Validates environment variables and API keys
-- Tests import functionality for payment processing
-- Provides configuration diagnostics
-
-**How to execute:**
-```bash
-# Environment and configuration test
-GET /api/test/payment
-
-# Payment client instantiation test
-POST /api/test/payment
-Content-Type: application/json
-{"test": "payment"}
-```
-
-**Parameters (POST):**
-- Any JSON body for testing client instantiation
-
-**Expected result:**
-```json
-{
-  "message": "Test endpoint working!",
-  "env": {
-    "hasApiKey": true,
-    "testMode": "true",
-    "apiKeyPrefix": "test_dHa..."
-  }
-}
-```
-
-**Success/Failure indicators:**
-- ✅ Success: API key present, Mollie client instantiates successfully
-- ❌ Failure: Missing API key, import failures
-
----
-
-### 10. Vertex Client Test - `/api/test/vertex-client/`
-
-**Purpose:** Tests Phase 3.2A VertexAI Client implementation
-
-**How it works:**
-- Tests VertexAI client with production configuration
-- Validates AI insights generation with structured prompts
-- Tests narrative report generation capabilities
-- Tests cost monitoring and budget controls
-- Validates response parsing and error handling
-
-**How to execute:**
-```bash
-# Full VertexAI client test with insights and narrative
-GET /api/test/vertex-client?mode=full
-
-# Test only AI insights generation
-GET /api/test/vertex-client?mode=insights
-
-# Basic client test
-GET /api/test/vertex-client
-```
+**Purpose:** Phase 3.2A VertexAI Client implementation
 
 **Parameters:**
 - `mode` (optional): `full`, `insights`, or basic (default: full)
 
-**Expected result:**
-```json
-{
-  "status": "success",
-  "phase": "3.2A VertexAI Client Test",
-  "enhancedContentSummary": {
-    "timeSignals": 2,
-    "qualityClaims": 3,
-    "contentQualityScore": 0.75,
-    "missedOpportunities": 4
-  },
-  "aiInsights": {
-    "status": "success",
-    "missedOpportunities": 3,
-    "authorityEnhancements": 2,
-    "confidence": 0.85
-  },
-  "narrativeReport": {
-    "status": "success",
-    "wordCount": 1250,
-    "sectionsPresent": {
-      "executiveSummary": true,
-      "detailedAnalysis": true,
-      "implementationRoadmap": true,
-      "conclusionNextSteps": true
-    }
-  },
-  "costTracking": {
-    "currentCost": 0.15,
-    "remainingBudget": 4.85
-  },
-  "implementation": {
-    "phase": "3.2A",
-    "status": "COMPLETED",
-    "readyForIntegration": true
-  }
-}
+**Test Variations:**
+```bash
+GET /api/test/vertex-client?mode=insights       # AI insights only
+GET /api/test/vertex-client?mode=full           # Full AI features
 ```
-
-**Success/Failure indicators:**
-- ✅ Success: AI insights and narrative generation working, cost tracking active
-- ❌ Failure: AI services failing, budget exceeded, authentication issues
 
 ---
 
-### 11. Vertex Connection Test - `/api/test/vertex/`
+### `/api/test/vertex/` - Basic AI Connection
 
-**Purpose:** Basic Vertex AI connection and authentication testing
-
-**How it works:**
-- Tests fundamental Vertex AI connectivity
-- Validates Google Cloud authentication
-- Tests basic API communication
-- Simple pass/fail validation
-
-**How to execute:**
-```bash
-# Simple connection test
-GET /api/test/vertex
-```
+**Purpose:** Basic Vertex AI connectivity validation
 
 **Parameters:** None
 
-**Expected result:**
-```json
-{
-  "success": true,
-  "message": "Vertex AI working!"
-}
-```
-
-**Success/Failure indicators:**
-- ✅ Success: `success: true`, connection established
-- ❌ Failure: `success: false`, authentication or connection errors
-
----
-
-### 12. PDF Generatie Test - `/api/test/pdf-generation/`
-
-**Doel:** Test de PDF-generatiecapaciteiten per tier.
-
-**Hoe het werkt:**
-- Test de PDF-generatie voor verschillende tiers.
-- Valideert de gegenereerde PDF's voor de business tier.
-- Meet de prestaties van de PDF-generatie voor de enterprise tier.
-
-**Hoe uit te voeren:**
+**Test Variations:**
 ```bash
-# PDF generatie voor starter tier
-GET /api/test/pdf-generation?tier=starter&test=generate
-
-# PDF validatie voor business tier
-GET /api/test/pdf-generation?tier=business&test=validate
-
-# PDF prestatie test voor enterprise tier
-GET /api/test/pdf-generation?tier=enterprise&test=performance
-```
-
-### 13. Complete PDF Flow Test - `/api/test/pdf-flow/`
-
-**Doel:** Test de complete PDF-verwerkingsflow.
-
-**Hoe het werkt:**
-- Test de PDF-verwerkingsflow met mock data voor de business tier.
-- Test de PDF-verwerkingsflow met een echte URL voor de enterprise tier.
-
-**Hoe uit te voeren:**
-```bash
-# PDF flow test met mock data voor business tier
-GET /api/test/pdf-flow?tier=business&mock=true
-
-# PDF flow test met echte URL voor enterprise tier
-GET /api/test/pdf-flow?tier=enterprise&url=https://example.com
-```
-
-### 14. PDF Toegang - `/api/pdf/[scanId]`
-
-**Doel:** Toegang tot de gegenereerde PDF's.
-
-**Hoe het werkt:**
-- Haal de gegenereerde PDF op via een scanId.
-- Download de PDF met een specifieke e-mail.
-
-**Hoe uit te voeren:**
-```bash
-# Toegang tot PDF met scanId
-GET /api/pdf/[scanId]?email=user@example.com
-
-# Download PDF met scanId
-GET /api/pdf/[scanId]/download?email=user@example.com
+GET /api/test/vertex                            # Simple connection test
 ```
 
 ---
 
-## Testing Strategy Overview
+### `/api/test/email/` - Email System
 
-### Development Phases
-The test endpoints are organized around development phases:
+**Purpose:** Email template generation and delivery
 
-1. **Phase 2.5**: Content extraction and pattern detection
-2. **Phase 3.1**: LLM integration and enhanced extraction 
-3. **Phase 3.2**: Business tier with AI enhancement
-3. **Phase 3.3**: Enterprise tier implementation
+**Parameters:**
+- `action` (optional): `template` or `send` (default: template)
+- `email` (required for send): Recipient email
 
-### Test Categories
+**Test Variations:**
+```bash
+GET /api/test/email                             # Template generation
+GET /api/test/email?action=send&email=test@example.com  # Send test email
+```
 
-**System Integration Tests:**
-- `/api/test/` - Complete system validation
-- `/api/test/business-tier/` - Business tier integration
-- `/api/test/enterprise-tier/` - Enterprise tier validation
+---
 
-**Component Tests:**
-- `/api/test/content-extractor/` - Pattern detection
-- `/api/test/enhanced-extractor/` - Enhanced extraction
-- `/api/test/vertex-client/` - AI client functionality
+### `/api/test/email/preview/` - Email Preview
 
-**Service Tests:**
-- `/api/test/email/` - Email delivery system
-- `/api/test/payment/` - Payment integration
-- `/api/test/vertex/` - Basic AI connectivity
+**Purpose:** Visual email template and PDF preview
 
-**Pipeline Tests:**
-- `/api/test/llm-integration/` - End-to-end AI pipeline
+**Parameters:**
+- `format` (optional): `html` or `pdf` (default: html)
+- `email` (optional): Email for template
 
-### Common Testing Patterns
+**Test Variations:**
+```bash
+GET /api/test/email/preview                     # HTML preview
+GET /api/test/email/preview?format=pdf          # PDF download
+```
 
-**Quick vs Full Tests:**
-Many endpoints support `mode=quick` for basic validation and `mode=full` for comprehensive testing.
+---
 
-**Error Handling:**
-All endpoints include structured error responses with:
-- Error type classification
-- Fallback mechanism status
-- Implementation phase tracking
+### `/api/test/payment/` - Payment Integration
 
-**Performance Tracking:**
-Tests include duration measurements and cost tracking where applicable.
+**Purpose:** Mollie payment configuration validation
 
-**Backward Compatibility:**
-Enhanced features are tested for compatibility with existing implementations.
+**Parameters:** None for GET, any JSON for POST
 
-## Usage Guidelines
+**Test Variations:**
+```bash
+GET /api/test/payment                           # Environment check
+POST /api/test/payment                          # Client instantiation
+```
 
-### Development Testing
-1. Start with basic connectivity tests (`/api/test/vertex/`)
-2. Test individual components (`/api/test/content-extractor/`)
-3. Validate integrations (`/api/test/llm-integration/`)
-4. Test complete tiers (`/api/test/business-tier/`)
+---
 
-### Production Readiness
-1. Run full system tests (`/api/test/?url=production-site`)
-2. Validate email delivery (`/api/test/email/?action=send`)
-3. Test payment integration (`/api/test/payment/`)
-4. Verify AI services (`/api/test/vertex-client/?mode=full`)
+### `/api/test/pdf-generation/` - PDF Generation
 
-### Debugging Issues
-1. Check environment configuration (`/api/test/payment/`)
-2. Test individual modules (`/api/test/?module=TechnicalSEO`)
-3. Validate AI connectivity (`/api/test/vertex/`)
-4. Test fallback mechanisms (`/api/test/llm-integration/`)
+**Purpose:** Isolated PDF generation testing per tier
 
-### Performance Monitoring
-- Monitor AI costs with VertexAI client tests
-- Track scan duration across different tiers
-- Validate fallback activation under load
+**Parameters:**
+- `tier` (required): `starter`, `business`, `enterprise`
+- `test` (optional): `generate`, `validate`, `performance`, `error-handling`
 
-## Security Considerations
+**Test Variations:**
+```bash
+GET /api/test/pdf-generation?tier=business&test=validate      # Recommended
+GET /api/test/pdf-generation?tier=enterprise&test=performance # Benchmarking
+GET /api/test/pdf-generation?tier=starter                     # Basic test
+```
 
-- Test endpoints should not be exposed in production
-- API keys and sensitive data are masked in responses
-- Mock data is used for all testing scenarios
-- No real payments are processed in test mode
+**Expected Benchmarks:**
+- **Starter:** 100-200KB, 1-3 seconds
+- **Business:** 200-400KB, 2-5 seconds  
+- **Enterprise:** 300-600KB, 3-7 seconds
 
-## Troubleshooting Common Issues
+---
 
-**Authentication Errors:**
-- Check `GOOGLE_APPLICATION_CREDENTIALS` environment variable
-- Verify service account permissions
-- Test with `/api/test/vertex/`
+### `/api/test/pdf-flow/` - Complete PDF Pipeline
 
-**AI Service Failures:**
-- Budget exceeded: Check cost tracking in responses
-- Service unavailable: Fallback mechanisms should activate
-- Invalid responses: Check prompt formatting
+**Purpose:** End-to-end PDF workflow testing
 
-**Email Delivery Issues:**
-- Verify Resend API key configuration
-- Check email template generation first
-- Test with `/api/test/email/?action=template`
+**Parameters:**
+- `tier` (required): `starter`, `business`, `enterprise`
+- `url` (optional): Website URL (default: https://example.com)
+- `mock` (optional): `true` for mock data, `false` for real scan
 
-**Payment Integration:**
-- Verify Mollie API key and test mode settings
-- Check environment variable configuration
-- Test with `/api/test/payment/`
+**Test Variations:**
+```bash
+GET /api/test/pdf-flow?tier=business&mock=true              # Fast, reliable
+GET /api/test/pdf-flow?tier=business&url=https://example.com # Real URL
+GET /api/test/pdf-flow?tier=enterprise&mock=true            # Enterprise features
+```
+
+---
+
+### `/api/pdf/[scanId]` - PDF Status
+
+**Purpose:** Check PDF generation status and metadata
+
+**Parameters:**
+- `scanId` (required): UUID in URL path
+- `email` (required): Email for access verification
+
+**Test Variations:**
+```bash
+GET /api/pdf/12345-abcde-67890?email=test@example.com       # Status check
+```
+
+---
+
+### `/api/pdf/[scanId]/download` - PDF Download
+
+**Purpose:** Download generated PDF with authentication
+
+**Parameters:**
+- `scanId` (required): UUID in URL path  
+- `email` (required): Email for access verification
+
+**Test Variations:**
+```bash
+GET /api/pdf/12345-abcde-67890/download?email=test@example.com  # Direct download
+```
+
+---
+
+## ⚠️ Troubleshooting Guide
+
+### Common Issues
+
+#### "Cannot use relative URL" errors
+**Status:** ✅ **Resolved** - URL normalization implemented
+**Check:** Look for `"URL normalized: [url] -> https://[url]"` in console
+
+#### "fetch failed" errors  
+**Cause:** Supabase project paused
+**Solution:** Activate Supabase project via dashboard
+
+#### Module errors in scan results
+**Cause:** Modules cannot fetch URL
+**Solution:** Use reliable test URLs (example.com)
+
+#### AI enhancement fails
+**Expected:** Graceful fallback to pattern-based analysis
+**Check:** `costTracking.aiCost` and `error` fields in response
+
+#### PDF generation fails
+**Cause:** URL normalization issues in templates
+**Check:** Console logs for "Invalid URL" errors
+
+### Success Validation Checklist
+
+#### ✅ Basic System Health
+- [ ] Development server on port 5173
+- [ ] Supabase database connection working
+- [ ] Environment variables loaded correctly
+- [ ] AI services (Vertex) reachable
+
+#### ✅ URL Normalization Working
+- [ ] `example.com` becomes `https://example.com`
+- [ ] No "relative URL" errors in modules
+- [ ] Console shows "URL normalized" messages
+
+#### ✅ Tier Functionality
+- [ ] Basic: TechnicalSEO + SchemaMarkup modules working
+- [ ] Business: AI enhancement + LLM integration
+- [ ] Enterprise: Multi-page + competitive analysis
+
+#### ✅ Database Integration
+- [ ] Scan records created successfully
+- [ ] Results saved correctly
+- [ ] User history maintained
+
+#### ✅ Frontend Integration
+- [ ] Landing page scans work
+- [ ] Results page shows correct data
+- [ ] Error handling works properly
+
+---
+
+## 🏭 Production Readiness
+
+### Database Migration Verification
+```sql
+-- Check PDF columns exist
+SELECT column_name FROM information_schema.columns 
+WHERE table_name = 'scans' AND column_name LIKE 'pdf_%';
+
+-- Verify constraint allows new statuses
+SELECT conname, pg_get_constraintdef(oid) 
+FROM pg_constraint 
+WHERE conname = 'scans_pdf_generation_status_check';
+```
+
+### Fresh Production Scan Test
+```bash
+# 1. Create fresh scan via API
+POST /api/scan/business
+{"url": "https://example.com", "email": "test@example.com"}
+
+# 2. Monitor PDF status progression
+# Expected: "pending" → "generating" → "completed"
+
+# 3. Verify PDF download
+GET /api/pdf/[scanId]?email=test@example.com
+```
+
+### Complete User Journey
+1. Go to `http://localhost:5173`
+2. Select "Business Scan" tier
+3. Enter test URL and email
+4. Complete payment flow (test mode)
+5. Monitor scan progress
+6. Verify PDF download when ready
+
+---
+
+## 📈 Performance Monitoring
+
+### AI Cost Tracking
+- Monitor costs in VertexAI client tests
+- Business tier: Stay under €0.15 per scan
+- Enterprise tier: Stay under €0.25 per scan
+
+### Scan Duration Benchmarks
+- Basic scan: < 30 seconds
+- Business scan: < 2 minutes  
+- Enterprise scan: < 5 minutes
+
+### PDF Generation Performance
+- Starter: 1-3 seconds, 100-200KB
+- Business: 2-5 seconds, 200-400KB
+- Enterprise: 3-7 seconds, 300-600KB

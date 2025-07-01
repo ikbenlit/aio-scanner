@@ -2,6 +2,7 @@ import * as cheerio from 'cheerio';
 import type { ModuleResult, Finding } from '../../types/scan';
 import { PatternMatcher, type PatternConfig } from '../PatternMatcher';
 import { PatternConfigLoader } from '../PatternConfigLoader';
+import { normalizeUrl } from '../../utils.js';
 
 export class AIContentModule {
   private patternMatcher = new PatternMatcher();
@@ -10,7 +11,8 @@ export class AIContentModule {
   async execute(url: string): Promise<ModuleResult> {
     try {
       // Fetch website content
-      const response = await fetch(url);
+              const normalizedUrl = normalizeUrl(url);
+        const response = await fetch(normalizedUrl);
       const html = await response.text();
       const $ = cheerio.load(html);
       

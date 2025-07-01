@@ -11,6 +11,7 @@
   import { goto } from '$app/navigation';
   
   let isScanning = false;
+  let isBusinessScanning = false;
   
   // Handle URL scan - start echte scan via API
   async function handleScan(event: CustomEvent<{ url: string }>) {
@@ -52,6 +53,44 @@
     }
   }
   
+  // Handle Business scan - direct test endpoint for testing (bypasses payment)
+  async function handleBusinessScan(event: CustomEvent<{ url: string; email: string }>) {
+    console.log('💼 handleBusinessScan called in +page.svelte with event:', event);
+    const { url, email } = event.detail;
+    
+    if (isBusinessScanning) return; // Prevent multiple simultaneous scans
+    
+    try {
+      isBusinessScanning = true;
+      console.log(`🚀 Starting business test scan for URL: ${url}`);
+      
+      // Use test endpoint for development/testing
+      const testResponse = await fetch(`/api/test/business-tier?mode=full&url=${encodeURIComponent(url)}`);
+      
+      if (!testResponse.ok) {
+        const errorData = await testResponse.json();
+        throw new Error(errorData.error || 'Business test scan failed');
+      }
+      
+      const testData = await testResponse.json();
+      console.log('Business test scan result:', testData);
+      
+      if (testData.status === 'success' && testData.scanResult?.scanId) {
+        // Redirect to results page with the scan ID
+        goto(`/scan/${testData.scanResult.scanId}/results`);
+      } else {
+        throw new Error('Test scan completed but no scan ID returned');
+      }
+      
+    } catch (error) {
+      console.error('Business test scan error:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Onbekende fout';
+      alert(`Business test scan kon niet worden gestart: ${errorMessage}`);
+    } finally {
+      isBusinessScanning = false;
+    }
+  }
+  
   function handleLogin() {
     // TODO: Navigate to auth page
     console.log('Navigate to login');
@@ -71,7 +110,14 @@
 <Header />
 
 <main>
-  <HeroSection on:scan={handleScan} onScan={handleScan} {isScanning} />
+  <HeroSection 
+    on:scan={handleScan} 
+    on:businessScan={handleBusinessScan}
+    onScan={handleScan} 
+    onBusinessScan={handleBusinessScan}
+    {isScanning} 
+    {isBusinessScanning}
+  />
   <FeatureSection />
   <TestimonialSection />
   <PricingSection onScan={handleScan} {isScanning} />

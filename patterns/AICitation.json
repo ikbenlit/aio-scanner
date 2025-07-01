@@ -6,39 +6,104 @@
         "[class*=\"about\" i]",
         "[class*=\"team\" i]",
         "[class*=\"author\" i]",
-        "[class*=\"founder\" i]"
+        "[class*=\"founder\" i]",
+        "[class*=\"bio\" i]",
+        "[id*=\"over\" i]",
+        "[id*=\"about\" i]",
+        "[id*=\"team\" i]"
       ],
       "description": "Detecteert author/team secties",
       "impact": "high"
+    },
+    "contactInfo": {
+      "patterns": [
+        "[class*=\"contact\" i]",
+        "[class*=\"footer\" i]",
+        "[class*=\"address\" i]",
+        "[id*=\"contact\" i]",
+        "[id*=\"footer\" i]"
+      ],
+      "description": "Detecteert contact informatie secties",
+      "impact": "medium"
     }
   },
   "regex": {
     "expertiseSignals": {
       "patterns": [
         "\\d+\\s*jaar\\s*(ervaring|experience)",
-        "gecertificeerd|certified|diploma",
-        "specialist|expert|authority"
+        "gecertificeerd|certified|diploma|degree",
+        "specialist|expert|authority|guru",
+        "award|prijs|winnaar|winner",
+        "published|gepubliceerd|artikel|research",
+        "keynote|spreker|speaker|presentatie",
+        "bachelor|master|phd|doctor",
+        "iso|accredited|member|lid van|association"
       ],
-      "description": "Detecteert expertise indicatoren",
+      "description": "Detecteert expertise indicatoren en credentials",
       "impact": "high",
       "flags": "gi"
     },
     "quoteableContent": {
       "patterns": [
         "^\".*\"$",
-        "^(het belangrijkste is|the key is)",
-        "^\\d+%\\s+van"
+        "^(het belangrijkste is|the key is|essential is)",
+        "^(wij geloven|we believe|our philosophy)",
+        "^(de toekomst|the future|success requires)",
+        "^\\d+%\\s+van",
+        "^(studies tonen|research shows|proven that)",
+        "succesvol|uniek|expert|bewezen|resultaat|transformatie"
       ],
-      "description": "Identificeert quoteerbare content",
+      "description": "Identificeert quoteerbare content en impactful statements",
       "impact": "medium",
       "flags": "gim"
+    },
+    "authorityMarkers": {
+      "patterns": [
+        "featured in|vermeld in|appeared on",
+        "interview|artikel|publicatie",
+        "tv|radio|podcast|nieuwsuur",
+        "nos|rtl|bbc|cnn",
+        "klanten|clients|partners",
+        "samenwerking|collaboration",
+        "fortune|top\\s*\\d+",
+        "award|prijs|winnaar|nominated",
+        "best|top|leading|#1",
+        "recognized|erkend|known for"
+      ],
+      "description": "Detecteert media mentions, client signals en industry recognition",
+      "impact": "high",
+      "flags": "gi"
+    },
+    "businessTransparency": {
+      "patterns": [
+        "email|telefoon|phone|address|adres",
+        "contact|kvk|btw|vat|chamber of commerce",
+        "kvk\\s*:?\\s*\\d+",
+        "btw\\s*:?\\s*[a-z]{2}\\d+",
+        "established|opgericht|since\\s*\\d{4}",
+        "registered|geregistreerd"
+      ],
+      "description": "Detecteert contact informatie en business registratie details",
+      "impact": "medium",
+      "flags": "gi"
+    },
+    "professionalTitles": {
+      "patterns": [
+        "ceo|directeur|oprichter|founder",
+        "expert|specialist|consultant",
+        "manager|hoofd|senior",
+        "years? of experience|jaar ervaring"
+      ],
+      "description": "Detecteert professionele titels en functies",
+      "impact": "medium",
+      "flags": "gi"
     }
   },
   "scoring": {
     "baseScore": 100,
     "deductions": {
-      "high": 25,
-      "medium": 15,
+      "high": 20,
+      "medium": 10,
       "low": 5
     }
   }

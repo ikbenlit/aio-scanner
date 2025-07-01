@@ -17,7 +17,7 @@ export const GET: RequestHandler = async ({ url }) => {
         console.log(`🌐 Test URL: ${testUrl}`);
         
         const orchestrator = new ScanOrchestrator();
-        const testScanId = `test-enterprise-${Date.now()}`;
+        const testScanId = crypto.randomUUID();
         
         if (testMode === 'quick') {
             // Quick test - just validate orchestrator can be instantiated

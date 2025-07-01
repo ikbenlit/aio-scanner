@@ -93,6 +93,7 @@ export interface EngineScanResult extends BaseScanResult {
             strategicRoadmap: boolean;
         };
     };
+    pdfUrl?: string | null;
     // Enterprise Tier
     enterpriseFeatures?: EnterpriseFeatures;
 }
@@ -237,7 +238,8 @@ export function transformDBToEngine(
         narrativeReport: dbScan.narrative_report
             ? JSON.parse(dbScan.narrative_report)
             : undefined,
-        costTracking: dbScan.cost_tracking ? JSON.parse(dbScan.cost_tracking) : undefined
+        costTracking: dbScan.cost_tracking ? JSON.parse(dbScan.cost_tracking) : undefined,
+        pdfUrl: dbScan.pdf_url || null
     };
 }
 

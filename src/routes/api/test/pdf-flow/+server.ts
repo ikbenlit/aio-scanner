@@ -19,7 +19,7 @@ export const GET: RequestHandler = async ({ url }) => {
   
   try {
     const orchestrator = new ScanOrchestrator();
-    const scanId = `pdf-test-${tier}-${Date.now()}`;
+    const scanId = crypto.randomUUID();
     const testEmail = 'test@example.com';
     const mockPaymentId = `pay_${Date.now()}`;
     

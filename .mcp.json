@@ -1,0 +1,16 @@
+{
+    "mcpServers": {
+"supabase-aio-scanner": {
+    "command": "npx",
+    "args": [
+      "-y",
+      "@supabase/mcp-server-supabase@latest",
+      "--read-only",
+      "--project-ref=ipyucglfdqhtpinntooi"
+    ],
+    "env": {
+      "SUPABASE_ACCESS_TOKEN": "sbp_38d031c4fd1de580e1f332824a93d26ea10675cf"
+    }
+  }
+}
+}

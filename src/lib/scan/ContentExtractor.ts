@@ -1,4 +1,5 @@
 import * as cheerio from 'cheerio';
+import { normalizeUrl } from '../utils.js';
 
 // Enhanced Content Extraction Types
 export interface ContentSamples {
@@ -102,9 +103,18 @@ export class ContentExtractor {
   
   public async fetchContent(url: string): Promise<string> {
     try {
-      const response = await fetch(url);
+      const normalizedUrl = normalizeUrl(url);
+      
+      // Validate URL format
+      try {
+        new URL(normalizedUrl);
+      } catch (urlError) {
+        throw new Error(`Invalid URL format: ${normalizedUrl}`);
+      }
+
+      const response = await fetch(normalizedUrl);
       if (!response.ok) {
-        throw new Error(`Failed to fetch ${url}: ${response.statusText}`);
+        throw new Error(`Failed to fetch ${normalizedUrl}: ${response.statusText}`);
       }
       return await response.text();
     } catch (error) {

@@ -191,7 +191,14 @@ function generateEnhancedInsights(scanResult: EmailTemplateResult): string {
 
 export function generateScanEmailTemplate(scanResults: EmailTemplateResult): string {
   const { url, overallScore, moduleResults } = scanResults;
-  const domain = new URL(url).hostname;
+  
+  // Normalize URL for domain extraction
+  let normalizedUrl = url;
+  if (!url.startsWith('http://') && !url.startsWith('https://')) {
+    normalizedUrl = 'https://' + url;
+  }
+  
+  const domain = new URL(normalizedUrl).hostname;
   
   // Determine status and color based on score
   const getScoreStatus = (score: number) => {

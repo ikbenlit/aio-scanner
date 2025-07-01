@@ -113,14 +113,12 @@
   <HeroSection 
     on:scan={handleScan} 
     on:businessScan={handleBusinessScan}
-    onScan={handleScan} 
-    onBusinessScan={handleBusinessScan}
     {isScanning} 
     {isBusinessScanning}
   />
   <FeatureSection />
   <TestimonialSection />
-  <PricingSection onScan={handleScan} {isScanning} />
+  <PricingSection />
 
   <!-- Final CTA -->
   <section class="py-20 lg:py-32 bg-gradient-to-br from-primary-blue/5 via-cyber-accent/5 to-secondary-yellow/5">

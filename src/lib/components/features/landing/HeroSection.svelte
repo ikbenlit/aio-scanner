@@ -3,8 +3,6 @@
   import { createEventDispatcher, onMount } from 'svelte';
   import URLInput from '$lib/components/core/URLInput.svelte';
   
-  export let onScan: (event: CustomEvent<{ url: string }>) => void;
-  export let onBusinessScan: (event: CustomEvent<{ url: string; email: string }>) => void;
   export let isScanning: boolean = false;
   export let isBusinessScanning: boolean = false;
   
@@ -22,10 +20,6 @@
     console.log('HeroSection handleScan called with:', event.detail);
     // Dispatch event up to parent
     dispatch('scan', event.detail);
-    // Also call the onScan prop for backward compatibility
-    if (onScan) {
-      onScan(event);
-    }
   }
   
   function handleBusinessScan() {
@@ -43,10 +37,6 @@
     
     // Dispatch event up to parent
     dispatch('businessScan', scanData);
-    // Also call the onBusinessScan prop for backward compatibility
-    if (onBusinessScan) {
-      onBusinessScan(new CustomEvent('businessScan', { detail: scanData }));
-    }
   }
   
   // Animation logic

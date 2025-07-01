@@ -1,146 +1,128 @@
 <!-- src/lib/components/features/landing/PricingSection.svelte -->
-<script lang="ts">
-  import URLInput from '$lib/components/core/URLInput.svelte';
-  
-  export let onScan: (event: CustomEvent<{ url: string }>) => void;
-  export let isScanning: boolean = false;
-</script>
-
 <section class="py-20 bg-gradient-to-br from-bg-light via-white to-blue-50">
   <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
     <div class="text-center mb-16">
       <h2 class="text-3xl sm:text-4xl font-header font-bold text-gray-900 mb-4">
-        Transparante prijzen
+        Kies een betaald pakket
       </h2>
       <p class="text-lg text-gray-600 max-w-2xl mx-auto">
-        Kies het plan dat bij jouw behoeften past. Credits verlopen nooit en je betaalt alleen voor wat je gebruikt.
+        Upgrade voor meer kracht. De gratis scan is beschikbaar in de sectie hierboven.
       </p>
     </div>
 
-    <div class="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-      <!-- Single Scan -->
-      <div class="glass p-8 rounded-2xl transition-all duration-300 hover:scale-105 hover:shadow-xl">
-        <div class="text-center mb-8">
-          <h3 class="text-xl font-header font-bold text-gray-900 mb-2">Losse Scan</h3>
-          <div class="text-3xl font-bold text-gray-900">€9,95</div>
-          <p class="text-gray-600">voor één scan</p>
+    <div class="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+      <!-- Starter Tier -->
+      <div class="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+        <div class="text-center">
+          <h3 class="text-lg font-semibold leading-8 text-gray-900">Starter</h3>
+          <p class="mt-2 text-sm text-gray-500">Ideaal voor kleine bedrijven en freelancers</p>
+          <div class="mt-4 flex items-center justify-center gap-x-2">
+            <span class="text-3xl font-bold text-gray-900">€19,95</span>
+            <span class="text-sm font-medium text-gray-500">/ eenmalig</span>
+          </div>
+          <p class="mt-4 text-sm text-gray-600">Essentiële AI-rapportages en PDF-exports.</p>
+          <ul role="list" class="mt-6 space-y-4">
+            <li class="flex space-x-3">
+              <svg class="h-6 w-6 flex-shrink-0 text-green-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+              </svg>
+              <span class="text-sm text-gray-700">Alle Basic-functies</span>
+            </li>
+            <li class="flex space-x-3">
+              <svg class="h-6 w-6 flex-shrink-0 text-green-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+              </svg>
+              <span class="text-sm text-gray-700">AI-gegenereerd content rapport</span>
+            </li>
+            <li class="flex space-x-3">
+              <svg class="h-6 w-6 flex-shrink-0 text-green-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+              </svg>
+              <span class="text-sm text-gray-700">Downloadbare PDF-rapporten</span>
+            </li>
+          </ul>
         </div>
-        
-        <ul class="space-y-4 mb-8">
-          <li class="flex items-center">
-            <svg class="w-5 h-5 text-success-green mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-            </svg>
-            1 scan
-          </li>
-          <li class="flex items-center">
-            <svg class="w-5 h-5 text-success-green mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-            </svg>
-            Basis PDF rapport
-          </li>
-          <li class="flex items-center">
-            <svg class="w-5 h-5 text-success-green mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-            </svg>
-            AI-vindbaarheid score
-          </li>
-        </ul>
-
-        <URLInput 
-          size="default"
-          on:scan={onScan}
-          placeholder="https://jouwwebsite.nl"
-          buttonText="Start scan"
-          loading={isScanning}
-          disabled={isScanning}
-        />
+        <a href="/#" class="mt-8 block w-full rounded-md bg-blue-600 px-3 py-2 text-center text-sm font-semibold text-white shadow-sm hover:bg-blue-500">Koop nu</a>
       </div>
 
-      <!-- Starter Pack -->
-      <div class="glass p-8 rounded-2xl border-2 border-primary-blue relative transition-all duration-300 hover:scale-105 hover:shadow-xl">
-        <div class="absolute -top-4 left-1/2 transform -translate-x-1/2">
-          <span class="bg-primary-blue text-white px-4 py-1 rounded-full text-sm font-medium">
-            Populair
-          </span>
+      <!-- Business Tier -->
+      <div class="rounded-2xl border-2 border-blue-600 bg-white p-6 shadow-lg">
+        <div class="text-center">
+          <h3 class="text-lg font-semibold leading-8 text-blue-600">Business</h3>
+          <p class="mt-2 text-sm text-gray-500">Voor MKB en marketing professionals</p>
+          <div class="mt-4 flex items-center justify-center gap-x-2">
+            <span class="text-3xl font-bold text-gray-900">€49,95</span>
+            <span class="text-sm font-medium text-gray-500">/ eenmalig</span>
+          </div>
+          <p class="mt-4 text-sm text-gray-600">Diepgaande AI-analyse en strategische content.</p>
+          <ul role="list" class="mt-6 space-y-4">
+            <li class="flex space-x-3">
+              <svg class="h-6 w-6 flex-shrink-0 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+              </svg>
+              <span class="text-sm text-gray-700">Alle Starter-functies</span>
+            </li>
+            <li class="flex space-x-3">
+              <svg class="h-6 w-6 flex-shrink-0 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+              </svg>
+              <span class="text-sm text-gray-700">AI-auteur voor content verbetering</span>
+            </li>
+            <li class="flex space-x-3">
+              <svg class="h-6 w-6 flex-shrink-0 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+              </svg>
+              <span class="text-sm text-gray-700">Volledig narratief PDF-rapport</span>
+            </li>
+            <li class="flex space-x-3">
+              <svg class="h-6 w-6 flex-shrink-0 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+              </svg>
+              <span class="text-sm text-gray-700">Analyse van de versheid van content</span>
+            </li>
+          </ul>
         </div>
-        
-        <div class="text-center mb-8">
-          <h3 class="text-xl font-header font-bold text-gray-900 mb-2">Starter Pack</h3>
-          <div class="text-3xl font-bold text-gray-900">€19,95</div>
-          <p class="text-gray-600">voor 2 credits + 1 bonus</p>
-        </div>
-        
-        <ul class="space-y-4 mb-8">
-          <li class="flex items-center">
-            <svg class="w-5 h-5 text-success-green mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-            </svg>
-            2 credits (verlopen nooit)
-          </li>
-          <li class="flex items-center">
-            <svg class="w-5 h-5 text-success-green mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-            </svg>
-            +1 gratis bonus scan
-          </li>
-          <li class="flex items-center">
-            <svg class="w-5 h-5 text-success-green mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-            </svg>
-            Uitgebreid PDF rapport
-          </li>
-          <li class="flex items-center">
-            <svg class="w-5 h-5 text-success-green mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-            </svg>
-            Scan historie (30 dagen)
-          </li>
-        </ul>
-
-        <button class="w-full bg-primary-blue text-white py-2 px-4 rounded-lg hover:bg-primary-blue-dark transition-colors">
-          Koop nu
-        </button>
+        <a href="/#" class="mt-8 block w-full rounded-md bg-blue-600 px-3 py-2 text-center text-sm font-semibold text-white shadow-sm hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600">Populairste Keuze</a>
       </div>
 
-      <!-- Professional Pack -->
-      <div class="glass p-8 rounded-2xl transition-all duration-300 hover:scale-105 hover:shadow-xl">
-        <div class="text-center mb-8">
-          <h3 class="text-xl font-header font-bold text-gray-900 mb-2">Professional Pack</h3>
-          <div class="text-3xl font-bold text-gray-900">€49,95</div>
-          <p class="text-gray-600">voor 5 credits + 1 bonus</p>
+      <!-- Enterprise Tier -->
+      <div class="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+        <div class="text-center">
+          <h3 class="text-lg font-semibold leading-8 text-gray-900">Enterprise</h3>
+          <p class="mt-2 text-sm text-gray-500">Voor bureaus en grote ondernemingen</p>
+          <div class="mt-4 flex items-center justify-center gap-x-2">
+            <span class="text-3xl font-bold text-gray-900">€149,95</span>
+            <span class="text-sm font-medium text-gray-500">/ eenmalig</span>
+          </div>
+          <p class="mt-4 text-sm text-gray-600">Strategische analyses en concurrentievoordeel.</p>
+          <ul role="list" class="mt-6 space-y-4">
+            <li class="flex space-x-3">
+              <svg class="h-6 w-6 flex-shrink-0 text-green-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+              </svg>
+              <span class="text-sm text-gray-700">Alle Business-functies</span>
+            </li>
+            <li class="flex space-x-3">
+              <svg class="h-6 w-6 flex-shrink-0 text-green-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+              </svg>
+              <span class="text-sm text-gray-700">Multi-pagina scan & analyse</span>
+            </li>
+            <li class="flex space-x-3">
+              <svg class="h-6 w-6 flex-shrink-0 text-green-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+              </svg>
+              <span class="text-sm text-gray-700">Concurrentie-analyse</span>
+            </li>
+            <li class="flex space-x-3">
+              <svg class="h-6 w-6 flex-shrink-0 text-green-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+              </svg>
+              <span class="text-sm text-gray-700">Strategische roadmap</span>
+            </li>
+          </ul>
         </div>
-        
-        <ul class="space-y-4 mb-8">
-          <li class="flex items-center">
-            <svg class="w-5 h-5 text-success-green mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-            </svg>
-            5 credits (verlopen nooit)
-          </li>
-          <li class="flex items-center">
-            <svg class="w-5 h-5 text-success-green mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-            </svg>
-            +1 gratis bonus scan
-          </li>
-          <li class="flex items-center">
-            <svg class="w-5 h-5 text-success-green mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-            </svg>
-            Uitgebreid PDF rapport
-          </li>
-          <li class="flex items-center">
-            <svg class="w-5 h-5 text-success-green mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-            </svg>
-            Scan historie (90 dagen)
-          </li>
-        </ul>
-
-        <button class="w-full bg-primary-blue text-white py-2 px-4 rounded-lg hover:bg-primary-blue-dark transition-colors">
-          Koop nu
-        </button>
+        <a href="/#" class="mt-8 block w-full rounded-md bg-gray-600 px-3 py-2 text-center text-sm font-semibold text-white shadow-sm hover:bg-gray-500">Neem contact op</a>
       </div>
     </div>
   </div>

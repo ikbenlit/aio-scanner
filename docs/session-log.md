@@ -19,6 +19,91 @@ SESSIONLOG-Template
 
 ---
 
+### 📅 01-07-2025 11:15 - Session #5 | URL Parsing Error Fix
+
+**Focus:** Fix "Invalid URL" error preventing PDF downloads for certain scans
+**Goal:** Robust URL handling for PDF filename generation
+
+**🏆 MAJOR ACHIEVEMENTS:**
+- [x] **URL Parsing Error Resolved**
+  - ✅ Added safe URL parsing with try-catch in PDF download function
+  - ✅ Implemented fallback hostname extraction for malformed URLs
+  - ✅ Fixed `extractDomainName()` in narrativeGenerator.ts
+
+**Key Technical Wins:**
+- ✅ **Defensive Programming**: `new URL()` constructor now has proper error handling
+- ✅ **Sanitized Filenames**: Invalid characters stripped for safe PDF filenames
+
+**Lessons Learned:**
+- Never assume external data (URLs) will be in valid format
+- JavaScript URL constructor is strict - always use try-catch for user input
+
+---
+
+### 📅 01-07-2025 10:45 - Session #4 | PDF Database Query Fix
+
+**Focus:** Fix real scan PDF generation showing starter template instead of new glassmorphism business design
+**Goal:** Ensure real scan data properly generates Phase 5 redesigned business PDFs
+
+**🏆 MAJOR ACHIEVEMENTS:**
+- [x] **Database Query Bug Fixed**
+  - ✅ Test endpoint was querying wrong columns (`scan_result, narrative_report`)
+  - ✅ Correct query uses `result_json` with nested `narrativeReport` data
+  - ✅ Real scan `8445d046-0cff-493c-b8bf-daeecd533e13` now generates proper business PDF
+
+- [x] **Data Extraction Logic Corrected**
+  - ✅ Fixed extraction: `resultData.narrativeReport` from `result_json` column
+  - ✅ Verified narrative data exists (727 words) in database
+  - ✅ Business tier PDFs now show new glassmorphism design with real content
+
+**Key Technical Wins:**
+- ✅ **Debugging Infrastructure**: Added comprehensive logging for PDF generation flow
+- ✅ **Data Validation**: Console logs verify tier, narrative presence, and content preview
+- ✅ **Phase 5 Design Validated**: New glassmorphism business PDF works with real scan data
+
+**Scope Management Success:**
+- 🚫 **No PDF Generator Changes**: Issue was data access, not template generation
+- ✅ **Database Structure Understanding**: Learned actual schema vs assumed schema
+- ✅ **Hot Reload Fix**: Development server restart resolved caching issues
+
+**Lessons Learned:**
+- Database column assumptions can cause silent failures in tier-based PDF generation
+- Real vs mock data testing reveals integration issues not caught in isolated testing
+- Development server restarts are essential after significant endpoint changes
+
+---
+
+### 📅 01-07-2025 08:30 - Session #3 | PDF Template Refactor & On-Demand Download
+
+**Focus:** Implement AI-specific PDF templates and enable visual validation of generated reports.
+**Goal:** Refactor PDF generation logic for maintainability and provide a way to directly download/view test PDFs.
+
+**🏆 MAJOR ACHIEVEMENTS:**
+- [x] **PDF Template Architecture Refactored**
+  - ✅ Created `NarrativePDFGenerator` for AI-enhanced `business` & `enterprise` reports.
+  - ✅ Separated AI content templating from core PDF generation logic (SoC).
+  - ✅ `TierAwarePDFGenerator` now delegates to the specialist generator, cleaning up the main class.
+
+- [x] **On-Demand PDF Download Implemented**
+  - ✅ Enhanced the `/api/test/pdf-generation` endpoint with a `?download=true` parameter.
+  - ✅ Developers can now instantly download and visually inspect generated PDFs for any tier.
+  - ✅ Eliminates the need to check storage buckets for visual validation during development.
+
+**Key Technical Wins:**
+- ✅ **Separation of Concerns (SoC)**: `narrativeGenerator.ts` now exclusively handles AI content layout, making the system more modular and easier to maintain.
+- ✅ **Improved Developer Experience (DX)**: The on-demand download feature significantly speeds up the feedback loop for template design and debugging.
+- ✅ **Hot Reload Debugging**: Successfully diagnosed and resolved a Vite server hot-reload issue by forcing a restart, a crucial troubleshooting step.
+
+**Scope Management Success:**
+- 🚫 **No changes to core AI logic**: The focus remained purely on the presentation layer (the PDF template) without altering the underlying data generation.
+- ✅ **Leveraged existing infrastructure**: Built upon the existing test endpoint instead of creating a new one from scratch.
+
+**Lessons Learned:**
+- When API behavior doesn't match code changes, a stale server process (hot-reload failure) is a primary suspect. A quick restart is often the fastest fix.
+- Providing developers with tools to *see* the output of their work (like a direct download) is a massive productivity booster.
+
+---
+
 ### 📅 01-07-2025 07:25 - Session 2 | PDF Storage Upload Fix - Production Ready
 
 **Focus:** PDF upload storage error diagnose en definitieve oplossing  
@@ -174,33 +259,3 @@ Resterende 155 TypeScript errors zijn voornamelijk test file issues (Jest/Vitest
 
 ## Tijd: 15 minuten
 
-### 📅 01-07-2025 08:30 - Session #3 | PDF Template Refactor & On-Demand Download
-
-**Focus:** Implement AI-specific PDF templates and enable visual validation of generated reports.
-**Goal:** Refactor PDF generation logic for maintainability and provide a way to directly download/view test PDFs.
-
-**🏆 MAJOR ACHIEVEMENTS:**
-- [x] **PDF Template Architecture Refactored**
-  - ✅ Created `NarrativePDFGenerator` for AI-enhanced `business` & `enterprise` reports.
-  - ✅ Separated AI content templating from core PDF generation logic (SoC).
-  - ✅ `TierAwarePDFGenerator` now delegates to the specialist generator, cleaning up the main class.
-
-- [x] **On-Demand PDF Download Implemented**
-  - ✅ Enhanced the `/api/test/pdf-generation` endpoint with a `?download=true` parameter.
-  - ✅ Developers can now instantly download and visually inspect generated PDFs for any tier.
-  - ✅ Eliminates the need to check storage buckets for visual validation during development.
-
-**Key Technical Wins:**
-- ✅ **Separation of Concerns (SoC)**: `narrativeGenerator.ts` now exclusively handles AI content layout, making the system more modular and easier to maintain.
-- ✅ **Improved Developer Experience (DX)**: The on-demand download feature significantly speeds up the feedback loop for template design and debugging.
-- ✅ **Hot Reload Debugging**: Successfully diagnosed and resolved a Vite server hot-reload issue by forcing a restart, a crucial troubleshooting step.
-
-**Scope Management Success:**
-- 🚫 **No changes to core AI logic**: The focus remained purely on the presentation layer (the PDF template) without altering the underlying data generation.
-- ✅ **Leveraged existing infrastructure**: Built upon the existing test endpoint instead of creating a new one from scratch.
-
-**Lessons Learned:**
-- When API behavior doesn't match code changes, a stale server process (hot-reload failure) is a primary suspect. A quick restart is often the fastest fix.
-- Providing developers with tools to *see* the output of their work (like a direct download) is a massive productivity booster.
-
----

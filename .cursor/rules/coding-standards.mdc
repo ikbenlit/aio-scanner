@@ -128,4 +128,4 @@ alwaysApply: false
 - Allocate 20% of post-MVP time to cleanup
 - Prioritize refactoring based on usage patterns
 
-When running command prompts the user uses Windows PowerShell syntax
+When running command prompts the user uses Windows Subsystem for Linux (WSL) syntax

@@ -122,20 +122,27 @@ export class TierAwarePDFGenerator {
     tier: ScanTier,
     aiContent?: NarrativeReport
   ): Promise<Buffer> {
+    console.log(`🏭 TierAwarePDFGenerator.generatePDF called with tier: ${tier}, aiContent: ${!!aiContent}`);
     
     switch(tier) {
       case 'basic':
         throw new Error('PDF generation not available for basic tier');
         
       case 'starter':
+        console.log(`📄 Generating starter PDF...`);
         return this.generateStarterPDF(scanResult);
         
       case 'business':
-        if (!aiContent) throw new Error('AI content required for business tier');
+        if (!aiContent) {
+          console.error('❌ AI content missing for business tier');
+          throw new Error('AI content required for business tier');
+        }
+        console.log(`📊 Generating business PDF with narrative content...`);
         return this.generateBusinessPDF(scanResult, aiContent);
         
       case 'enterprise':
         if (!aiContent) throw new Error('AI content required for enterprise tier');
+        console.log(`🏢 Generating enterprise PDF with narrative content...`);
         return this.generateEnterprisePDF(scanResult, aiContent);
         
       default:

@@ -58,6 +58,11 @@ CREATE TABLE public.scans (
   payment_reference text,
   user_email text,
   id uuid NOT NULL DEFAULT gen_random_uuid(),
+  pdf_generation_status text DEFAULT 'pending'::text CHECK (pdf_generation_status = ANY (ARRAY['pending'::text, 'generating'::text, 'completed'::text, 'failed'::text, 'N/A'::text, 'development'::text])),
+  last_pdf_generated_at timestamp with time zone,
+  pdf_template_version text DEFAULT '1.0'::text,
+  pdf_url text,
+  pdf_file_size integer,
   CONSTRAINT scans_pkey PRIMARY KEY (id),
   CONSTRAINT scans_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id)
 );

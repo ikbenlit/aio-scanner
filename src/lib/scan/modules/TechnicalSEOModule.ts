@@ -62,15 +62,15 @@ export class TechnicalSEOModule {
     // Add custom technical SEO analysis
     findings.push(
       {
-        title: 'Robots.txt optimalisatie nodig',
-        description: 'Voeg specifieke regels toe voor AI crawlers zoals GPTBot en ChatGPT-User',
+        title: 'Robots.txt: Optimalisatie Nodig',
+        description: 'Voeg specifieke regels toe voor AI crawlers zoals GPTBot en ChatGPT-User. Dit helpt bij het controleren hoe AI-systemen je content crawlen en indexeren.',
         priority: 'high',
         category: 'Crawling',
         impact: 'high'
       },
       {
-        title: 'Meta descriptions voor AI',
-        description: 'Optimaliseer meta descriptions voor AI parsing',
+        title: 'Meta Descriptions: AI-Optimalisatie',
+        description: 'Optimaliseer meta descriptions voor AI parsing. Goed gestructureerde metadata helpt AI-systemen je content beter te begrijpen en te categoriseren.',
         priority: 'medium',
         category: 'Metadata',
         impact: 'medium'

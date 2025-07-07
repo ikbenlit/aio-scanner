@@ -64,8 +64,8 @@ export class SchemaMarkupModule {
     
     if (jsonLdScripts.length === 0) {
       findings.push({
-        title: 'Geen JSON-LD structured data gevonden',
-        description: 'Website gebruikt geen JSON-LD schema markup',
+        title: 'Gestructureerde Data: Ontbrekend',
+        description: 'Website gebruikt geen JSON-LD schema markup. Het toevoegen van schema markup kan leiden tot rich snippets in zoekresultaten en betere zichtbaarheid.',
         priority: 'high',
         category: 'structured-data'
       });
@@ -103,8 +103,8 @@ export class SchemaMarkupModule {
 
     if (validSchemas > 0) {
       findings.push({
-        title: `${validSchemas} JSON-LD schema's gevonden`,
-        description: `Schema types: ${foundSchemaTypes.join(', ')}`,
+        title: `Gestructureerde Data: Uitstekend (${validSchemas} schema's gevonden)`,
+        description: `Gevonden schema types: ${foundSchemaTypes.join(', ')}. Schema markup helpt zoekmachines je content beter te begrijpen en kan leiden tot rich snippets in zoekresultaten.`,
         priority: 'low',
         category: 'structured-data'
       });

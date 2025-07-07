@@ -346,24 +346,28 @@ export class AICitationModule {
 
     const transparencyScore = contactSignals + businessInfoSignals;
 
+    // Create detailed findings with specific information
+    const foundContactElements = contactElements.filter(element => bodyText.includes(element));
+    const foundBusinessPatterns = businessPatterns.filter(pattern => bodyText.match(pattern));
+    
     if (transparencyScore >= 8) {
       findings.push({
-        title: 'Uitstekende business transparantie',
-        description: `${transparencyScore} transparency signals: contact info, business details`,
+        title: 'Uitstekende Business Transparantie',
+        description: `Gevonden contact elementen: ${foundContactElements.slice(0, 5).join(', ')}${foundContactElements.length > 5 ? ` en ${foundContactElements.length - 5} meer` : ''}. Dit helpt met lokale SEO, vertrouwensopbouw en gebruikerservaring.`,
         priority: 'low',
         category: 'transparency'
       });
     } else if (transparencyScore >= 4) {
       findings.push({
-        title: 'Beperkte business transparantie',
-        description: `${transparencyScore} transparency signals gevonden`,
+        title: 'Beperkte Business Transparantie',
+        description: `Gevonden: ${foundContactElements.slice(0, 3).join(', ')}${foundContactElements.length > 3 ? ` en ${foundContactElements.length - 3} meer` : ''}. Voeg meer contactinformatie toe zoals telefoonnummer, adres en KVK-nummer voor betere SEO.`,
         priority: 'medium',
         category: 'transparency'
       });
     } else {
       findings.push({
-        title: 'Ontbrekende business transparantie',
-        description: 'Website mist essentiële bedrijfsinformatie',
+        title: 'Ontbrekende Business Transparantie',
+        description: 'Website mist essentiële bedrijfsinformatie zoals contactgegevens, adres, telefoonnummer en KVK-nummer. Dit schaadt de geloofwaardigheid en lokale SEO.',
         priority: 'high',
         category: 'transparency'
       });

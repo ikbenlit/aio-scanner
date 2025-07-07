@@ -112,31 +112,31 @@ export class AIContentModule {
     // Evaluate findings
     if (faqSectionsFound > 0 || questionHeadings >= 3) {
       findings.push({
-        title: 'FAQ content gedetecteerd',
-        description: `${faqSectionsFound} FAQ secties en ${questionHeadings} vraag-koppen gevonden`,
+        title: 'FAQ Content: Uitstekend',
+        description: `${faqSectionsFound} FAQ secties en ${questionHeadings} vraag-koppen gevonden. FAQ content is ideaal voor AI-citaties en verbetert de kans dat je website wordt gebruikt als bron in AI-antwoorden.`,
         priority: 'low',
         category: 'ai-content'
       });
 
       if (questionsFound >= 5) {
         findings.push({
-          title: 'Uitgebreide FAQ content',
-          description: `${questionsFound} vragen gevonden - ideaal voor AI-citaties`,
+          title: 'Uitgebreide FAQ Content: Ideaal voor AI',
+          description: `${questionsFound} vragen gevonden. Dit uitgebreide vraag-antwoord format is perfect voor AI-assistenten om te citeren bij gebruikersvragen.`,
           priority: 'low',
           category: 'ai-content'
         });
       }
     } else if (questionHeadings >= 1) {
       findings.push({
-        title: 'Beperkte FAQ content',
-        description: `Slechts ${questionHeadings} vraag-koppen gevonden`,
+        title: 'FAQ Content: Beperkt',
+        description: `Slechts ${questionHeadings} vraag-koppen gevonden. Voeg meer FAQ content toe om beter vindbaar te worden door AI-assistenten.`,
         priority: 'medium',
         category: 'ai-content'
       });
     } else {
       findings.push({
-        title: 'Geen FAQ content gevonden',
-        description: 'Website mist vraag-antwoord content die AI-assistenten kunnen citeren',
+        title: 'FAQ Content: Ontbrekend',
+        description: 'Website mist vraag-antwoord content die AI-assistenten kunnen citeren. Voeg een FAQ sectie toe om je vindbaarheidskansen te vergroten.',
         priority: 'high',
         category: 'ai-content'
       });

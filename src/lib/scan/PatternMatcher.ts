@@ -75,7 +75,7 @@ export class PatternMatcher {
   toFindings(signals: DetectedSignal[], moduleId: string): Finding[] {
     return signals.map(signal => ({
       title: this.generateFindingTitle(signal),
-      description: signal.description,
+      description: this.generateFindingDescription(signal),
       priority: signal.impact,
       category: signal.category,
       impact: signal.impact,
@@ -179,7 +179,56 @@ export class PatternMatcher {
   }
 
   private generateFindingTitle(signal: DetectedSignal): string {
-    const matchText = signal.matches === 1 ? 'match' : 'matches';
-    return `${signal.category}: ${signal.matches} ${matchText} gevonden`;
+    const categoryTitles: Record<string, string> = {
+      'contactInfo': 'Contact Informatie',
+      'businessInfo': 'Bedrijfsinformatie',
+      'socialProof': 'Social Proof',
+      'authority': 'Authoriteit Signalen',
+      'transparency': 'Transparantie',
+      'schema': 'Schema Markup',
+      'structured-data': 'Gestructureerde Data',
+      'metadata': 'Metadata',
+      'technical': 'Technische SEO',
+      'content': 'Content Kwaliteit',
+      'performance': 'Performance',
+      'accessibility': 'Toegankelijkheid',
+      'security': 'Beveiliging'
+    };
+
+    const friendlyCategory = categoryTitles[signal.category] || signal.category;
+    
+    // Generate more descriptive titles based on signal strength
+    if (signal.matches >= 8) {
+      return `${friendlyCategory}: Uitstekend (${signal.matches} elementen gevonden)`;
+    } else if (signal.matches >= 5) {
+      return `${friendlyCategory}: Goed (${signal.matches} elementen gevonden)`;
+    } else if (signal.matches >= 3) {
+      return `${friendlyCategory}: Beperkt (${signal.matches} elementen gevonden)`;
+    } else {
+      return `${friendlyCategory}: Ontbrekend (${signal.matches} elementen gevonden)`;
+    }
+  }
+
+  private generateFindingDescription(signal: DetectedSignal): string {
+    const contextExplanations: Record<string, string> = {
+      'contactInfo': 'Contactinformatie helpt bezoekers en zoekmachines je bedrijf te vinden en vertrouwen op te bouwen.',
+      'businessInfo': 'Duidelijke bedrijfsinformatie verbetert de geloofwaardigheid en lokale SEO.',
+      'socialProof': 'Social proof zoals testimonials en reviews verhogen de conversie en vertrouwen.',
+      'authority': 'Authoriteit signalen zoals certificaten en vermeldingen versterken je online reputatie.',
+      'transparency': 'Transparantie over je bedrijf bouwt vertrouwen op bij bezoekers en zoekmachines.',
+      'schema': 'Schema markup helpt zoekmachines je content beter te begrijpen en weer te geven.',
+      'structured-data': 'Gestructureerde data verbetert hoe je site wordt weergegeven in zoekresultaten.',
+      'metadata': 'Goede metadata verbetert de zichtbaarheid en klikgegevens in zoekmachines.',
+      'technical': 'Technische SEO optimalisatie verbetert de prestaties en indexering van je site.',
+      'content': 'Kwalitatieve content is essentieel voor gebruikerservaring en SEO rankings.',
+      'performance': 'Snelle laadtijden verbeteren de gebruikerservaring en SEO rankings.',
+      'accessibility': 'Toegankelijkheid zorgt ervoor dat je site bruikbaar is voor alle gebruikers.',
+      'security': 'Beveiliging beschermt je site en gebruikers tegen bedreigingen.'
+    };
+
+    const baseDescription = signal.description || 'Geen beschrijving beschikbaar';
+    const context = contextExplanations[signal.category] || '';
+    
+    return context ? `${baseDescription} ${context}` : baseDescription;
   }
 } 

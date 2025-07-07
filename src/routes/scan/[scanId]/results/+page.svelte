@@ -5,9 +5,9 @@
   import Header from '$lib/components/layout/Header.svelte';
   import { Button } from '$lib/components/ui/button';
   import { Alert, AlertDescription } from '$lib/components/ui/alert';
-  import ProgressCircle from '$lib/components/scan/ProgressCircle.svelte';
-  import ModuleProgressGrid from '$lib/components/scan/ModuleProgressGrid.svelte';
-  import WebsitePreview from '$lib/components/scan/WebsitePreview.svelte';
+  import ProgressCircle from '$lib/components/features/scan/ProgressCircle.svelte';
+  import ModuleProgressGrid from '$lib/components/features/scan/ModuleProgressGrid.svelte';
+  import WebsitePreview from '$lib/components/features/scan/WebsitePreview.svelte';
   import type { ScanModule } from '$lib/types/scan';
   import type { ModuleItem } from '$lib/components/features/scan/ModuleProgressGrid.svelte';
   

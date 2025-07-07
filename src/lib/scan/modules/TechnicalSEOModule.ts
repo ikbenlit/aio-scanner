@@ -1,5 +1,4 @@
 import * as cheerio from 'cheerio';
-import robotsParser from 'robots-parser';
 import type { ModuleResult, Finding } from '../../types/scan';
 import { ContentFetcher } from '../ContentFetcher.js';
 import { PatternMatcher, type PatternConfig } from '../PatternMatcher';

@@ -1,29 +1,16 @@
 <script lang="ts">
+  import { onMount } from 'svelte';
   import { page } from '$app/stores';
   import { goto } from '$app/navigation';
   import Header from '$lib/components/layout/Header.svelte';
   import { Button } from '$lib/components/ui/button';
   import { Alert, AlertDescription } from '$lib/components/ui/alert';
-  import ProgressCircle from '$lib/components/features/scan/ProgressCircle.svelte';
-  import ModuleProgressGrid from '$lib/components/features/scan/ModuleProgressGrid.svelte';
-  import StatusIndicators from '$lib/components/features/scan/StatusIndicators.svelte';
-  import WebsitePreview from '$lib/components/features/scan/WebsitePreview.svelte';
+  import ProgressCircle from '$lib/components/scan/ProgressCircle.svelte';
+  import ModuleProgressGrid from '$lib/components/scan/ModuleProgressGrid.svelte';
+  import WebsitePreview from '$lib/components/scan/WebsitePreview.svelte';
+  import type { ScanModule } from '$lib/types/scan';
   import type { ModuleItem } from '$lib/components/features/scan/ModuleProgressGrid.svelte';
   
-  interface ScanModule {
-    id?: string;
-    moduleName?: string;
-    name?: string;
-    icon?: string;
-    score: number;
-    findings: Array<{
-      type?: 'success' | 'warning' | 'error';
-      priority?: 'high' | 'medium' | 'low';
-      title: string;
-      description: string;
-    }>;
-  }
-
   interface PageData {
     scan: {
       id: string;
@@ -32,27 +19,63 @@
       overallScore: number;
       moduleResults: ScanModule[];
       createdAt: string;
-      completedAt: string;
+      completedAt: string | null;
       screenshot?: string; // Screenshot data
+      tier: string;
+      pdfGenerationStatus: string | null;
+      pdfUrl: string | null;
     };
     emailStatus: {
       email: string | null;
       sentAt: string | null;
     };
+    screenshot: string | null;
+    error: string | null;
   }
   
   export let data: PageData;
-  const { scan, emailStatus } = data;
+  const { scan, emailStatus, screenshot, error } = data;
   
   console.log('Scan module results:', scan.moduleResults);
+  console.log('PDF Debug Info:', {
+    tier: scan.tier,
+    email: emailStatus.email,
+    pdfStatus: scan.pdfGenerationStatus,
+    pdfUrl: scan.pdfUrl,
+    showButton: scan.tier !== 'basic' && emailStatus.email && scan.pdfGenerationStatus === 'completed' && scan.pdfUrl
+  });
   
-  // Format email sent time
-  const emailSentTime = emailStatus.sentAt 
-    ? new Date(emailStatus.sentAt).toLocaleTimeString('nl-NL', { 
-        hour: '2-digit', 
-        minute: '2-digit' 
-      })
-    : null;
+  let emailSentTime: string | null = null;
+  if (emailStatus.sentAt) {
+    try {
+      emailSentTime = new Date(emailStatus.sentAt).toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' });
+    } catch(e) {
+      // ignore invalid date
+    }
+  }
+
+  // Poll for scan results if scan is not complete
+  onMount(() => {
+    if (scan.status !== 'completed' && scan.status !== 'failed' && typeof window !== 'undefined') {
+      const interval = setInterval(async () => {
+        try {
+          const res = await fetch(`/api/scan/results/${scan.id}`);
+          if (res.ok) {
+            const resultData = await res.json();
+            if (resultData.scan.status === 'completed' || resultData.scan.status === 'failed') {
+              clearInterval(interval);
+              // Force a full reload to get server-loaded data
+              window.location.reload();
+            }
+          }
+        } catch (err) {
+          console.error('Polling error:', err);
+        }
+      }, 5000); // Poll every 5 seconds
+
+      return () => clearInterval(interval);
+    }
+  });
 
   function handleNewScan() {
     goto('/');
@@ -60,6 +83,36 @@
 
   function handleUpgrade() {
     goto('/upgrade');
+  }
+
+  // PDF Download functie
+  async function downloadPDF(scanId: string, email: string | null) {
+    if (!email) {
+      alert('Email not found for this scan. Please try running the scan again and provide an email to download the report.');
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/pdf/${scanId}/download?email=${encodeURIComponent(email)}`);
+      
+      if (response.ok) {
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `AIO-Scanner-${scan.tier}-Report-${new URL(scan.url).hostname}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+      } else {
+        const errorText = await response.text();
+        alert(`PDF download mislukt: ${errorText}`);
+      }
+    } catch (err) {
+      console.error('PDF download error:', err);
+      alert('Er is een onverwachte fout opgetreden bij het downloaden van de PDF.');
+    }
   }
 
   // Convert modules to progress grid format - AI modules eerst, dan de rest
@@ -194,8 +247,8 @@
 </script>
 
 <svelte:head>
-<title>Scan Resultaten - AIO Scanner</title>
-<meta name="description" content="Je AI-gereedheid scan resultaten zijn beschikbaar." />
+<title>Scan Resultaten voor {scan.url}</title>
+<meta name="description" content="Analyse en AI-readiness score voor {scan.url}" />
 </svelte:head>
 
 <Header />
@@ -212,161 +265,205 @@
     </p>
   </div>
 
-  <!-- Website Preview -->
-  <div class="max-w-2xl mx-auto mb-12">
-    <WebsitePreview 
-      websiteUrl={scan.url}
-      websiteScreenshot={scan.screenshot || ''}
-      statusText="Scan voltooid"
-      isLoading={false}
-    />
-  </div>
-
-  <!-- Email Status Alert -->
-  {#if emailStatus.email}
-    <Alert class="mb-8">
+  <!-- Error Alert -->
+  {#if error}
+    <Alert variant="destructive" class="mb-8">
       <AlertDescription>
-        <div class="flex items-center gap-2">
-          <span class="text-xl">📧</span>
-          <span>
-            Een uitgebreid PDF rapport is onderweg naar <strong>{emailStatus.email}</strong>
-            {#if emailSentTime}
-              (verzonden om {emailSentTime})
-            {/if}
-          </span>
-        </div>
+        <p><strong>Er is een fout opgetreden:</strong> {error}</p>
+        <p class="mt-2">Probeer de scan opnieuw uit te voeren. Als het probleem aanhoudt, neem contact op met support.</p>
       </AlertDescription>
     </Alert>
   {/if}
 
-  <!-- Results Grid -->
-  <div class="grid lg:grid-cols-2 gap-8 mb-12">
-    <!-- Left Column: Score & Status -->
-    <div class="space-y-8">
-      <!-- Score Circle -->
-      <div class="glass p-8 rounded-2xl text-center">
+  <!-- Top Section: 50/50 Split -->
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
+    <!-- Left: Website Preview -->
+    <div class="space-y-6 order-1 lg:order-1">
+      <WebsitePreview 
+        websiteUrl={scan.url}
+        websiteScreenshot={scan.screenshot || ''}
+        statusText="Scan voltooid"
+        isLoading={false}
+      />
+      
+      <!-- PDF Status for non-basic tiers -->
+      {#if scan.tier !== 'basic'}
+        <Alert>
+          <AlertDescription>
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <div class="flex items-center gap-2">
+                <span class="text-xl">
+                  {#if scan.pdfGenerationStatus === 'completed' && scan.pdfUrl}
+                    📄
+                  {:else if scan.pdfGenerationStatus === 'generating' || scan.pdfGenerationStatus === 'pending'}
+                    ⚙️
+                  {:else}
+                    📧
+                  {/if}
+                </span>
+                <span class="text-sm">
+                  {#if scan.pdfGenerationStatus === 'completed' && scan.pdfUrl}
+                    PDF rapport is klaar!
+                  {:else if scan.pdfGenerationStatus === 'generating' || scan.pdfGenerationStatus === 'pending'}
+                    PDF wordt gegenereerd...
+                  {:else if emailStatus.email}
+                    Rapport wordt naar {emailStatus.email} gestuurd
+                  {:else}
+                    Rapport wordt klaargezet
+                  {/if}
+                </span>
+              </div>
+              
+              {#if scan.pdfGenerationStatus === 'completed' && scan.pdfUrl}
+                <Button 
+                  variant="default" 
+                  size="sm"
+                  on:click={() => downloadPDF(scan.id, emailStatus.email)}
+                  class="w-full sm:w-auto"
+                >
+                  📄 Download PDF
+                </Button>
+              {/if}
+            </div>
+          </AlertDescription>
+        </Alert>
+      {/if}
+    </div>
+
+    <!-- Right: AI-Gereedheid Score -->
+    <div class="flex items-center justify-center order-2 lg:order-2">
+      <div class="glass p-6 lg:p-8 rounded-2xl text-center w-full max-w-md mx-auto">
         <ProgressCircle 
           progress={scan.overallScore} 
-          size={192} 
+          size={180} 
         />
-        <h2 class="text-xl font-semibold mt-4">AI-Gereedheid Score</h2>
-        <p class="text-gray-600 mt-2">
-          Je website scoort {scan.overallScore} van de 100 punten
+        <h2 class="text-xl lg:text-2xl font-semibold mt-4 lg:mt-6">AI-Gereedheid Score</h2>
+        <p class="text-gray-600 mt-2 text-base lg:text-lg">
+          {scan.overallScore} van de 100 punten
         </p>
-      </div>
-
-      <!-- Status Indicators -->
-      <div class="glass p-8 rounded-2xl">
-        <StatusIndicators />
+        <div class="mt-3 lg:mt-4 text-xs lg:text-sm text-gray-500">
+          Gebaseerd op {scan.moduleResults ? scan.moduleResults.length : 0} modules
+        </div>
       </div>
     </div>
+  </div>
 
-    <!-- Right Column: Module Results -->
-    <div class="glass p-8 rounded-2xl">
-      <h2 class="text-xl font-semibold mb-6">Gedetailleerde Resultaten</h2>
-      
-      {#each moduleItems as module}
-        <div class="mb-6 last:mb-0">
-          <!-- Module Header - Clickable -->
-          <button 
-            class="w-full flex items-center justify-between p-4 rounded-lg transition-all duration-200 hover:shadow-sm"
-            class:bg-gradient-to-r={module.name.startsWith('AI')}
-            class:from-blue-50={module.name.startsWith('AI')}
-            class:to-purple-50={module.name.startsWith('AI')}
-            class:bg-gray-50={!module.name.startsWith('AI')}
-            on:click={() => toggleModule(module.id)}
-          >
-            <div class="flex items-center gap-3">
-              <span class="text-xl">{module.icon}</span>
-              <div class="text-left">
-                <h3 class="text-lg font-medium text-gray-900">{module.name}</h3>
-                {#if module.name.startsWith('AI')}
-                  <span class="text-sm text-blue-600 font-medium">AI Module</span>
+  <!-- Results Section -->
+  <div class="space-y-8">
+    {#if scan.moduleResults && scan.moduleResults.length > 0}
+      <!-- Detailed Results -->
+      <div class="glass p-8 rounded-2xl">
+        <h2 class="text-xl font-semibold mb-6">Gedetailleerde Resultaten</h2>
+        
+        {#each moduleItems as module}
+          <div class="mb-6 last:mb-0">
+            <!-- Module Header - Clickable -->
+            <button 
+              class="w-full flex items-center justify-between p-4 rounded-lg transition-all duration-200 hover:shadow-sm"
+              class:bg-gradient-to-r={module.name.startsWith('AI')}
+              class:from-blue-50={module.name.startsWith('AI')}
+              class:to-purple-50={module.name.startsWith('AI')}
+              class:bg-gray-50={!module.name.startsWith('AI')}
+              on:click={() => toggleModule(module.id)}
+            >
+              <div class="flex items-center gap-3">
+                <span class="text-xl">{module.icon}</span>
+                <div class="text-left">
+                  <h3 class="text-lg font-medium text-gray-900">{module.name}</h3>
+                  {#if module.name.startsWith('AI')}
+                    <span class="text-sm text-blue-600 font-medium">AI Module</span>
+                  {/if}
+                </div>
+              </div>
+              
+              <div class="flex items-center gap-3">
+                {#if getModuleData(module)}
+                  <span class="px-3 py-1 rounded-full text-sm font-semibold bg-green-100 text-green-700">
+                    Geïmplementeerd
+                  </span>
+                {:else}
+                  <span class="px-3 py-1 rounded-full text-sm font-semibold bg-yellow-100 text-yellow-700">
+                    In ontwikkeling
+                  </span>
+                {/if}
+                
+                <!-- Chevron Icon -->
+                <svg 
+                  class="w-5 h-5 text-gray-400 transition-transform duration-200"
+                  class:rotate-180={expandedStates[module.id]}
+                  fill="none" 
+                  stroke="currentColor" 
+                  viewBox="0 0 24 24"
+                >
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                </svg>
+              </div>
+            </button>
+
+            <!-- Module Content - Collapsible -->
+            {#if expandedStates[module.id]}
+              <div class="mt-4 pl-4 border-l-2 border-gray-100">
+                {#if getModuleData(module)}
+                  {@const moduleData = getModuleData(module)}
+                  {#if moduleData && moduleData.findings && moduleData.findings.length > 0}
+                    <div class="space-y-3">
+                      {#each moduleData.findings as finding}
+                        {@const displayType = finding.type || priorityToType(finding.priority || 'medium')}
+                        <div class="flex items-start gap-3 p-4 rounded-lg" 
+                          class:bg-green-50={displayType === 'success'}
+                          class:bg-yellow-50={displayType === 'warning'}
+                          class:bg-red-50={displayType === 'error'}
+                        >
+                          <span class="mt-0.5 text-lg">
+                            {#if displayType === 'success'}
+                              <span class="text-green-500">✓</span>
+                            {:else if displayType === 'warning'}
+                              <span class="text-yellow-500">⚠️</span>
+                            {:else}
+                              <span class="text-red-500">✗</span>
+                            {/if}
+                          </span>
+                          <div class="flex-1">
+                            <p class="text-sm font-medium mb-1" 
+                              class:text-green-700={displayType === 'success'}
+                              class:text-yellow-700={displayType === 'warning'}
+                              class:text-red-700={displayType === 'error'}
+                            >
+                              {finding.title}
+                            </p>
+                            <p class="text-sm" 
+                              class:text-green-600={displayType === 'success'}
+                              class:text-yellow-600={displayType === 'warning'}
+                              class:text-red-600={displayType === 'error'}
+                            >
+                              {finding.description}
+                            </p>
+                          </div>
+                        </div>
+                      {/each}
+                    </div>
+                  {:else}
+                    <p class="text-sm text-gray-500 italic p-4">Geen specifieke bevindingen voor deze module.</p>
+                  {/if}
+                {:else}
+                  <div class="p-4 bg-gray-50 rounded-lg">
+                    <p class="text-sm text-gray-600">
+                      Deze module is momenteel in ontwikkeling. Binnenkort beschikbaar!
+                    </p>
+                  </div>
                 {/if}
               </div>
-            </div>
-            
-            <div class="flex items-center gap-3">
-              {#if getModuleData(module)}
-                <span class="px-3 py-1 rounded-full text-sm font-semibold bg-green-100 text-green-700">
-                  Geïmplementeerd
-                </span>
-              {:else}
-                <span class="px-3 py-1 rounded-full text-sm font-semibold bg-yellow-100 text-yellow-700">
-                  In ontwikkeling
-                </span>
-              {/if}
-              
-              <!-- Chevron Icon -->
-              <svg 
-                class="w-5 h-5 text-gray-400 transition-transform duration-200"
-                class:rotate-180={expandedStates[module.id]}
-                fill="none" 
-                stroke="currentColor" 
-                viewBox="0 0 24 24"
-              >
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-              </svg>
-            </div>
-          </button>
-
-          <!-- Module Content - Collapsible -->
-          {#if expandedStates[module.id]}
-            <div class="mt-4 pl-4 border-l-2 border-gray-100">
-              {#if getModuleData(module)}
-                {@const moduleData = getModuleData(module)}
-                {#if moduleData && moduleData.findings && moduleData.findings.length > 0}
-                  <div class="space-y-3">
-                    {#each moduleData.findings as finding}
-                      {@const displayType = finding.type || priorityToType(finding.priority || 'medium')}
-                      <div class="flex items-start gap-3 p-4 rounded-lg" 
-                        class:bg-green-50={displayType === 'success'}
-                        class:bg-yellow-50={displayType === 'warning'}
-                        class:bg-red-50={displayType === 'error'}
-                      >
-                        <span class="mt-0.5 text-lg">
-                          {#if displayType === 'success'}
-                            <span class="text-green-500">✓</span>
-                          {:else if displayType === 'warning'}
-                            <span class="text-yellow-500">⚠️</span>
-                          {:else}
-                            <span class="text-red-500">✗</span>
-                          {/if}
-                        </span>
-                        <div class="flex-1">
-                          <p class="text-sm font-medium mb-1" 
-                            class:text-green-700={displayType === 'success'}
-                            class:text-yellow-700={displayType === 'warning'}
-                            class:text-red-700={displayType === 'error'}
-                          >
-                            {finding.title}
-                          </p>
-                          <p class="text-sm" 
-                            class:text-green-600={displayType === 'success'}
-                            class:text-yellow-600={displayType === 'warning'}
-                            class:text-red-600={displayType === 'error'}
-                          >
-                            {finding.description}
-                          </p>
-                        </div>
-                      </div>
-                    {/each}
-                  </div>
-                {:else}
-                  <p class="text-sm text-gray-500 italic p-4">Geen specifieke bevindingen voor deze module.</p>
-                {/if}
-              {:else}
-                <div class="p-4 bg-gray-50 rounded-lg">
-                  <p class="text-sm text-gray-600">
-                    Deze module is momenteel in ontwikkeling. Binnenkort beschikbaar!
-                  </p>
-                </div>
-              {/if}
-            </div>
-          {/if}
-        </div>
-      {/each}
-    </div>
+            {/if}
+          </div>
+        {/each}
+      </div>
+    {:else}
+      <div class="glass p-8 rounded-2xl text-center">
+        <div class="text-6xl mb-4">🔍</div>
+        <h3 class="text-xl font-semibold mb-2">Geen resultaten beschikbaar</h3>
+        <p class="text-gray-600">De scan heeft nog geen resultaten opgeleverd.</p>
+      </div>
+    {/if}
   </div>
 
   <!-- Action Buttons -->

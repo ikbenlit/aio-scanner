@@ -95,6 +95,7 @@ export class AIContentModule {
     // Check for question patterns in headings
     const headings = $('h1, h2, h3, h4, h5, h6');
     let questionHeadings = 0;
+    const foundQuestions: string[] = [];
     
     headings.each((_, heading) => {
       const text = $(heading).text().trim();
@@ -106,14 +107,21 @@ export class AIContentModule {
       
       if (questionPatterns.some(pattern => pattern.test(text))) {
         questionHeadings++;
+        if (foundQuestions.length < 3) { // Limit examples
+          foundQuestions.push(text);
+        }
       }
     });
 
     // Evaluate findings
     if (faqSectionsFound > 0 || questionHeadings >= 3) {
+      const exampleText = foundQuestions.length > 0 
+        ? ` Voorbeelden: "${foundQuestions.slice(0, 2).join('", "')}".` 
+        : '';
+      
       findings.push({
         title: 'FAQ Content: Uitstekend',
-        description: `${faqSectionsFound} FAQ secties en ${questionHeadings} vraag-koppen gevonden. FAQ content is ideaal voor AI-citaties en verbetert de kans dat je website wordt gebruikt als bron in AI-antwoorden.`,
+        description: `${faqSectionsFound} FAQ secties en ${questionHeadings} vraag-koppen gevonden.${exampleText} FAQ content is ideaal voor AI-citaties en verbetert de kans dat je website wordt gebruikt als bron.`,
         priority: 'low',
         category: 'ai-content'
       });
@@ -121,22 +129,26 @@ export class AIContentModule {
       if (questionsFound >= 5) {
         findings.push({
           title: 'Uitgebreide FAQ Content: Ideaal voor AI',
-          description: `${questionsFound} vragen gevonden. Dit uitgebreide vraag-antwoord format is perfect voor AI-assistenten om te citeren bij gebruikersvragen.`,
+          description: `${questionsFound} vragen gevonden in FAQ secties. Dit uitgebreide vraag-antwoord format is perfect voor AI-assistenten om te citeren bij gebruikersvragen.`,
           priority: 'low',
           category: 'ai-content'
         });
       }
     } else if (questionHeadings >= 1) {
+      const exampleText = foundQuestions.length > 0 
+        ? ` Gevonden: "${foundQuestions[0]}".` 
+        : '';
+      
       findings.push({
         title: 'FAQ Content: Beperkt',
-        description: `Slechts ${questionHeadings} vraag-koppen gevonden. Voeg meer FAQ content toe om beter vindbaar te worden door AI-assistenten.`,
+        description: `Slechts ${questionHeadings} vraag-koppen gevonden.${exampleText} Voeg meer FAQ content toe om beter vindbaar te worden door AI-assistenten.`,
         priority: 'medium',
         category: 'ai-content'
       });
     } else {
       findings.push({
         title: 'FAQ Content: Ontbrekend',
-        description: 'Website mist vraag-antwoord content die AI-assistenten kunnen citeren. Voeg een FAQ sectie toe om je vindbaarheidskansen te vergroten.',
+        description: 'Website mist vraag-antwoord content die AI-assistenten kunnen citeren. Voeg een FAQ sectie toe met vragen zoals "Wat doet [bedrijf]?" of "Hoe werkt [service]?".',
         priority: 'high',
         category: 'ai-content'
       });

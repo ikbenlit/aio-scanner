@@ -285,31 +285,41 @@ export class AICitationModule {
     ];
 
     let recognitionSignals = 0;
+    const foundRecognition: string[] = [];
     recognitionPatterns.forEach(pattern => {
       const matches = bodyText.match(pattern);
-      if (matches) recognitionSignals += matches.length;
+      if (matches) {
+        recognitionSignals += matches.length;
+        foundRecognition.push(...matches.slice(0, 3)); // Limit per pattern
+      }
     });
 
     const totalAuthoritySignals = mediaSignals + clientSignals + recognitionSignals;
 
+    // Build concrete examples
+    const authorityExamples: string[] = [];
+    if (mediaSignals > 0) authorityExamples.push(`${mediaSignals} media vermeldingen`);
+    if (clientSignals > 0) authorityExamples.push(`${clientSignals} klant referenties`);
+    if (recognitionSignals > 0) authorityExamples.push(`${recognitionSignals} awards/erkenningen`);
+
     if (totalAuthoritySignals >= 8) {
       findings.push({
-        title: 'Sterke authority markers',
-        description: `${totalAuthoritySignals} authority signals: ${mediaSignals} media, ${clientSignals} clients, ${recognitionSignals} recognition`,
+        title: 'Sterke Authoriteit Signalen',
+        description: `Uitstekende authoriteit met ${authorityExamples.join(', ')}. ${foundRecognition.length > 0 ? `Gevonden termen: ${foundRecognition.slice(0, 3).join(', ')}${foundRecognition.length > 3 ? '...' : ''}. ` : ''}Dit versterkt je geloofwaardigheid bij AI-assistenten.`,
         priority: 'low',
         category: 'authority'
       });
     } else if (totalAuthoritySignals >= 3) {
       findings.push({
-        title: 'Beperkte authority markers',
-        description: `${totalAuthoritySignals} authority signals gevonden`,
+        title: 'Beperkte Authoriteit Signalen',
+        description: `Gevonden: ${authorityExamples.join(', ')}. Voeg meer client testimonials, media vermeldingen of awards toe om je authoriteit te versterken voor AI-citaties.`,
         priority: 'medium',
         category: 'authority'
       });
     } else {
       findings.push({
-        title: 'Ontbrekende authority markers',
-        description: 'Website toont weinig external validation',
+        title: 'Ontbrekende Authoriteit Signalen',
+        description: 'Website mist externe validatie zoals klant testimonials, media vermeldingen of industry awards. Dit schaadt je geloofwaardigheid bij AI-assistenten.',
         priority: 'medium',
         category: 'authority'
       });

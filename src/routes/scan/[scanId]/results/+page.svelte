@@ -116,57 +116,73 @@
   }
 
   // Convert modules to progress grid format - AI modules eerst, dan de rest
-  const moduleItems: ModuleItem[] = [
+  const moduleItems = [
     // AI Modules bovenaan
     {
       id: 'ai_citation',
       name: 'AI Citation',
       icon: '🏆',
-      status: 'complete' as const
+      status: 'complete' as const,
+      description: 'Scant op bedrijfsinformatie die AI-assistenten kunnen gebruiken als betrouwbare bron',
+      scansFor: 'Contactgegevens, KVK-nummer, BTW-nummer, bedrijfsadres, teamleden, authoriteit signalen'
     },
     {
       id: 'ai_content',
       name: 'AI Content',
       icon: '🤖',
-      status: 'complete' as const
+      status: 'complete' as const,
+      description: 'Controleert of je content geschikt is voor AI-assistenten om te citeren',
+      scansFor: 'FAQ secties, vraag-antwoord content, duidelijke koppen, gestructureerde informatie'
     },
     // Technische modules
     {
       id: 'technical_seo',
       name: 'Technical SEO',
       icon: '⚙️',
-      status: 'complete' as const
+      status: 'complete' as const,
+      description: 'Analyseert technische aspecten die AI-crawlers beïnvloeden',
+      scansFor: 'Robots.txt regels, meta descriptions, AI-crawler toegang, site structuur'
     },
     {
       id: 'schema_markup',
       name: 'Schema Markup',
       icon: '📝',
-      status: 'complete' as const
+      status: 'complete' as const,
+      description: 'Controleert gestructureerde data die AI helpt je content te begrijpen',
+      scansFor: 'JSON-LD schema\'s, Open Graph data, structured data markup, rich snippets'
     },
     // Modules in ontwikkeling
     {
       id: 'cross_web',
       name: 'Cross-web Presence',
       icon: '🌐',
-      status: 'pending' as const
+      status: 'pending' as const,
+      description: 'Analyseert je online aanwezigheid across verschillende platforms',
+      scansFor: 'Social media links, vermeldingen, backlinks, online reputatie signalen'
     },
     {
       id: 'freshness',
       name: 'Content Freshness',
       icon: '🔄',
-      status: 'pending' as const
+      status: 'pending' as const,
+      description: 'Controleert hoe recent en up-to-date je content is',
+      scansFor: 'Publicatiedata, laatste updates, nieuws secties, blog activiteit'
     },
     {
       id: 'multimodal',
       name: 'Multimodal Optimization',
       icon: '🎨',
-      status: 'pending' as const
+      status: 'pending' as const,
+      description: 'Optimaliseert content voor verschillende media types',
+      scansFor: 'Afbeelding alt-text, video transcripts, audio beschrijvingen, multimedia content'
     },
     {
       id: 'monitoring',
       name: 'Monitoring Hooks',
       icon: '📊',
-      status: 'pending' as const
+      status: 'pending' as const,
+      description: 'Monitort real-time AI-interacties met je website',
+      scansFor: 'AI crawler activiteit, citatie tracking, performance metrics, usage analytics'
     }
   ];
 
@@ -379,8 +395,19 @@
                   >
                     {module.icon}
                   </div>
-                  <div>
-                    <h3 class="text-lg font-semibold text-gray-900">{module.name}</h3>
+                  <div class="flex-1">
+                    <div class="flex items-center gap-2">
+                      <h3 class="text-lg font-semibold text-gray-900">{module.name}</h3>
+                      <button
+                        class="text-gray-400 hover:text-gray-600 transition-colors"
+                        on:click={() => expandedStates[`${module.id}_info`] = !expandedStates[`${module.id}_info`]}
+                        title="Meer info over deze module"
+                      >
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                      </button>
+                    </div>
                     {#if module.name.startsWith('AI')}
                       <span class="text-sm text-blue-600 font-medium">AI Module</span>
                     {/if}
@@ -399,6 +426,28 @@
                   {/if}
                 </div>
               </div>
+
+              <!-- Module Description (expandable) -->
+              {#if expandedStates[`${module.id}_info`]}
+                <div class="mt-4 p-4 bg-gray-50 rounded-lg">
+                  <div class="space-y-3">
+                    <div>
+                      <h4 class="text-sm font-medium text-gray-700 mb-1">Wat doet deze module?</h4>
+                      <p class="text-sm text-gray-600">{module.description}</p>
+                    </div>
+                    <div>
+                      <h4 class="text-sm font-medium text-gray-700 mb-1">Wat wordt er gescand?</h4>
+                      <p class="text-sm text-gray-600">{module.scansFor}</p>
+                    </div>
+                    {#if hasData}
+                      <div>
+                        <h4 class="text-sm font-medium text-gray-700 mb-1">Gescande secties</h4>
+                        <p class="text-sm text-gray-600">Homepage, contactpagina, over ons pagina, footer, header sectie</p>
+                      </div>
+                    {/if}
+                  </div>
+                </div>
+              {/if}
 
               <!-- Quick Stats -->
               {#if hasData}
@@ -507,6 +556,26 @@
                         </div>
                       {/each}
                     </div>
+
+                    <!-- Actionable Tips Section -->
+                    {#if criticalFindings.length > 0}
+                      <div class="mt-6 p-4 bg-blue-50 rounded-lg">
+                        <h5 class="text-sm font-semibold text-blue-800 mb-2">💡 Verbetip voor {module.name}</h5>
+                        <p class="text-sm text-blue-700">
+                          {#if module.id === 'ai_citation'}
+                            Voeg een duidelijke contactpagina toe met KVK-nummer, adres en telefoonnummer. Dit verhoogt je geloofwaardigheid bij AI-assistenten.
+                          {:else if module.id === 'ai_content'}
+                            Creëer een FAQ sectie met veel gestelde vragen over je product/dienst. Start elke vraag met "Wat", "Hoe" of "Waarom".
+                          {:else if module.id === 'schema_markup'}
+                            Voeg JSON-LD schema markup toe voor je bedrijfsgegevens en diensten. Dit helpt AI je content beter begrijpen.
+                          {:else if module.id === 'technical_seo'}
+                            Optimaliseer je robots.txt en meta descriptions specifiek voor AI-crawlers zoals GPTBot.
+                          {:else}
+                            Werk aan de gevonden verbeterpunten om je AI-gereedheid te verhogen.
+                          {/if}
+                        </p>
+                      </div>
+                    {/if}
                   </div>
                 {/if}
               {:else}

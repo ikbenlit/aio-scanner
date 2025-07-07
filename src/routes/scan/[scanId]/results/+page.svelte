@@ -351,70 +351,139 @@
   <!-- Results Section -->
   <div class="space-y-8">
     {#if scan.moduleResults && scan.moduleResults.length > 0}
-      <!-- Detailed Results -->
-      <div class="glass p-8 rounded-2xl">
-        <h2 class="text-xl font-semibold mb-6">Gedetailleerde Resultaten</h2>
-        
+      <!-- Section Header -->
+      <div class="text-center mb-8">
+        <h2 class="text-2xl font-semibold mb-2">Gedetailleerde Analyse</h2>
+        <p class="text-gray-600">Ontdek wat er goed gaat en waar verbeterkansen liggen</p>
+      </div>
+
+      <!-- Module Cards Grid -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         {#each moduleItems as module}
-          <div class="mb-6 last:mb-0">
-            <!-- Module Header - Clickable -->
-            <button 
-              class="w-full flex items-center justify-between p-4 rounded-lg transition-all duration-200 hover:shadow-sm"
-              class:bg-gradient-to-r={module.name.startsWith('AI')}
-              class:from-blue-50={module.name.startsWith('AI')}
-              class:to-purple-50={module.name.startsWith('AI')}
-              class:bg-gray-50={!module.name.startsWith('AI')}
-              on:click={() => toggleModule(module.id)}
-            >
-              <div class="flex items-center gap-3">
-                <span class="text-xl">{module.icon}</span>
-                <div class="text-left">
-                  <h3 class="text-lg font-medium text-gray-900">{module.name}</h3>
-                  {#if module.name.startsWith('AI')}
-                    <span class="text-sm text-blue-600 font-medium">AI Module</span>
+          {@const moduleData = getModuleData(module)}
+          {@const hasData = moduleData && moduleData.findings && moduleData.findings.length > 0}
+          {@const criticalFindings = hasData ? moduleData.findings.filter(f => (f.priority || 'medium') === 'high' || f.type === 'error') : []}
+          {@const positiveFindings = hasData ? moduleData.findings.filter(f => (f.priority || 'medium') === 'low' || f.type === 'success') : []}
+          
+          <!-- Module Card -->
+          <div class="glass rounded-2xl overflow-hidden hover:shadow-lg transition-all duration-300">
+            <!-- Card Header -->
+            <div class="p-6 border-b border-gray-100">
+              <div class="flex items-center justify-between mb-3">
+                <div class="flex items-center gap-3">
+                  <div class="w-12 h-12 rounded-lg flex items-center justify-center text-2xl"
+                    class:bg-gradient-to-br={module.name.startsWith('AI')}
+                    class:from-blue-100={module.name.startsWith('AI')}
+                    class:to-purple-100={module.name.startsWith('AI')}
+                    class:bg-gray-100={!module.name.startsWith('AI')}
+                  >
+                    {module.icon}
+                  </div>
+                  <div>
+                    <h3 class="text-lg font-semibold text-gray-900">{module.name}</h3>
+                    {#if module.name.startsWith('AI')}
+                      <span class="text-sm text-blue-600 font-medium">AI Module</span>
+                    {/if}
+                  </div>
+                </div>
+                
+                <div class="flex items-center gap-2">
+                  {#if hasData}
+                    <span class="px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700">
+                      Actief
+                    </span>
+                  {:else}
+                    <span class="px-3 py-1 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-700">
+                      Ontwikkeling
+                    </span>
                   {/if}
                 </div>
               </div>
-              
-              <div class="flex items-center gap-3">
-                {#if getModuleData(module)}
-                  <span class="px-3 py-1 rounded-full text-sm font-semibold bg-green-100 text-green-700">
-                    Geïmplementeerd
-                  </span>
-                {:else}
-                  <span class="px-3 py-1 rounded-full text-sm font-semibold bg-yellow-100 text-yellow-700">
-                    In ontwikkeling
-                  </span>
-                {/if}
-                
-                <!-- Chevron Icon -->
-                <svg 
-                  class="w-5 h-5 text-gray-400 transition-transform duration-200"
-                  class:rotate-180={expandedStates[module.id]}
-                  fill="none" 
-                  stroke="currentColor" 
-                  viewBox="0 0 24 24"
-                >
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                </svg>
-              </div>
-            </button>
 
-            <!-- Module Content - Collapsible -->
-            {#if expandedStates[module.id]}
-              <div class="mt-4 pl-4 border-l-2 border-gray-100">
-                {#if getModuleData(module)}
-                  {@const moduleData = getModuleData(module)}
-                  {#if moduleData && moduleData.findings && moduleData.findings.length > 0}
+              <!-- Quick Stats -->
+              {#if hasData}
+                <div class="flex items-center gap-4 text-sm">
+                  {#if positiveFindings.length > 0}
+                    <div class="flex items-center gap-1 text-green-600">
+                      <span>✓</span>
+                      <span>{positiveFindings.length} goed</span>
+                    </div>
+                  {/if}
+                  {#if criticalFindings.length > 0}
+                    <div class="flex items-center gap-1 text-red-600">
+                      <span>⚠</span>
+                      <span>{criticalFindings.length} verbeterpunt{criticalFindings.length !== 1 ? 'en' : ''}</span>
+                    </div>
+                  {/if}
+                  <div class="flex items-center gap-1 text-gray-500">
+                    <span>📊</span>
+                    <span>{moduleData.findings.length} total</span>
+                  </div>
+                </div>
+              {:else}
+                <p class="text-sm text-gray-500">Binnenkort beschikbaar</p>
+              {/if}
+            </div>
+
+            <!-- Card Content -->
+            <div class="p-6">
+              {#if hasData}
+                <!-- Top Findings Preview -->
+                <div class="space-y-3">
+                  {#each moduleData.findings.slice(0, 3) as finding}
+                    {@const displayType = finding.type || priorityToType(finding.priority || 'medium')}
+                    <div class="flex items-start gap-3 p-3 rounded-lg" 
+                      class:bg-green-50={displayType === 'success'}
+                      class:bg-yellow-50={displayType === 'warning'}
+                      class:bg-red-50={displayType === 'error'}
+                    >
+                      <span class="mt-0.5 text-sm">
+                        {#if displayType === 'success'}
+                          <span class="text-green-500">✓</span>
+                        {:else if displayType === 'warning'}
+                          <span class="text-yellow-500">⚠️</span>
+                        {:else}
+                          <span class="text-red-500">✗</span>
+                        {/if}
+                      </span>
+                      <div class="flex-1 min-w-0">
+                        <p class="text-sm font-medium truncate" 
+                          class:text-green-700={displayType === 'success'}
+                          class:text-yellow-700={displayType === 'warning'}
+                          class:text-red-700={displayType === 'error'}
+                        >
+                          {finding.title}
+                        </p>
+                        <p class="text-xs text-gray-600 mt-1 line-clamp-2">
+                          {finding.description}
+                        </p>
+                      </div>
+                    </div>
+                  {/each}
+                  
+                  {#if moduleData.findings.length > 3}
+                    <button 
+                      class="w-full text-center py-2 text-sm text-blue-600 hover:text-blue-700 font-medium"
+                      on:click={() => toggleModule(module.id)}
+                    >
+                      {expandedStates[module.id] ? '← Toon minder' : `Toon alle ${moduleData.findings.length} bevindingen →`}
+                    </button>
+                  {/if}
+                </div>
+
+                <!-- Expanded Details -->
+                {#if expandedStates[module.id] && moduleData.findings.length > 3}
+                  <div class="mt-6 pt-6 border-t border-gray-100">
+                    <h4 class="text-sm font-semibold text-gray-700 mb-4">Alle Bevindingen</h4>
                     <div class="space-y-3">
-                      {#each moduleData.findings as finding}
+                      {#each moduleData.findings.slice(3) as finding}
                         {@const displayType = finding.type || priorityToType(finding.priority || 'medium')}
-                        <div class="flex items-start gap-3 p-4 rounded-lg" 
+                        <div class="flex items-start gap-3 p-3 rounded-lg" 
                           class:bg-green-50={displayType === 'success'}
                           class:bg-yellow-50={displayType === 'warning'}
                           class:bg-red-50={displayType === 'error'}
                         >
-                          <span class="mt-0.5 text-lg">
+                          <span class="mt-0.5 text-sm">
                             {#if displayType === 'success'}
                               <span class="text-green-500">✓</span>
                             {:else if displayType === 'warning'}
@@ -431,29 +500,24 @@
                             >
                               {finding.title}
                             </p>
-                            <p class="text-sm" 
-                              class:text-green-600={displayType === 'success'}
-                              class:text-yellow-600={displayType === 'warning'}
-                              class:text-red-600={displayType === 'error'}
-                            >
+                            <p class="text-xs text-gray-600">
                               {finding.description}
                             </p>
                           </div>
                         </div>
                       {/each}
                     </div>
-                  {:else}
-                    <p class="text-sm text-gray-500 italic p-4">Geen specifieke bevindingen voor deze module.</p>
-                  {/if}
-                {:else}
-                  <div class="p-4 bg-gray-50 rounded-lg">
-                    <p class="text-sm text-gray-600">
-                      Deze module is momenteel in ontwikkeling. Binnenkort beschikbaar!
-                    </p>
                   </div>
                 {/if}
-              </div>
-            {/if}
+              {:else}
+                <div class="text-center py-8">
+                  <div class="text-4xl mb-3">🚧</div>
+                  <p class="text-sm text-gray-600">
+                    Deze module wordt nog ontwikkeld en komt binnenkort beschikbaar.
+                  </p>
+                </div>
+              {/if}
+            </div>
           </div>
         {/each}
       </div>

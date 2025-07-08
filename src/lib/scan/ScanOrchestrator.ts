@@ -15,6 +15,9 @@ import { LLMEnhancementService, type AIInsights, type MissedOpportunity, type Au
 import type { NarrativeReport } from '../types/scan.js';
 import { TierAwarePDFGenerator } from '../pdf/generator.js';
 import { supabase } from '../supabase.js';
+// Strategy Pattern imports
+import { TierStrategyFactory } from './strategies/TierStrategyFactory';
+import type { ScanDependencies, ScanContext } from './strategies/TierScanStrategy';
 
 export class ScanOrchestrator {
     private modules: ScanModule[] = [
@@ -59,27 +62,33 @@ export class ScanOrchestrator {
             console.log(`💾 Creating scan record: ${scanId}`);
             await db.createScan(url, scanId, undefined, tier);
 
-            let result: EngineScanResult;
+            // 2. Get strategy for this tier
+            const strategy = TierStrategyFactory.createStrategy(tier);
+            
+            // 3. Prepare dependencies for strategy
+            const dependencies: ScanDependencies = {
+                modules: this.modules,
+                aiReportGenerator: this.aiReportGenerator,
+                contentExtractor: this.contentExtractor,
+                llmEnhancementService: this.llmEnhancementService,
+                pdfGenerator: this.pdfGenerator
+            };
+            
+            // 4. Prepare execution context
+            const context: ScanContext = {
+                email,
+                paymentId,
+                startTime: Date.now(),
+                progressCallback: (progress) => {
+                    console.log(`📊 Scan progress: ${progress}%`);
+                }
+            };
 
-            // 2. Execute modules based on tier
-            switch (tier) {
-                case 'basic':
-                    result = await this.executeBasicScan(url, scanId);
-                    break;
-                case 'starter':
-                    result = await this.executeStarterScan(url, scanId);
-                    break;
-                case 'business':
-                    result = await this.executeBusinessScan(url, scanId);
-                    break;
-                case 'enterprise':
-                    result = await this.executeEnterpriseScan(url, scanId);
-                    break;
-                default:
-                    throw new Error(`Niet-ondersteunde tier: ${tier}`);
-            }
+            // 5. Execute scan using strategy
+            console.log(`🚀 Executing ${tier} tier scan using strategy pattern`);
+            const result = await strategy.execute(url, scanId, dependencies, context);
 
-            // 3. Update scan with results
+            // 6. Update scan with results
             console.log(`💾 Updating scan results: ${scanId}`);
             await db.updateScanStatus(
                 scanId, 
@@ -88,7 +97,7 @@ export class ScanOrchestrator {
                 result.overallScore
             );
 
-            // 4. Update user scan history voor alle tiers
+            // 7. Update user scan history voor alle tiers
             if (email) {
                 await upsertUserScanHistory({
                     email,
@@ -114,66 +123,39 @@ export class ScanOrchestrator {
         }
     }
 
+    // DEPRECATED: Legacy method - use Strategy Pattern instead
+    // Kept for backwards compatibility only
     private async executeBasicScan(url: string, scanId: string): Promise<EngineScanResult> {
-        console.log(`🔍 Starting basic scan for ${url} (${scanId})`);
-        
-        // Execute core modules in parallel (TechnicalSEO + SchemaMarkup)
-        const moduleResults = await Promise.all(
-            this.modules.slice(0, 2).map(module => module.execute(url))
-        );
-
-        // Calculate overall score
-        const overallScore = Math.round(
-            moduleResults.reduce((sum: number, result: ModuleResult) => sum + result.score, 0) / moduleResults.length
-        );
-
-        return {
-            scanId,
-            url,
-            status: 'completed',
-            createdAt: new Date().toISOString(),
-            overallScore,
-            moduleResults,
-            completedAt: new Date().toISOString(),
-            tier: 'basic' as const
+        console.warn('⚠️ Using deprecated executeBasicScan - consider using Strategy Pattern');
+        const { BasicTierStrategy } = await import('./strategies/BasicTierStrategy');
+        const strategy = new BasicTierStrategy();
+        const dependencies: ScanDependencies = {
+            modules: this.modules,
+            aiReportGenerator: this.aiReportGenerator,
+            contentExtractor: this.contentExtractor,
+            llmEnhancementService: this.llmEnhancementService,
+            pdfGenerator: this.pdfGenerator
         };
+        return strategy.execute(url, scanId, dependencies, { startTime: Date.now() });
     }
 
+    // DEPRECATED: Legacy method - use Strategy Pattern instead
     private async executeStarterScan(url: string, scanId: string): Promise<EngineScanResult> {
-        console.log(`🔍 Starting starter scan for ${url} (${scanId})`);
-        
-        // Execute basic scan first
-        const basicResult = await this.executeBasicScan(url, scanId);
-        
-        // Execute additional starter modules (AIContent + AICitation)
-        const additionalResults = await Promise.all(
-            this.modules.slice(2, 4).map(module => module.execute(url))
-        );
-
-        const allResults = [...basicResult.moduleResults, ...additionalResults];
-        
-        // Generate AI report
-        const aiReport = await this.aiReportGenerator.generateReport({
-            ...basicResult,
-            moduleResults: allResults
-        });
-
-        const starterResult = {
-            ...basicResult,
-            moduleResults: allResults,
-            aiReport,
-            tier: 'starter' as const
+        console.warn('⚠️ Using deprecated executeStarterScan - consider using Strategy Pattern');
+        const { StarterTierStrategy } = await import('./strategies/StarterTierStrategy');
+        const strategy = new StarterTierStrategy();
+        const dependencies: ScanDependencies = {
+            modules: this.modules,
+            aiReportGenerator: this.aiReportGenerator,
+            contentExtractor: this.contentExtractor,
+            llmEnhancementService: this.llmEnhancementService,
+            pdfGenerator: this.pdfGenerator
         };
-
-        // Phase 3.5 - Generate PDF for starter tier
-        const pdfUrl = await this.generateAndStorePDF(starterResult);
-        
-        return {
-            ...starterResult,
-            pdfUrl
-        };
+        return strategy.execute(url, scanId, dependencies, { startTime: Date.now() });
     }
 
+    // DEPRECATED: Legacy method - use Strategy Pattern instead
+    // TODO: Remove after Strategy Pattern fully tested
     private async executeBusinessScan(url: string, scanId: string): Promise<EngineScanResult> {
         console.log('🚀 Starting business tier AI-enhanced scan for', url);
         const scanStartTime = Date.now();
@@ -266,6 +248,8 @@ export class ScanOrchestrator {
         }
     }
 
+    // DEPRECATED: Legacy method - use Strategy Pattern instead  
+    // TODO: Remove after Strategy Pattern fully tested
     private async executeEnterpriseScan(url: string, scanId: string): Promise<EngineScanResult> {
         console.log('🏢 Starting enterprise tier scan for', url);
         const scanStartTime = Date.now();

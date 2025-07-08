@@ -280,7 +280,7 @@
         <!-- Legacy content here -->
         <div class="bg-white rounded-lg shadow-sm p-6">
           <div class="text-center mb-8">
-            <ProgressCircle score={legacyScore} size="large" />
+            <ProgressCircle score={Number(legacyScore) || 0} size="large" />
             <h1 class="text-2xl font-bold text-gray-900 mt-4">
               Scan Resultaten voor {scan.url}
             </h1>

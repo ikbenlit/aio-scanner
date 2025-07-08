@@ -6,7 +6,13 @@
       "Bash(find:*)",
       "Bash(rg:*)",
       "Bash(grep:*)",
-      "mcp__supabase-aio-scanner__execute_sql"
+      "mcp__supabase-aio-scanner__execute_sql",
+      "Bash(npm run check:*)",
+      "Bash(npm run build:*)",
+      "Bash(npx tsc:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(mkdir:*)"
     ],
     "deny": []
   },

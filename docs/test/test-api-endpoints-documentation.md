@@ -371,6 +371,10 @@ Write-Host "✅ Echte scan voltooid. Gebruik dit ID: $scanId"
 # Stap 3: Open deze URL in je BROWSER om de PDF te downloaden
 # Vervang de ID met die uit Stap 1.
 # http://localhost:5173/api/test/pdf-generation?download=true&scanId=$scanId
+#scan ID --> http://localhost:5173/api/test/pdf-generation?download=true&scanId=aac92063-4e5a-4a52-ac96-5394b5c093bf
+# 8445d046-0cff-493c-b8bf-daeecd533e13
+# 6b61f18a-6a51-49b3-a747-e9626f049243
+# aac92063-4e5a-4a52-ac96-5394b5c093bf
 
 # Stap 4: Pas de HTML/CSS in narrativeGenerator.ts aan en sla op.
 

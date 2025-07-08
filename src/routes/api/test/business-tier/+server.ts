@@ -10,11 +10,13 @@ import { ScanOrchestrator } from '../../../../lib/scan/ScanOrchestrator.js';
 export const GET: RequestHandler = async ({ url }) => {
     const testMode = url.searchParams.get('mode') || 'full';
     const testUrl = url.searchParams.get('url') || 'https://gifsvoorinsta.nl';
+    const testEmail = url.searchParams.get('email') || 'test@example.com';
 
     try {
         console.log('🧪 Testing Phase 3.2 Business Tier Integration');
         console.log(`📋 Test mode: ${testMode}`);
         console.log(`🌐 Test URL: ${testUrl}`);
+        console.log(`📧 Test Email: ${testEmail}`);
         
         const orchestrator = new ScanOrchestrator();
         const testScanId = crypto.randomUUID();
@@ -44,7 +46,7 @@ export const GET: RequestHandler = async ({ url }) => {
             testUrl,
             'business',
             testScanId,
-            'test@example.com',
+            testEmail,
             'test-payment-id'
         );
         

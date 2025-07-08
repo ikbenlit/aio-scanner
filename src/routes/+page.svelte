@@ -65,7 +65,7 @@
       console.log(`🚀 Starting business test scan for URL: ${url}`);
       
       // Use test endpoint for development/testing
-      const testResponse = await fetch(`/api/test/business-tier?mode=full&url=${encodeURIComponent(url)}`);
+      const testResponse = await fetch(`/api/test/business-tier?mode=full&url=${encodeURIComponent(url)}&email=${encodeURIComponent(email)}`);
       
       if (!testResponse.ok) {
         const errorData = await testResponse.json();

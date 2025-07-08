@@ -166,7 +166,7 @@ export class ScanOrchestrator {
         };
 
         // Phase 3.5 - Generate PDF for starter tier
-        const pdfUrl = await this.generateAndStorePDF(starterResult, 'starter');
+        const pdfUrl = await this.generateAndStorePDF(starterResult);
         
         return {
             ...starterResult,
@@ -223,7 +223,7 @@ export class ScanOrchestrator {
             console.log(`✅ Business scan completed in ${costTracking.scanDuration}ms`);
             console.log(`💰 Estimated AI cost: €${costTracking.aiCost.toFixed(4)}`);
 
-            const businessResult = {
+            const businessResult: EngineScanResult = {
                 scanId,
                 url,
                 status: 'completed',
@@ -239,7 +239,7 @@ export class ScanOrchestrator {
             };
 
             // Phase 3.5 - Generate PDF for business tier
-            const pdfUrl = await this.generateAndStorePDF(businessResult, 'business', narrative);
+            const pdfUrl = await this.generateAndStorePDF(businessResult, narrative);
 
             return {
                 ...businessResult,
@@ -310,10 +310,10 @@ export class ScanOrchestrator {
             console.log(`✅ Enterprise scan completed in ${enterpriseCostTracking.scanDuration}ms`);
             console.log(`💰 Enterprise AI cost: €${enterpriseCostTracking.aiCost.toFixed(4)}`);
 
-            const enterpriseResult = {
+            const enterpriseResult: EngineScanResult = {
                 ...businessResult,
                 tier: 'enterprise',
-                enterpriseFeatures: enterpriseEnhancements,
+                enterpriseFeatures: enterpriseEnhancements as any,
                 narrativeReport: enterpriseNarrative,
                 costTracking: enterpriseCostTracking,
                 // Override business AI report with enterprise version
@@ -326,7 +326,7 @@ export class ScanOrchestrator {
             };
 
             // Phase 3.5 - Generate PDF for enterprise tier
-            const pdfUrl = await this.generateAndStorePDF(enterpriseResult, 'enterprise', enterpriseNarrative);
+            const pdfUrl = await this.generateAndStorePDF(enterpriseResult, enterpriseNarrative);
 
             return {
                 ...enterpriseResult,
@@ -933,85 +933,53 @@ RESPONSE FORMAT (JSON):
      */
     private async generateAndStorePDF(
         scanResult: EngineScanResult,
-        tier: ScanTier,
         narrative?: NarrativeReport
     ): Promise<string | null> {
-        
-        if (tier === 'basic') {
-            console.log('📄 PDF generation skipped for basic tier');
+        if (!scanResult.tier || scanResult.tier === 'basic') {
+            console.log('Skipping PDF generation for basic tier or tierless scan.');
             return null;
         }
-        
-        console.log(`📄 Starting PDF generation for ${tier} tier...`);
-        
+
+        const scanId = scanResult.scanId;
+        const tier = scanResult.tier;
+
         try {
-            // Update PDF generation status
-            await supabase
-                .from('scans')
-                .update({ 
-                    pdf_generation_status: 'generating',
-                    pdf_template_version: '1.0'
-                })
-                .eq('id', scanResult.scanId);
-            
-            // Generate PDF using TierAwarePDFGenerator
+            console.log(`🚀 Starting PDF generation for scan ${scanId} (tier: ${tier})`);
+            await db.updateScanStatus(scanId, 'generating');
+
+            // Generate PDF buffer from the appropriate generator
             const pdfBuffer = await this.pdfGenerator.generatePDF(scanResult, tier, narrative);
+
+            // Store PDF in Supabase Storage
+            const timestamp = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+            const filePath = `reports/${timestamp}/${scanId}/${tier}-report.pdf`;
             
-            // Generate unique file path
-            const timestamp = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
-            const pdfPath = `reports/${timestamp}/${scanResult.scanId}/${tier}-report.pdf`;
-            
-            console.log(`💾 Uploading PDF to storage: ${pdfPath}`);
-            
-            // Upload to Supabase Storage
-            const { data: uploadData, error: uploadError } = await supabase.storage
+            const { error: uploadError } = await supabase.storage
                 .from('scan-reports')
-                .upload(pdfPath, pdfBuffer, {
+                .upload(filePath, pdfBuffer, {
                     contentType: 'application/pdf',
                     upsert: true
                 });
-                
+
             if (uploadError) {
-                console.error('PDF upload failed:', uploadError);
-                throw uploadError;
+                throw new Error(`PDF upload failed: ${uploadError.message}`);
             }
-            
-            console.log('✅ PDF uploaded successfully:', uploadData);
-            
+
             // Get public URL
             const { data: { publicUrl } } = supabase.storage
                 .from('scan-reports')
-                .getPublicUrl(pdfPath);
-                
-            console.log('🔗 PDF public URL generated:', publicUrl);
-            
-            // Update scan record with PDF details
-            await supabase
-                .from('scans')
-                .update({ 
-                    pdf_generation_status: 'completed',
-                    last_pdf_generated_at: new Date().toISOString(),
-                    pdf_url: publicUrl,
-                    pdf_file_size: pdfBuffer.length
-                })
-                .eq('id', scanResult.scanId);
-                
-            console.log(`✅ PDF generation completed for ${tier} tier: ${publicUrl}`);
+                .getPublicUrl(filePath);
+
+            console.log(`✅ PDF generated and stored for scan ${scanId} at ${publicUrl}`);
+
+            // Update scan record with PDF URL and status
+            await db.updateScanStatus(scanId, 'completed');
+
             return publicUrl;
-            
-        } catch (error: unknown) {
-            console.error(`❌ PDF generation failed for ${tier} tier:`, error);
-            
-            // Update status to failed
-            await supabase
-                .from('scans')
-                .update({ 
-                    pdf_generation_status: 'failed'
-                })
-                .eq('id', scanResult.scanId);
-                
-            // Don't throw error - PDF generation failure shouldn't fail the entire scan
-            return null;
+        } catch (error: any) {
+            console.error(`❌ PDF generation failed for scan ${scanId}:`, error);
+            await db.updateScanStatus(scanId, 'failed');
+            return null; // Return null on failure
         }
     }
 
@@ -1056,7 +1024,6 @@ RESPONSE FORMAT (JSON):
             // Generate PDF
             return await this.generateAndStorePDF(
                 scanResult,
-                scan.tier as ScanTier,
                 scanResult.narrativeReport
             );
             

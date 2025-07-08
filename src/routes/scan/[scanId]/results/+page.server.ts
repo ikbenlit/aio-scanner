@@ -1,6 +1,9 @@
 import { error } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 import { getSupabaseClient } from '$lib/supabase';
+import { translateFindings, getPositiveFindings } from '$lib/results/translation';
+import { selectTop3QuickWins } from '$lib/results/prioritization';
+import type { Finding } from '$lib/types/scan';
 
 interface ScanModule {
   id?: string;
@@ -13,6 +16,11 @@ interface ScanModule {
     title: string;
     description: string;
     message?: string;
+    recommendation?: string;
+    impact?: string;
+    category?: string;
+    technicalDetails?: string;
+    estimatedTime?: string;
   }>;
 }
 
@@ -31,6 +39,38 @@ interface DatabaseScan {
   email_sent: boolean | null;
   email_sent_at: string | null;
   user_email: string | null;
+  tier: string | null;
+  pdf_generation_status: string | null;
+  pdf_url: string | null;
+}
+
+/**
+ * Extract all findings from module results for translation
+ */
+function extractFindingsFromModules(moduleResults: ScanModule[]): Finding[] {
+  const allFindings: Finding[] = [];
+  
+  for (const module of moduleResults) {
+    if (module.findings && Array.isArray(module.findings)) {
+      for (const finding of module.findings) {
+        // Ensure finding has required properties
+        if (finding.title && finding.description) {
+          allFindings.push({
+            title: finding.title,
+            description: finding.description,
+            priority: finding.priority || 'medium',
+            recommendation: finding.recommendation,
+            impact: finding.impact,
+            category: finding.category || module.name?.toLowerCase() || 'general',
+            technicalDetails: finding.technicalDetails,
+            estimatedTime: finding.estimatedTime
+          });
+        }
+      }
+    }
+  }
+  
+  return allFindings;
 }
 
 export const load = (async ({ params }: { params: { scanId: string } }) => {
@@ -55,7 +95,10 @@ export const load = (async ({ params }: { params: { scanId: string } }) => {
         email,
         email_sent,
         email_sent_at,
-        user_email
+        user_email,
+        tier,
+        pdf_generation_status,
+        pdf_url
       `)
       .eq('id', scanId)
       .single();
@@ -92,11 +135,20 @@ export const load = (async ({ params }: { params: { scanId: string } }) => {
           overallScore: 0,
           moduleResults: [],
           createdAt: typedScan.created_at,
-          completedAt: null
+          completedAt: null,
+          tier: typedScan.tier || 'basic',
+          pdfGenerationStatus: typedScan.pdf_generation_status,
+          pdfUrl: typedScan.pdf_url
         },
         emailStatus: {
           email: typedScan.email || typedScan.user_email || null,
           sentAt: null
+        },
+        businessInsights: {
+          quickWins: [],
+          positiveFindings: [],
+          totalActions: 0,
+          allActions: []
         }
       };
     }
@@ -119,7 +171,24 @@ export const load = (async ({ params }: { params: { scanId: string } }) => {
 
     console.log('✅ Data loaded successfully');
     
-    // 3. Return complete data
+    // 3. Process findings through translation system
+    console.log('🔄 Processing findings through translation system...');
+    const allFindings = extractFindingsFromModules(moduleResults);
+    console.log(`📋 Found ${allFindings.length} total findings`);
+    
+    // Translate technical findings to business actions
+    const businessActions = translateFindings(allFindings);
+    console.log(`✨ Translated ${businessActions.length} findings to business actions`);
+    
+    // Select top 3 quick wins
+    const quickWins = selectTop3QuickWins(businessActions);
+    console.log(`🚀 Selected ${quickWins.length} quick wins`);
+    
+    // Get positive reinforcement points
+    const positiveFindings = getPositiveFindings(allFindings);
+    console.log(`✅ Found ${positiveFindings.length} positive points`);
+    
+    // 4. Return complete data with new business-friendly structure
     return {
       scan: {
         id: typedScan.id,
@@ -128,12 +197,22 @@ export const load = (async ({ params }: { params: { scanId: string } }) => {
         overallScore: typedScan.overall_score,
         moduleResults: moduleResults,
         createdAt: typedScan.created_at,
-        completedAt: typedScan.completed_at
+        completedAt: typedScan.completed_at,
+        tier: typedScan.tier || 'basic',
+        pdfGenerationStatus: typedScan.pdf_generation_status,
+        pdfUrl: typedScan.pdf_url
       },
       emailStatus: {
         email: typedScan.email || typedScan.user_email || null,
         sentAt: typedScan.email_sent_at || null,
         sent: typedScan.email_sent || false
+      },
+      // New business-friendly data
+      businessInsights: {
+        quickWins,
+        positiveFindings,
+        totalActions: businessActions.length,
+        allActions: businessActions
       }
     };
 

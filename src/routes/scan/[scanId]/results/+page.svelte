@@ -5,11 +5,35 @@
   import Header from '$lib/components/layout/Header.svelte';
   import { Button } from '$lib/components/ui/button';
   import { Alert, AlertDescription } from '$lib/components/ui/alert';
+  
+  // New redesigned components
+  import ScoreHero from '$lib/components/features/scan/ScoreHero.svelte';
+  import PositiveReinforcement from '$lib/components/features/scan/PositiveReinforcement.svelte';
+  import QuickWinsSection from '$lib/components/features/scan/QuickWinsSection.svelte';
+  import GentleConversion from '$lib/components/features/scan/GentleConversion.svelte';
+  
+  // Legacy components (keep for fallback/debugging)
   import ProgressCircle from '$lib/components/features/scan/ProgressCircle.svelte';
   import ModuleProgressGrid from '$lib/components/features/scan/ModuleProgressGrid.svelte';
   import WebsitePreview from '$lib/components/features/scan/WebsitePreview.svelte';
-  import type { ScanModule } from '$lib/types/scan';
-  import type { ModuleItem } from '$lib/components/features/scan/ModuleProgressGrid.svelte';
+  
+  import type { PrioritizedAction } from '$lib/results/prioritization';
+  import type { BusinessAction } from '$lib/results/translation';
+  import type { ScanTier } from '$lib/types/database';
+  
+  interface ScanModule {
+    id?: string;
+    name: string;
+    icon?: string;
+    score: number;
+    findings: Array<{
+      type?: 'success' | 'warning' | 'error';
+      priority?: 'high' | 'medium' | 'low';
+      title: string;
+      description: string;
+      message?: string;
+    }>;
+  }
   
   interface PageData {
     scan: {
@@ -20,7 +44,7 @@
       moduleResults: ScanModule[];
       createdAt: string;
       completedAt: string | null;
-      screenshot?: string; // Screenshot data
+      screenshot?: string;
       tier: string;
       pdfGenerationStatus: string | null;
       pdfUrl: string | null;
@@ -29,584 +53,261 @@
       email: string | null;
       sentAt: string | null;
     };
+    businessInsights: {
+      quickWins: PrioritizedAction[];
+      positiveFindings: string[];
+      totalActions: number;
+      allActions: BusinessAction[];
+    };
     screenshot: string | null;
     error: string | null;
   }
   
   export let data: PageData;
-  const { scan, emailStatus, screenshot, error } = data;
+  const { scan, emailStatus, businessInsights, screenshot, error } = data;
   
-  console.log('Scan module results:', scan.moduleResults);
-  console.log('PDF Debug Info:', {
-    tier: scan.tier,
-    email: emailStatus.email,
-    pdfStatus: scan.pdfGenerationStatus,
-    pdfUrl: scan.pdfUrl,
-    showButton: scan.tier !== 'basic' && emailStatus.email && scan.pdfGenerationStatus === 'completed' && scan.pdfUrl
-  });
+  console.log('🎨 New Results Page - Redesigned!');
+  console.log('Quick Wins:', businessInsights.quickWins);
+  console.log('Positive Findings:', businessInsights.positiveFindings);
+  console.log('Total Actions:', businessInsights.totalActions);
   
   let emailSentTime: string | null = null;
   if (emailStatus.sentAt) {
     try {
-      emailSentTime = new Date(emailStatus.sentAt).toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' });
-    } catch(e) {
-      // ignore invalid date
+      const sentDate = new Date(emailStatus.sentAt);
+      emailSentTime = sentDate.toLocaleString('nl-NL', {
+        day: 'numeric',
+        month: 'short',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    } catch (e) {
+      console.warn('Invalid email sent date:', emailStatus.sentAt);
     }
   }
 
-  // Poll for scan results if scan is not complete
-  onMount(() => {
-    if (scan.status !== 'completed' && scan.status !== 'failed' && typeof window !== 'undefined') {
-      const interval = setInterval(async () => {
-        try {
-          const res = await fetch(`/api/scan/results/${scan.id}`);
-          if (res.ok) {
-            const resultData = await res.json();
-            if (resultData.scan.status === 'completed' || resultData.scan.status === 'failed') {
-              clearInterval(interval);
-              // Force a full reload to get server-loaded data
-              window.location.reload();
-            }
-          }
-        } catch (err) {
-          console.error('Polling error:', err);
-        }
-      }, 5000); // Poll every 5 seconds
-
-      return () => clearInterval(interval);
-    }
-  });
-
-  function handleNewScan() {
-    goto('/');
+  // Explicitly create a number for the legacy component to avoid linter issues
+  let legacyScore: number = 0;
+  if (scan && scan.overallScore) {
+    legacyScore = Number(scan.overallScore);
   }
 
-  function handleUpgrade() {
-    goto('/upgrade');
-  }
-
-  // PDF Download functie
-  async function downloadPDF(scanId: string, email: string | null) {
-    if (!email) {
-      alert('Email not found for this scan. Please try running the scan again and provide an email to download the report.');
-      return;
-    }
-
-    try {
-      const response = await fetch(`/api/pdf/${scanId}/download?email=${encodeURIComponent(email)}`);
-      
-      if (response.ok) {
-        const blob = await response.blob();
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `AIO-Scanner-${scan.tier}-Report-${new URL(scan.url).hostname}.pdf`;
-        document.body.appendChild(a);
-        a.click();
-        window.URL.revokeObjectURL(url);
-        document.body.removeChild(a);
-      } else {
-        const errorText = await response.text();
-        alert(`PDF download mislukt: ${errorText}`);
-      }
-    } catch (err) {
-      console.error('PDF download error:', err);
-      alert('Er is een onverwachte fout opgetreden bij het downloaden van de PDF.');
-    }
-  }
-
-  // Convert modules to progress grid format - AI modules eerst, dan de rest
+  // Legacy module items for backward compatibility
   const moduleItems = [
-    // AI Modules bovenaan
-    {
-      id: 'ai_citation',
-      name: 'AI Citation',
-      icon: '🏆',
-      status: 'complete' as const,
-      description: 'Scant op bedrijfsinformatie die AI-assistenten kunnen gebruiken als betrouwbare bron',
-      scansFor: 'Contactgegevens, KVK-nummer, BTW-nummer, bedrijfsadres, teamleden, authoriteit signalen'
-    },
-    {
-      id: 'ai_content',
-      name: 'AI Content',
-      icon: '🤖',
-      status: 'complete' as const,
-      description: 'Controleert of je content geschikt is voor AI-assistenten om te citeren',
-      scansFor: 'FAQ secties, vraag-antwoord content, duidelijke koppen, gestructureerde informatie'
-    },
-    // Technische modules
-    {
-      id: 'technical_seo',
-      name: 'Technical SEO',
-      icon: '⚙️',
-      status: 'complete' as const,
-      description: 'Analyseert technische aspecten die AI-crawlers beïnvloeden',
-      scansFor: 'Robots.txt regels, meta descriptions, AI-crawler toegang, site structuur'
-    },
-    {
-      id: 'schema_markup',
-      name: 'Schema Markup',
-      icon: '📝',
-      status: 'complete' as const,
-      description: 'Controleert gestructureerde data die AI helpt je content te begrijpen',
-      scansFor: 'JSON-LD schema\'s, Open Graph data, structured data markup, rich snippets'
-    },
-    // Modules in ontwikkeling
-    {
-      id: 'cross_web',
-      name: 'Cross-web Presence',
-      icon: '🌐',
-      status: 'pending' as const,
-      description: 'Analyseert je online aanwezigheid across verschillende platforms',
-      scansFor: 'Social media links, vermeldingen, backlinks, online reputatie signalen'
-    },
-    {
-      id: 'freshness',
-      name: 'Content Freshness',
-      icon: '🔄',
-      status: 'pending' as const,
-      description: 'Controleert hoe recent en up-to-date je content is',
-      scansFor: 'Publicatiedata, laatste updates, nieuws secties, blog activiteit'
-    },
-    {
-      id: 'multimodal',
-      name: 'Multimodal Optimization',
-      icon: '🎨',
-      status: 'pending' as const,
-      description: 'Optimaliseert content voor verschillende media types',
-      scansFor: 'Afbeelding alt-text, video transcripts, audio beschrijvingen, multimedia content'
-    },
-    {
-      id: 'monitoring',
-      name: 'Monitoring Hooks',
-      icon: '📊',
-      status: 'pending' as const,
-      description: 'Monitort real-time AI-interacties met je website',
-      scansFor: 'AI crawler activiteit, citatie tracking, performance metrics, usage analytics'
-    }
+    { id: 'technical_seo', name: 'Technical SEO', icon: '🔧' },
+    { id: 'schema_markup', name: 'Schema Markup', icon: '📋' },
+    { id: 'ai_content', name: 'AI Content', icon: '🤖' },
+    { id: 'ai_citation', name: 'AI Citation', icon: '📑' },
+    { id: 'cross_web_presence', name: 'Cross-web Presence', icon: '🌐' },
+    { id: 'content_freshness', name: 'Content Freshness', icon: '🔄' }
   ];
 
-  // State voor inklapbare secties
-  let expandedStates: Record<string, boolean> = {};
+  // Show legacy view for debugging (can be removed later)
+  let showLegacyView = false;
   
-  // Initialiseer expanded states - alle modules uitgeklapt
-  moduleItems.forEach(module => {
-    expandedStates[module.id] = true;
-  });
+  // Create a reactive variable to ensure score is a number for legacy components
+  $: legacyScore = Number(scan.overallScore);
 
-  function toggleModule(moduleId: string) {
-    expandedStates[moduleId] = !expandedStates[moduleId];
+  // Check if this is development mode
+  const isDevelopment = typeof window !== 'undefined' && 
+    (window.location.hostname === 'localhost' || window.location.hostname.includes('dev'));
+
+  function toggleLegacyView() {
+    showLegacyView = !showLegacyView;
   }
 
-  // Module name normalization function
-  function normalizeModuleName(name: string): string {
-    // Convert camelCase to space-separated words
-    return name
-      .replace(/([A-Z])/g, ' $1')
-      .replace(/^\s+/, '')
-      .replace(/\s+/g, ' ')
-      .trim();
-  }
-
-  // Find matching module data for each moduleItem
-  function getModuleData(moduleItem: ModuleItem): ScanModule | undefined {
-    return scan.moduleResults.find(result => {
-      const normalizedResultName = normalizeModuleName(result.moduleName || result.name || '');
-      const normalizedItemName = moduleItem.name;
-      
-      // Direct name match
-      if (normalizedResultName === normalizedItemName) return true;
-      
-      // Specific mappings for edge cases
-      const mappings: Record<string, string[]> = {
-        'Technical SEO': ['TechnicalSEO', 'Technical SEO'],
-        'Schema Markup': ['SchemaMarkup', 'Schema Markup'],
-        'AI Content': ['AIContent', 'AI Content'],
-        'AI Citation': ['AICitation', 'AI Citation'],
-        'Cross-web Presence': ['CrossWebFootprint', 'Cross Web Footprint'],
-        'Content Freshness': ['Freshness', 'Content Freshness']
-      };
-      
-      const possibleNames = mappings[normalizedItemName] || [];
-      return possibleNames.includes(result.moduleName || result.name || '');
-    });
-  }
-
-  // Helper functie voor default icons (kan verwijderd worden als we de nieuwe mapping gebruiken)
-  function getDefaultIcon(moduleName: string): string {
-    const icons: Record<string, string> = {
-      'Content': '📝',
-      'SEO': '🔍',
-      'Performance': '⚡',
-      'Accessibility': '♿',
-      'Security': '🔒',
-      'Mobile': '📱',
-      'Social': '🤝',
-      'Analytics': '📊'
-    };
-    return icons[moduleName] || '📊';
-  }
-
-  // Convert priority to type for consistent display
-  function priorityToType(priority: string): 'success' | 'warning' | 'error' {
-    switch (priority) {
-      case 'low':
-        return 'success';
-      case 'medium':
-        return 'warning';
-      case 'high':
-        return 'error';
-      default:
-        return 'warning';
+  // Handle PDF download
+  async function downloadPDF() {
+    if (!scan.pdfUrl) {
+      console.error('No PDF URL available');
+      return;
     }
+    
+    try {
+      window.open(scan.pdfUrl, '_blank');
+    } catch (error) {
+      console.error('Error downloading PDF:', error);
+    }
+  }
+
+  // Format tier display name
+  function formatTierName(tier: string): string {
+    switch (tier.toLowerCase()) {
+      case 'basic': return 'Basic';
+      case 'starter': return 'Starter';
+      case 'business': return 'Business';
+      case 'enterprise': return 'Enterprise';
+      default: return tier;
+    }
+  }
+
+  // Get properly typed tier for components
+  function getScanTier(tier: string): ScanTier {
+    return tier as ScanTier;
   }
 </script>
 
 <svelte:head>
-<title>Scan Resultaten voor {scan.url}</title>
-<meta name="description" content="Analyse en AI-readiness score voor {scan.url}" />
+  <title>Scan Resultaten - {scan.url} | AIO Scanner</title>
+  <meta name="description" content="AI-optimalisatie resultaten voor {scan.url}" />
 </svelte:head>
 
 <Header />
 
-<main class="min-h-screen bg-gradient-to-br from-bg-light via-white to-blue-50">
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-  <!-- Header Section -->
-  <div class="text-center mb-8">
-    <h1 class="text-3xl font-header font-bold text-gray-900 mb-4">
-      🎉 Je Scan Resultaten
-    </h1>
-    <p class="text-lg text-gray-600 mb-6">
-      Scan resultaten voor {scan.url}
-    </p>
-  </div>
+<main class="min-h-screen bg-gray-50 py-8">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    
+    <!-- Error State -->
+    {#if error}
+      <Alert class="mb-8 border-red-200 bg-red-50">
+        <AlertDescription class="text-red-800">
+          <strong>Fout bij laden:</strong> {error}
+        </AlertDescription>
+      </Alert>
+    {/if}
 
-  <!-- Error Alert -->
-  {#if error}
-    <Alert variant="destructive" class="mb-8">
-      <AlertDescription>
-        <p><strong>Er is een fout opgetreden:</strong> {error}</p>
-        <p class="mt-2">Probeer de scan opnieuw uit te voeren. Als het probleem aanhoudt, neem contact op met support.</p>
-      </AlertDescription>
-    </Alert>
-  {/if}
-
-  <!-- Top Section: 50/50 Split -->
-  <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
-    <!-- Left: Website Preview -->
-    <div class="space-y-6 order-1 lg:order-1">
-      <WebsitePreview 
-        websiteUrl={scan.url}
-        websiteScreenshot={scan.screenshot || ''}
-        statusText="Scan voltooid"
-        isLoading={false}
-      />
-      
-      <!-- PDF Status for non-basic tiers -->
-      {#if scan.tier !== 'basic'}
-        <Alert>
-          <AlertDescription>
-            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-              <div class="flex items-center gap-2">
-                <span class="text-xl">
-                  {#if scan.pdfGenerationStatus === 'completed' && scan.pdfUrl}
-                    📄
-                  {:else if scan.pdfGenerationStatus === 'generating' || scan.pdfGenerationStatus === 'pending'}
-                    ⚙️
-                  {:else}
-                    📧
-                  {/if}
-                </span>
-                <span class="text-sm">
-                  {#if scan.pdfGenerationStatus === 'completed' && scan.pdfUrl}
-                    PDF rapport is klaar!
-                  {:else if scan.pdfGenerationStatus === 'generating' || scan.pdfGenerationStatus === 'pending'}
-                    PDF wordt gegenereerd...
-                  {:else if emailStatus.email}
-                    Rapport wordt naar {emailStatus.email} gestuurd
-                  {:else}
-                    Rapport wordt klaargezet
-                  {/if}
-                </span>
-              </div>
-              
-              {#if scan.pdfGenerationStatus === 'completed' && scan.pdfUrl}
-                <Button 
-                  variant="default" 
-                  size="sm"
-                  on:click={() => downloadPDF(scan.id, emailStatus.email)}
-                  class="w-full sm:w-auto"
-                >
-                  📄 Download PDF
-                </Button>
-              {/if}
-            </div>
-          </AlertDescription>
-        </Alert>
-      {/if}
-    </div>
-
-    <!-- Right: AI-Gereedheid Score -->
-    <div class="flex items-center justify-center order-2 lg:order-2">
-      <div class="glass p-6 lg:p-8 rounded-2xl text-center w-full max-w-md mx-auto">
-        <ProgressCircle 
-          progress={scan.overallScore} 
-          size={180} 
-        />
-        <h2 class="text-xl lg:text-2xl font-semibold mt-4 lg:mt-6">AI-Gereedheid Score</h2>
-        <p class="text-gray-600 mt-2 text-base lg:text-lg">
-          {scan.overallScore} van de 100 punten
-        </p>
-        <div class="mt-3 lg:mt-4 text-xs lg:text-sm text-gray-500">
-          Gebaseerd op {scan.moduleResults ? scan.moduleResults.length : 0} modules
+    <!-- Development Controls -->
+    {#if isDevelopment}
+      <div class="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+        <div class="flex items-center justify-between">
+          <span class="text-sm text-yellow-800">🚧 Development Mode</span>
+          <button 
+            class="text-xs bg-yellow-200 px-2 py-1 rounded hover:bg-yellow-300"
+            on:click={toggleLegacyView}
+          >
+            {showLegacyView ? 'Hide' : 'Show'} Legacy View
+          </button>
         </div>
       </div>
-    </div>
-  </div>
+    {/if}
 
-  <!-- Results Section -->
-  <div class="space-y-8">
-    {#if scan.moduleResults && scan.moduleResults.length > 0}
-      <!-- Section Header -->
-      <div class="text-center mb-8">
-        <h2 class="text-2xl font-semibold mb-2">Gedetailleerde Analyse</h2>
-        <p class="text-gray-600">Ontdek wat er goed gaat en waar verbeterkansen liggen</p>
-      </div>
+    <!-- NEW REDESIGNED RESULTS PAGE -->
+    {#if !showLegacyView}
+      <div class="space-y-8">
+        
+        <!-- Phase 1: Score Hero -->
+        <ScoreHero 
+          score={scan.overallScore} 
+          url={scan.url}
+          showContext={true}
+        />
 
-      <!-- Module Cards Grid -->
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {#each moduleItems as module}
-          {@const moduleData = getModuleData(module)}
-          {@const hasData = moduleData && moduleData.findings && moduleData.findings.length > 0}
-          {@const criticalFindings = hasData ? moduleData.findings.filter(f => (f.priority || 'medium') === 'high' || f.type === 'error') : []}
-          {@const positiveFindings = hasData ? moduleData.findings.filter(f => (f.priority || 'medium') === 'low' || f.type === 'success') : []}
-          
-          <!-- Module Card -->
-          <div class="glass rounded-2xl overflow-hidden hover:shadow-lg transition-all duration-300">
-            <!-- Card Header -->
-            <div class="p-6 border-b border-gray-100">
-              <div class="flex items-center justify-between mb-3">
-                <div class="flex items-center gap-3">
-                  <div class="w-12 h-12 rounded-lg flex items-center justify-center text-2xl"
-                    class:bg-gradient-to-br={module.name.startsWith('AI')}
-                    class:from-blue-100={module.name.startsWith('AI')}
-                    class:to-purple-100={module.name.startsWith('AI')}
-                    class:bg-gray-100={!module.name.startsWith('AI')}
-                  >
-                    {module.icon}
-                  </div>
-                  <div class="flex-1">
-                    <div class="flex items-center gap-2">
-                      <h3 class="text-lg font-semibold text-gray-900">{module.name}</h3>
-                      <button
-                        class="text-gray-400 hover:text-gray-600 transition-colors"
-                        on:click={() => expandedStates[`${module.id}_info`] = !expandedStates[`${module.id}_info`]}
-                        title="Meer info over deze module"
-                      >
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                        </svg>
-                      </button>
-                    </div>
-                    {#if module.name.startsWith('AI')}
-                      <span class="text-sm text-blue-600 font-medium">AI Module</span>
-                    {/if}
-                  </div>
-                </div>
-                
-                <div class="flex items-center gap-2">
-                  {#if hasData}
-                    <span class="px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700">
-                      Actief
-                    </span>
-                  {:else}
-                    <span class="px-3 py-1 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-700">
-                      Ontwikkeling
-                    </span>
-                  {/if}
-                </div>
-              </div>
+        <!-- Phase 2: Positive Reinforcement -->
+        {#if businessInsights.positiveFindings.length > 0}
+          <PositiveReinforcement 
+            positiveFindings={businessInsights.positiveFindings}
+            showTitle={true}
+          />
+        {/if}
 
-              <!-- Module Description (expandable) -->
-              {#if expandedStates[`${module.id}_info`]}
-                <div class="mt-4 p-4 bg-gray-50 rounded-lg">
-                  <div class="space-y-3">
-                    <div>
-                      <h4 class="text-sm font-medium text-gray-700 mb-1">Wat doet deze module?</h4>
-                      <p class="text-sm text-gray-600">{module.description}</p>
-                    </div>
-                    <div>
-                      <h4 class="text-sm font-medium text-gray-700 mb-1">Wat wordt er gescand?</h4>
-                      <p class="text-sm text-gray-600">{module.scansFor}</p>
-                    </div>
-                    {#if hasData}
-                      <div>
-                        <h4 class="text-sm font-medium text-gray-700 mb-1">Gescande secties</h4>
-                        <p class="text-sm text-gray-600">Homepage, contactpagina, over ons pagina, footer, header sectie</p>
-                      </div>
-                    {/if}
-                  </div>
-                </div>
-              {/if}
+        <!-- Phase 2: Quick Wins Section -->
+        <QuickWinsSection 
+          quickWins={businessInsights.quickWins}
+          totalActions={businessInsights.totalActions}
+        />
 
-              <!-- Quick Stats -->
-              {#if hasData}
-                <div class="flex items-center gap-4 text-sm">
-                  {#if positiveFindings.length > 0}
-                    <div class="flex items-center gap-1 text-green-600">
-                      <span>✓</span>
-                      <span>{positiveFindings.length} goed</span>
-                    </div>
-                  {/if}
-                  {#if criticalFindings.length > 0}
-                    <div class="flex items-center gap-1 text-red-600">
-                      <span>⚠</span>
-                      <span>{criticalFindings.length} verbeterpunt{criticalFindings.length !== 1 ? 'en' : ''}</span>
-                    </div>
-                  {/if}
-                  <div class="flex items-center gap-1 text-gray-500">
-                    <span>📊</span>
-                    <span>{moduleData.findings.length} total</span>
-                  </div>
-                </div>
-              {:else}
-                <p class="text-sm text-gray-500">Binnenkort beschikbaar</p>
-              {/if}
+        <!-- Phase 3: Gentle Conversion -->
+        <GentleConversion 
+          tier={getScanTier(scan.tier)}
+          quickWinsCount={businessInsights.quickWins.length}
+          totalActionsCount={businessInsights.totalActions}
+          placement="after-quickwins"
+        />
+
+        <!-- Email & PDF Section -->
+        {#if emailStatus.email && emailSentTime}
+          <div class="bg-white rounded-xl p-6 border border-gray-200">
+            <div class="flex items-center gap-3 mb-4">
+              <span class="text-2xl">📧</span>
+              <h3 class="text-lg font-semibold text-gray-900">Rapport verzonden</h3>
             </div>
+            <p class="text-gray-600 mb-4">
+              Het volledige rapport is verzonden naar <strong>{emailStatus.email}</strong> op {emailSentTime}.
+            </p>
+            
+            <!-- PDF Download Button -->
+            {#if scan.tier !== 'basic' && scan.pdfGenerationStatus === 'completed' && scan.pdfUrl}
+              <Button 
+                class="bg-blue-600 hover:bg-blue-700 text-white"
+                on:click={downloadPDF}
+              >
+                📄 Download PDF Rapport
+              </Button>
+            {/if}
+          </div>
+        {/if}
 
-            <!-- Card Content -->
-            <div class="p-6">
-              {#if hasData}
-                <!-- Top Findings Preview -->
-                <div class="space-y-3">
-                  {#each moduleData.findings.slice(0, 3) as finding}
-                    {@const displayType = finding.type || priorityToType(finding.priority || 'medium')}
-                    <div class="flex items-start gap-3 p-3 rounded-lg" 
-                      class:bg-green-50={displayType === 'success'}
-                      class:bg-yellow-50={displayType === 'warning'}
-                      class:bg-red-50={displayType === 'error'}
-                    >
-                      <span class="mt-0.5 text-sm">
-                        {#if displayType === 'success'}
-                          <span class="text-green-500">✓</span>
-                        {:else if displayType === 'warning'}
-                          <span class="text-yellow-500">⚠️</span>
-                        {:else}
-                          <span class="text-red-500">✗</span>
-                        {/if}
-                      </span>
-                      <div class="flex-1 min-w-0">
-                        <p class="text-sm font-medium truncate" 
-                          class:text-green-700={displayType === 'success'}
-                          class:text-yellow-700={displayType === 'warning'}
-                          class:text-red-700={displayType === 'error'}
-                        >
-                          {finding.title}
-                        </p>
-                        <p class="text-xs text-gray-600 mt-1 line-clamp-2">
-                          {finding.description}
-                        </p>
-                      </div>
-                    </div>
-                  {/each}
-                  
-                  {#if moduleData.findings.length > 3}
-                    <button 
-                      class="w-full text-center py-2 text-sm text-blue-600 hover:text-blue-700 font-medium"
-                      on:click={() => toggleModule(module.id)}
-                    >
-                      {expandedStates[module.id] ? '← Toon minder' : `Toon alle ${moduleData.findings.length} bevindingen →`}
-                    </button>
-                  {/if}
-                </div>
+        <!-- Website Preview (if screenshot available) -->
+        {#if screenshot}
+          <div class="bg-white rounded-xl p-6 border border-gray-200">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Website Preview</h3>
+            <WebsitePreview websiteScreenshot={screenshot} websiteUrl={scan.url} />
+          </div>
+        {/if}
 
-                <!-- Expanded Details -->
-                {#if expandedStates[module.id] && moduleData.findings.length > 3}
-                  <div class="mt-6 pt-6 border-t border-gray-100">
-                    <h4 class="text-sm font-semibold text-gray-700 mb-4">Alle Bevindingen</h4>
-                    <div class="space-y-3">
-                      {#each moduleData.findings.slice(3) as finding}
-                        {@const displayType = finding.type || priorityToType(finding.priority || 'medium')}
-                        <div class="flex items-start gap-3 p-3 rounded-lg" 
-                          class:bg-green-50={displayType === 'success'}
-                          class:bg-yellow-50={displayType === 'warning'}
-                          class:bg-red-50={displayType === 'error'}
-                        >
-                          <span class="mt-0.5 text-sm">
-                            {#if displayType === 'success'}
-                              <span class="text-green-500">✓</span>
-                            {:else if displayType === 'warning'}
-                              <span class="text-yellow-500">⚠️</span>
-                            {:else}
-                              <span class="text-red-500">✗</span>
-                            {/if}
-                          </span>
-                          <div class="flex-1">
-                            <p class="text-sm font-medium mb-1" 
-                              class:text-green-700={displayType === 'success'}
-                              class:text-yellow-700={displayType === 'warning'}
-                              class:text-red-700={displayType === 'error'}
-                            >
-                              {finding.title}
-                            </p>
-                            <p class="text-xs text-gray-600">
-                              {finding.description}
-                            </p>
-                          </div>
-                        </div>
-                      {/each}
-                    </div>
-
-                    <!-- Actionable Tips Section -->
-                    {#if criticalFindings.length > 0}
-                      <div class="mt-6 p-4 bg-blue-50 rounded-lg">
-                        <h5 class="text-sm font-semibold text-blue-800 mb-2">💡 Verbetip voor {module.name}</h5>
-                        <p class="text-sm text-blue-700">
-                          {#if module.id === 'ai_citation'}
-                            Voeg een duidelijke contactpagina toe met KVK-nummer, adres en telefoonnummer. Dit verhoogt je geloofwaardigheid bij AI-assistenten.
-                          {:else if module.id === 'ai_content'}
-                            Creëer een FAQ sectie met veel gestelde vragen over je product/dienst. Start elke vraag met "Wat", "Hoe" of "Waarom".
-                          {:else if module.id === 'schema_markup'}
-                            Voeg JSON-LD schema markup toe voor je bedrijfsgegevens en diensten. Dit helpt AI je content beter begrijpen.
-                          {:else if module.id === 'technical_seo'}
-                            Optimaliseer je robots.txt en meta descriptions specifiek voor AI-crawlers zoals GPTBot.
-                          {:else}
-                            Werk aan de gevonden verbeterpunten om je AI-gereedheid te verhogen.
-                          {/if}
-                        </p>
-                      </div>
-                    {/if}
-                  </div>
-                {/if}
-              {:else}
-                <div class="text-center py-8">
-                  <div class="text-4xl mb-3">🚧</div>
-                  <p class="text-sm text-gray-600">
-                    Deze module wordt nog ontwikkeld en komt binnenkort beschikbaar.
-                  </p>
-                </div>
-              {/if}
+        <!-- Scan Metadata -->
+        <div class="bg-white rounded-xl p-6 border border-gray-200">
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+            <div>
+              <span class="text-gray-500">Scan Type:</span>
+              <span class="font-medium ml-2">{formatTierName(scan.tier)}</span>
+            </div>
+            <div>
+              <span class="text-gray-500">Voltooid op:</span>
+              <span class="font-medium ml-2">
+                {scan.completedAt ? new Date(scan.completedAt).toLocaleString('nl-NL') : 'Nog niet voltooid'}
+              </span>
+            </div>
+            <div>
+              <span class="text-gray-500">Scan ID:</span>
+              <span class="font-mono text-xs ml-2">{scan.id}</span>
             </div>
           </div>
-        {/each}
-      </div>
-    {:else}
-      <div class="glass p-8 rounded-2xl text-center">
-        <div class="text-6xl mb-4">🔍</div>
-        <h3 class="text-xl font-semibold mb-2">Geen resultaten beschikbaar</h3>
-        <p class="text-gray-600">De scan heeft nog geen resultaten opgeleverd.</p>
+        </div>
       </div>
     {/if}
-  </div>
 
-  <!-- Action Buttons -->
-  <div class="flex flex-col sm:flex-row justify-center gap-4 mt-12">
-    <Button variant="outline" on:click={handleNewScan} class="w-full sm:w-auto">
-      🔍 Scan nog een website
-    </Button>
-    <Button variant="default" on:click={handleUpgrade} class="w-full sm:w-auto">
-      🚀 Upgrade voor onbeperkt scannen
-    </Button>
+    <!-- LEGACY VIEW (for development/fallback) -->
+    {#if showLegacyView || isDevelopment}
+      <div class="space-y-8 {showLegacyView ? '' : 'opacity-50 pointer-events-none'}">
+        <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
+          <h2 class="font-semibold text-yellow-800 mb-2">🔧 Legacy View</h2>
+          <p class="text-sm text-yellow-700">
+            This is the original results page layout. The new redesigned version is shown above.
+          </p>
+        </div>
+
+        <!-- Legacy content here -->
+        <div class="bg-white rounded-lg shadow-sm p-6">
+          <div class="text-center mb-8">
+            <ProgressCircle score={legacyScore} size="large" />
+            <h1 class="text-2xl font-bold text-gray-900 mt-4">
+              Scan Resultaten voor {scan.url}
+            </h1>
+            <p class="text-gray-600 mt-2">
+              Voltooid op {scan.completedAt ? new Date(scan.completedAt).toLocaleDateString('nl-NL') : 'Nog niet voltooid'}
+            </p>
+          </div>
+
+          <ModuleProgressGrid 
+            modules={moduleItems} 
+          />
+        </div>
+      </div>
+    {/if}
+
   </div>
-</div>
 </main>
+
+<style>
+  /* Smooth transitions for view switching */
+  main {
+    transition: all 0.3s ease;
+  }
+
+  /* Focus styles for accessibility */
+  button:focus {
+    outline: 2px solid #3b82f6;
+    outline-offset: 2px;
+  }
+</style>

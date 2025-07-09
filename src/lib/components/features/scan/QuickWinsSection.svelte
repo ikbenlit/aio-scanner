@@ -2,7 +2,7 @@
 <script lang="ts">
   import ActionCard from './ActionCard.svelte';
   import type { PrioritizedAction } from '$lib/results/prioritization';
-  import type { ScanTier } from '$lib/types/scan';
+  import type { ScanTier } from '$lib/types/database';
 
   export let quickWins: PrioritizedAction[];
   export let totalActions: number = 0;

@@ -87,6 +87,31 @@
     *   **Quick Wins Title**: Pas de titel aan. Als `isBasicTier`, toon de `aiPreviewBadge`.
     *   **PDF Download Knop**: Render deze knop alleen als `!isBasicTier` en de PDF-status `completed` is.
 
+#### **1.3 Navigatie & CTA Flow**
+**Bestanden:** Diverse Svelte componenten en routes (`PricingSection`, `checkout`, `payment-return`, `results`)
+**Doel:** Een naadloze en logische gebruikersflow garanderen van tier-keuze tot aan het zien van het resultaat. Dit is de "lijm" tussen de UI-componenten.
+**Conceptuele Implementatie:**
+1.  **Vanaf `PricingSection`:**
+    *   **CTA Basic Tier**: `on:click` roept een `dispatch` event aan (`startBasicScan`) dat de gratis scan initieert op de landingspagina zelf.
+    *   **CTA Betaalde Tiers**: `on:click` navigeert de gebruiker met de juiste context naar de checkout-pagina.
+        ```javascript
+        goto(`/checkout?tier=${tier.name}&url=${encodeURIComponent(scanUrl)}`);
+        ```
+2.  **Op de `Checkout Page`:**
+    *   **CTA "Ga naar betaling"**: `on:click` roept een functie aan die de API call (`/api/payment/create`) doet en de gebruiker vervolgens doorstuurt naar de externe Mollie betaalpagina.
+        ```javascript
+        window.location.href = paymentUrl;
+        ```
+3.  **Vanaf de `Payment Return Page`:**
+    *   **Geen CTA (automatisch)**: Bij het laden van de pagina (`onMount`) wordt de scan direct gestart via een API call (`/api/scan/...`).
+    *   **Automatische Navigatie**: Na een succesvolle API-respons wordt de gebruiker direct doorgestuurd naar de resultatenpagina.
+        ```javascript
+        goto(`/scan/${result.scanId}/results`);
+        ```
+4.  **Op de `Results Page`:**
+    *   **CTA PDF Download**: Deze knop is conditioneel zichtbaar en functioneel.
+    *   **CTA in `GentleConversionBanner`**: De knop in de upgrade-banner moet correct verwijzen naar de checkout-pagina met de juiste parameters voor een upgrade.
+
 ### **FASE 2: Payment & Scan Flow (± 2.5 uur)**
 
 #### **2.1 Checkout Page Implementation**
@@ -125,6 +150,31 @@
     ```
 4.  **UI**: Toon een laad-indicator ("Betaling wordt geverifieerd, scan wordt gestart...") tijdens dit proces.
 
+#### **API Contract Reference**
+Een concreet overzicht van de twee kern-endpoints die in deze fase worden gebruikt.
+
+| Endpoint | Methode | Request Body (voorbeeld) | Response (voorbeeld) |
+|----------|---------|--------------------------|----------------------|
+| `/api/payment/create` | `POST` | `{ "tier": "starter", "url": "https://example.com", "email": "user@example.com" }` | `201 Created` → `{ "paymentUrl": "https://www.mollie.com/payments/XYZ" }` |
+| `/api/scan/:tier` | `POST` | `{ "url": "https://example.com", "email": "user@example.com", "paymentId": "tr_12345" }`<br/>`tier` path-param ∈ `basic\|starter\|business\|enterprise` | `202 Accepted` → `{ "scanId": "8464f0f9-...", "status": "queued" }` |
+
+**Type-validatie (Zod):**
+```typescript
+import { z } from 'zod';
+
+export const PaymentCreateSchema = z.object({
+  tier: z.enum(['starter', 'business', 'enterprise']),
+  url: z.string().url(),
+  email: z.string().email()
+});
+
+export const ScanRequestSchema = z.object({
+  url: z.string().url(),
+  email: z.string().email().optional(),
+  paymentId: z.string().optional()
+});
+```
+
 #### **2.3 Asynchronous Post-Scan Processing**
 **Bestand:** `src/lib/services/PostScanProcessorService.ts` & `supabase/functions/process-scan/index.ts` - **NIEUW**
 **Doel:** PDF-generatie en e-mailverzending loskoppelen van de `ScanOrchestrator` voor betere performance en SoC.
@@ -141,6 +191,28 @@
 *   `ScanOrchestrator` voltooit de scan en slaat resultaten op.
 *   Gebruiker wordt *direct* naar de webresultaten gestuurd.
 *   Ondertussen draait de Edge Function op de achtergrond om de PDF te maken en te mailen.
+
+**Deployment Checklist & ENV Requirements**
+
+**Deployment Stappen:**
+1. **Supabase Edge Function Deploy:**
+   * Navigeer naar de `supabase/functions/process-scan` directory.
+   * Voer `supabase functions deploy process-scan` uit om de functie te deployen.
+   * Verifieer de deployment via de Supabase dashboard logs.
+
+2. **PostScanProcessorService Deploy:**
+   * Zorg dat de service in de `src/lib/services` map staat.
+   * Controleer of de service correct wordt geïmporteerd en aangeroepen in de `ScanOrchestrator`.
+
+**ENV Requirements:**
+- `MOLLIE_KEY`: API sleutel voor Mollie betalingen.
+- `EMAIL_API_KEY`: Sleutel voor de e-mailservice.
+- `SUPABASE_URL`: URL van de Supabase instance.
+- `SUPABASE_ANON_KEY`: Anonieme sleutel voor Supabase toegang.
+
+**Error Reporting:**
+- **Supabase Logs:** Controleer de logs in het Supabase dashboard voor fouten in de Edge Function.
+- **Service Logs:** Voeg logging toe in de `PostScanProcessorService` voor elke stap (PDF generatie, e-mail verzending) en log fouten naar een centrale logging service of bestand.
 
 ### **FASE 3: Output Verfijning (± 1.25 uur)**
 

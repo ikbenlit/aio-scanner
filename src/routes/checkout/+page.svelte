@@ -53,7 +53,7 @@
     }
   };
   
-  $: selectedTier = tierConfig[tier];
+  $: selectedTier = tierConfig[tier as keyof typeof tierConfig];
   $: isValidEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   $: canProceed = selectedTier && scanUrl && isValidEmail;
   
@@ -93,7 +93,7 @@
         throw new Error('No payment URL received');
       }
       
-    } catch (err) {
+    } catch (err: any) {
       console.error('Payment error:', err);
       error = err.message || 'Er is iets misgegaan bij het verwerken van de betaling';
     } finally {

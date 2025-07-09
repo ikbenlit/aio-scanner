@@ -211,15 +211,15 @@
           />
         {/if}
 
-        <!-- Phase 2: Quick Wins Section -->
+        <!-- Phase 2: Quick Wins Section (Show aiPreviewBadge for basic tier) -->
         <QuickWinsSection 
           quickWins={businessInsights.quickWins}
           totalActions={businessInsights.totalActions}
           tier={businessInsights.tier}
-          aiPreviewBadge={businessInsights.aiPreviewBadge}
+          aiPreviewBadge={businessInsights.tier === 'basic' ? businessInsights.aiPreviewBadge : null}
         />
 
-        <!-- Phase 3: Gentle Conversion -->
+        <!-- Phase 3: Gentle Conversion (Always show, tier-aware messaging) -->
         <GentleConversion 
           tier={businessInsights.tier}
           quickWinsCount={businessInsights.quickWins.length}
@@ -228,12 +228,12 @@
           aiPreviewBadge={businessInsights.aiPreviewBadge}
         />
 
-        <!-- Phase 4: AI-Narrative Section -->
+        <!-- Phase 4: AI-Narrative Section (Lock based on tier) -->
         <AiNarrativeSection 
           aiNarrative={businessInsights.aiNarrative}
           aiInsights={businessInsights.aiInsights}
           tier={businessInsights.tier}
-          isLocked={businessInsights.isBasicTier}
+          isLocked={businessInsights.tier === 'basic' || businessInsights.tier === 'starter'}
         />
 
         <!-- Email & PDF Section -->
@@ -247,8 +247,8 @@
               Het volledige rapport is verzonden naar <strong>{emailStatus.email}</strong> op {emailSentTime}.
             </p>
             
-            <!-- PDF Download Button -->
-            {#if scan.tier !== 'basic' && scan.pdfGenerationStatus === 'completed' && scan.pdfUrl}
+            <!-- PDF Download Button (Only for non-basic tiers with completed PDF) -->
+            {#if !businessInsights.isBasicTier && scan.pdfGenerationStatus === 'completed' && scan.pdfUrl}
               <Button 
                 class="bg-blue-600 hover:bg-blue-700 text-white"
                 on:click={downloadPDF}

@@ -98,10 +98,11 @@
     });
     
     if (tier === 'basic') {
-      // Navigate to pricing or scan upgrade
-      window.location.href = '/pricing?from=results&tier=starter';
+      // Navigate to home with pricing section focused
+      window.location.href = '/#pricing';
     } else if (tier === 'starter') {
-      window.location.href = '/pricing?from=results&tier=business';
+      // Navigate to home with pricing section focused
+      window.location.href = '/#pricing';
     } else if (tier === 'business') {
       // Download PDF or email report
       // This would trigger the PDF generation/email flow
@@ -117,10 +118,11 @@
     });
     
     if (tier === 'basic') {
-      // Show more details about what's included
-      console.log('Show detailed feature comparison');
+      // Show more details about what's included - navigate to home with pricing
+      window.location.href = '/#pricing';
     } else if (tier === 'starter') {
-      window.location.href = '/features/business';
+      // Navigate to home with pricing section focused
+      window.location.href = '/#pricing';
     } else if (tier === 'business') {
       // Email report option
       console.log('Email report to user');

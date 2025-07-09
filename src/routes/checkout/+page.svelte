@@ -1,61 +1,42 @@
 <!-- src/routes/checkout/+page.svelte -->
-<script>
-  import { page } from '$app/stores';
-  import { onMount } from 'svelte';
+<script lang="ts">
+  import type { PageData } from './$types';
   
-  let tier = '';
-  let scanUrl = '';
-  let email = '';
+  export let data: PageData;
+  
+  // Extract data from load function
+  let { tier, scanUrl, tierConfig } = data;
+  let email = data.email;
   let isLoading = false;
   let error = '';
   
-  onMount(() => {
-    // Get parameters from URL
-    tier = $page.url.searchParams.get('tier') || '';
-    scanUrl = $page.url.searchParams.get('url') || '';
-    email = $page.url.searchParams.get('email') || '';
-  });
-  
-  // Tier configuration
-  const tierConfig = {
-    starter: {
-      name: 'Starter',
-      price: '€19,95',
-      description: 'Ideaal voor kleine bedrijven en freelancers',
-      features: [
-        'Alle Basic-functies',
-        'AI-gegenereerd content rapport',
-        'Downloadbare PDF-rapporten',
-        'E-mail ondersteuning'
-      ]
-    },
-    business: {
-      name: 'Business',
-      price: '€49,95',
-      description: 'Voor MKB en marketing professionals',
-      features: [
-        'Alle Starter-functies',
-        'AI-auteur voor content verbetering',
-        'Volledig narratief PDF-rapport',
-        'Analyse van de versheid van content'
-      ]
-    },
-    enterprise: {
-      name: 'Enterprise',
-      price: '€149,95',
-      description: 'Voor bureaus en grote ondernemingen',
-      features: [
-        'Alle Business-functies',
-        'Multi-pagina scan & analyse',
-        'Concurrentie-analyse',
-        'Strategische roadmap'
-      ]
-    }
-  };
-  
   $: selectedTier = tierConfig[tier as keyof typeof tierConfig];
   $: isValidEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-  $: canProceed = selectedTier && scanUrl && isValidEmail;
+  $: isValidUrl = scanUrl && isValidUrlFormat(scanUrl);
+  $: canProceed = selectedTier && isValidUrl && isValidEmail;
+  
+  function isValidUrlFormat(url: string): boolean {
+    try {
+      new URL(url);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+  
+  function formatUrl(url: string): string {
+    if (!url) return '';
+    if (!url.startsWith('http://') && !url.startsWith('https://')) {
+      return 'https://' + url;
+    }
+    return url;
+  }
+  
+  // Auto-format URL when user types
+  function handleUrlInput(event: Event) {
+    const target = event.target as HTMLInputElement;
+    scanUrl = formatUrl(target.value);
+  }
   
   async function handlePayment() {
     if (!canProceed || isLoading) return;
@@ -83,18 +64,19 @@
         throw new Error(errorData.error || 'Payment creation failed');
       }
       
-      const data = await response.json();
-      console.log('💳 Payment created:', data);
+      const result = await response.json();
+      console.log('💳 Payment created:', result);
       
-      // Redirect to payment URL
-      if (data.paymentUrl) {
-        window.location.href = data.paymentUrl;
+      // Redirect to payment URL  
+      if (result.paymentUrl) {
+        console.log('🔄 Redirecting to payment URL:', result.paymentUrl);
+        window.location.href = result.paymentUrl;
       } else {
         throw new Error('No payment URL received');
       }
       
     } catch (err: any) {
-      console.error('Payment error:', err);
+      console.error('💥 Payment error:', err);
       error = err.message || 'Er is iets misgegaan bij het verwerken van de betaling';
     } finally {
       isLoading = false;
@@ -184,9 +166,12 @@
                   type="email"
                   bind:value={email}
                   required
-                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  class="w-full px-3 py-2 border {isValidEmail || !email ? 'border-gray-300' : 'border-red-300'} rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder="je@email.com"
                 />
+                {#if email && !isValidEmail}
+                  <p class="text-sm text-red-600 mt-1">Voer een geldig e-mailadres in</p>
+                {/if}
                 <p class="text-sm text-gray-500 mt-1">
                   Je rapport wordt naar dit adres verzonden
                 </p>
@@ -200,10 +185,14 @@
                   id="scan-url"
                   type="url"
                   bind:value={scanUrl}
+                  on:input={handleUrlInput}
                   required
-                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  class="w-full px-3 py-2 border {isValidUrl || !scanUrl ? 'border-gray-300' : 'border-red-300'} rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder="https://jouwwebsite.nl"
                 />
+                {#if scanUrl && !isValidUrl}
+                  <p class="text-sm text-red-600 mt-1">Voer een geldige URL in</p>
+                {/if}
               </div>
               
               {#if error}
@@ -231,12 +220,42 @@
               </button>
             </form>
             
+            <!-- Process Info -->
+            <div class="mt-6 bg-blue-50 rounded-lg p-4">
+              <h4 class="font-medium text-gray-900 mb-2">Wat gebeurt er na betaling?</h4>
+              <ol class="text-sm text-gray-600 space-y-1">
+                <li>1. Je betaling wordt direct geverifieerd</li>
+                <li>2. De scan start automatisch (±60 seconden)</li>
+                <li>3. Je wordt doorgestuurd naar de live resultaten</li>
+                <li>4. Het volledige PDF-rapport wordt naar je e-mail verzonden</li>
+              </ol>
+            </div>
+            
+            <!-- Trust Signals -->
             <div class="mt-6 text-center">
-              <p class="text-sm text-gray-500">
-                Veilige betaling via Mollie
+              <p class="text-sm text-gray-500 mb-2">
+                🔒 Veilige betaling via Mollie
               </p>
-              <div class="flex justify-center mt-2 space-x-4">
-                <span class="text-xs text-gray-400">iDEAL • Credit Card • SEPA</span>
+              <div class="flex justify-center mt-2 space-x-4 text-xs text-gray-400">
+                <span>iDEAL</span>
+                <span>•</span>
+                <span>Credit Card</span>
+                <span>•</span>
+                <span>SEPA</span>
+              </div>
+              <div class="flex justify-center mt-3 space-x-6 text-xs text-gray-500">
+                <div class="flex items-center">
+                  <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                  </svg>
+                  30-dagen geld terug
+                </div>
+                <div class="flex items-center">
+                  <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd" />
+                  </svg>
+                  GDPR compliant
+                </div>
               </div>
             </div>
           </div>

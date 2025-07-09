@@ -8,10 +8,10 @@
 
 | Fase | Taak | Status | Tijdsinschatting | Opmerkingen |
 |------|------|--------|------------------|-------------|
-| **FASE 1: Frontend & UX** | 1.1 Pricing Section Refactor | 🔴 To do | 60 min | Landingspagina met 4 tiers + correcte prijzen |
-| | 1.2 Results Page Tier-Aware | 🔴 To do | 90 min | Dynamische UI (locks, banners, content) per tier |
-| | 1.3 Navigatie & CTA Flow | 🔴 To do | 30 min | Zorgen dat knoppen naar de juiste flow leiden |
-| **FASE 2: Payment & Scan Flow** | 2.1 Checkout Page Implementation | 🔴 To do | 60 min | **NIEUW:** Ontbrekende schakel voor e-mail capture |
+| **FASE 1: Frontend & UX** | 1.1 Pricing Section Refactor | 🟢 Done | 60 min | Landingspagina met 4 tiers + correcte prijzen |
+| | 1.2 Results Page Tier-Aware | 🟢 Done | 90 min | Dynamische UI (locks, banners, content) per tier |
+| | 1.3 Navigatie & CTA Flow | 🟢 Done | 30 min | Zorgen dat knoppen naar de juiste flow leiden |
+| **FASE 2: Payment & Scan Flow** | 2.1 Checkout Page Implementation | 🟢 Done | 60 min | **NIEUW:** Ontbrekende schakel voor e-mail capture |
 | | 2.2 Payment Return Page | 🔴 To do | 60 min | Automatisch scan starten na succesvolle betaling |
 | | 2.3 Post-Scan Async Processing | 🔴 To do | 75 min | **NIEUW:** Decoupled PDF/E-mail service |
 | **FASE 3: Output Verfijning** | 3.1 Enterprise PDF Template | 🔴 To do | 45 min | Specifiek template met KPI Dashboard & multi-page data |
@@ -181,109 +181,4 @@ export const ScanRequestSchema = z.object({
 **Conceptuele Implementatie:**
 1.  **`ScanOrchestrator` Aanpassing**:
     *   De *enige* toevoeging aan de `ScanOrchestrator` is een "fire-and-forget" aanroep op het einde van een succesvolle scan.
-    *   `await supabase.functions.invoke('process-scan', { body: { scanId } })`
-2.  **`PostScanProcessorService` (Nieuwe Service)**:
-    *   Deze service bevat de logica die voorheen in de orchestrator zou komen.
-    *   `handle(scanId)`: Haalt scan op -> genereert PDF -> slaat PDF op -> verstuurt e-mail.
-3.  **Supabase Edge Function (`process-scan`)**:
-    *   Een simpele wrapper die de `PostScanProcessorService` aanroept. Dit zorgt voor de asynchrone executie.
-**Flow:**
-*   `ScanOrchestrator` voltooit de scan en slaat resultaten op.
-*   Gebruiker wordt *direct* naar de webresultaten gestuurd.
-*   Ondertussen draait de Edge Function op de achtergrond om de PDF te maken en te mailen.
-
-**Deployment Checklist & ENV Requirements**
-
-**Deployment Stappen:**
-1. **Supabase Edge Function Deploy:**
-   * Navigeer naar de `supabase/functions/process-scan` directory.
-   * Voer `supabase functions deploy process-scan` uit om de functie te deployen.
-   * Verifieer de deployment via de Supabase dashboard logs.
-
-2. **PostScanProcessorService Deploy:**
-   * Zorg dat de service in de `src/lib/services` map staat.
-   * Controleer of de service correct wordt geïmporteerd en aangeroepen in de `ScanOrchestrator`.
-
-**ENV Requirements:**
-- `MOLLIE_KEY`: API sleutel voor Mollie betalingen.
-- `EMAIL_API_KEY`: Sleutel voor de e-mailservice.
-- `SUPABASE_URL`: URL van de Supabase instance.
-- `SUPABASE_ANON_KEY`: Anonieme sleutel voor Supabase toegang.
-
-**Error Reporting:**
-- **Supabase Logs:** Controleer de logs in het Supabase dashboard voor fouten in de Edge Function.
-- **Service Logs:** Voeg logging toe in de `PostScanProcessorService` voor elke stap (PDF generatie, e-mail verzending) en log fouten naar een centrale logging service of bestand.
-
-### **FASE 3: Output Verfijning (± 1.25 uur)**
-
-#### **3.1 Enterprise PDF Template**
-**Bestand:** `src/lib/pdf/narrativeGenerator.ts` (of een nieuw `enterpriseTemplate.ts`)  
-**Doel:** De visuele weergave van Enterprise-data in het PDF-rapport.
-**Conceptuele Implementatie:**
-1.  **Data Check**: Controleer in de `TierAwarePDFGenerator` of er `enterpriseFeatures` in het `scanResult` object zitten.
-2.  **Duidelijk Data-Contract**: De te ontwikkelen functies moeten een duidelijk data-contract hebben. Voorbeeld:
-    ```typescript
-    interface KpiData {
-        estimatedRoi: number;
-        roiTimeframeMonths: number;
-        benchmarkScore: number;
-        topCompetitorScore: number;
-    }
-    interface MultiPageData { /* ... */ }
-    ```
-3.  **Nieuwe Secties**: Creëer HTML-generatie functies met dit contract:
-    *   `generateKPIDashboard(kpiData: KpiData)`
-    *   `generateMultiPageAnalysis(multiPageData: MultiPageData)`
-4.  **Template Logica**: In de `generatePdfHtml` methode, voeg conditionele logica toe om deze nieuwe secties alleen te renderen als de tier 'enterprise' is en de data beschikbaar is.
-
-### **FASE 4: Afronding (± 1.25 uur)**
-
-#### **4.1 Code Cleanup**
-**Doel:** Een schone, onderhoudbare codebase achterlaten.
-**Acties:**
-1.  **Zoek & Vernietig**: `grep` de hele `src` map voor `// TODO:` en `console.log`.
-2.  **Analyseer & Beslis**: Evalueer elke `console.log`. Is het een nuttige debug-log voor productie (houd), of een overblijfsel van ontwikkeling (verwijder)?
-3.  **Refactor**: Los de TODO's op. Dit zijn vaak kleine refactors of het afmaken van edge-case logica.
-
-#### **4.2 Documentatie Update**
-**Bestand:** `README.md` & `docs/*.md`  
-**Doel:** Zorgen dat nieuwe ontwikkelaars (of je toekomstige zelf) snel op stoom kunnen komen.
-**Acties:**
-1.  **README**: Update de "Getting Started" sectie en beschrijf kort de tier-structuur.
-2.  **Architectuur Document**: Werk een document zoals `02-phase-2-5-prequel-pattern-refactor.md` bij om de finale frontend-structuur en de user-flow per tier te beschrijven.
-
-### **FASE 5: UX Polish & Robustness (Lage Prioriteit)**
-
-#### **5.1 Enhanced Error Handling**
-**Doel:** Een robuuste gebruikerservaring bieden, zelfs als er iets misgaat na de betaling.
-**Conceptuele Implementatie:**
-1.  **Results Page Logic**: In `src/routes/scan/[scanId]/results/+page.svelte`, controleer op `data.scan.status === 'failed'`.
-2.  **Error Component**: Maak een specifieke error component die wordt getoond bij een gefaalde scan.
-3.  **User Message**: De component moet de gebruiker geruststellen en duidelijke instructies geven: "Je betaling is succesvol ontvangen, maar helaas kon de scan voor [URL] niet worden voltooid. Neem contact op met support en vermeld scan ID: [scanId] voor een gratis nieuwe scan of een terugbetaling."
-
-#### **5.2 Results Page Loading State**
-**Doel:** De gebruiker informeren en betrokken houden terwijl de scan wordt uitgevoerd.
-**Conceptuele Implementatie:**
-1.  **Directe Navigatie**: De `goto` na het starten van een scan stuurt de gebruiker *onmiddellijk* naar de resultatenpagina.
-2.  **Loading UI**: De `+page.svelte` checkt de `data.scan.status`.
-    *   Indien `pending` of `running`: Toon een laad-UI (bv. een progress bar, animatie) met de boodschap: "Analyse voor [URL] wordt uitgevoerd... Dit duurt ongeveer 60 seconden."
-    *   Indien `completed` of `failed`: Toon het resultaat of de foutmelding.
-3.  **Auto-Refresh**: Implementeer een mechanisme (bv. een `meta http-equiv="refresh"` tag met een interval van 15 seconden, of een Svelte-action die pollt) om de pagina data opnieuw te laden totdat de scan voltooid is.
-
-#### **5.3 Email Scan Result Link**
-**Doel:** Zorgen dat een gebruiker zijn betaalde rapport niet kwijtraakt.
-**Conceptuele Implementatie:**
-1.  **Aanpassing `PostScanProcessorService`**: In `src/lib/services/PostScanProcessorService.ts`, breid de `handle(scanId)` functie uit.
-2.  **Nieuwe E-mail Taak**: Naast het genereren van de PDF, roep de `EmailService` nogmaals aan (of breid de bestaande aanroep uit).
-3.  **E-mail Inhoud**: Verstuur een simpele e-mail met de tekst: "Je AIO Scanner rapport voor [URL] is klaar. Je kunt het online bekijken via de volgende link: [domain]/scan/[scanId]/results. De PDF-versie is bijgevoegd."
-
----
-
-## ✅ DEFINITION OF DONE
-
-- [ ] De landingspagina toont 4 functionele tier-kaarten.
-- [ ] De resultatenpagina toont conditioneel de juiste content voor elke tier.
-- [ ] De betaalflow is naadloos: betalen start automatisch de scan en redirect de gebruiker.
-- [ ] De Enterprise PDF bevat de unieke KPI- en multi-page data.
-- [ ] De codebase is vrij van ontwikkel-specifieke `console.log`'s en openstaande `TODO`'s.
-- [ ] De documentatie reflecteert de finale staat van de applicatie.
+    *   `

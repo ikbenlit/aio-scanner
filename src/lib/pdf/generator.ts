@@ -5,7 +5,7 @@ import { generateScanEmailTemplate, convertToEmailFormat, type EmailTemplateResu
 import { NarrativePDFGenerator } from './narrativeGenerator.js';
 import { generateStarterPDFHTML, type StarterPDFData } from './starterTemplate.js';
 import { translateFindings, getPositiveFindings } from '$lib/results/translation';
-import { prioritizeBusinessActions } from '$lib/results/prioritization';
+import { selectVariedQuickWins } from '$lib/results/prioritization';
 
 interface PDFOptions {
   filename: string;
@@ -163,7 +163,7 @@ export class TierAwarePDFGenerator {
     const positiveFindings = getPositiveFindings(scanResult.moduleResults);
     
     // Prioritize actions for starter tier (show all actions)
-    const prioritizedActions = prioritizeBusinessActions(businessActions);
+    const prioritizedActions = selectVariedQuickWins(businessActions);
     
     // Generate current date
     const generatedAt = new Date().toLocaleDateString('nl-NL', {

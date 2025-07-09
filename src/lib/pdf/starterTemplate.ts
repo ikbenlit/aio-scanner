@@ -1,7 +1,7 @@
 // src/lib/pdf/starterTemplate.ts
 import type { EngineScanResult, BusinessAction } from '$lib/types/scan';
 import { translateFindings, getPositiveFindings } from '$lib/results/translation';
-import { prioritizeBusinessActions } from '$lib/results/prioritization';
+import { selectVariedQuickWins } from '$lib/results/prioritization';
 
 export interface StarterPDFData {
   scanResult: EngineScanResult;

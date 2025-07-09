@@ -2,7 +2,7 @@ import type { EngineScanResult, NarrativeReport, AIInsights, ScanTier, ModuleRes
 import { generatePDFFromHTML } from './generator.js';
 import { generateBusinessPDFHTML, type BusinessPDFData } from './businessTemplate.js';
 import { translateFindings, getPositiveFindings } from '$lib/results/translation';
-import { prioritizeBusinessActions } from '$lib/results/prioritization';
+import { selectVariedQuickWins } from '$lib/results/prioritization';
 
 export class NarrativePDFGenerator {
   async generateBusinessReport(
@@ -18,7 +18,7 @@ export class NarrativePDFGenerator {
     const positiveFindings = getPositiveFindings(scanResult.moduleResults);
     
     // Prioritize actions for business tier
-    const prioritizedActions = prioritizeBusinessActions(businessActions);
+    const prioritizedActions = selectVariedQuickWins(businessActions);
     
     // Generate current date
     const generatedAt = new Date().toLocaleDateString('nl-NL', {

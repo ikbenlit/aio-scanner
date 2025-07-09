@@ -1,3 +1,39 @@
+### 📅 2025-07-09 - Session #1 | Fase 1.1 & 2.1: Pricing & Checkout Flow
+
+**Focus:** Implementeren van de tier-selectie op de landingspagina en de nieuwe checkout-pagina.
+**Goal:** Voltooien van de eerste twee stappen van het afrondingsplan om een werkende betaal-initiatie flow te creëren.
+
+**🏆 MAJOR ACHIEVEMENTS:**
+
+- [x] **Fase 1.1: `PricingSection.svelte` Volledig Gerefactored**
+  - ✅ Dynamische rendering van 4 tiers (Basic, Starter, Business, Enterprise) met correcte prijzen.
+  - ✅ Conditionele weergave van een e-mailveld voor betaalde tiers.
+  - ✅ Basic tier start direct een gratis scan via een `dispatch` event.
+  - ✅ Betaalde tiers navigeren correct naar de nieuwe `/checkout` pagina met `tier`, `url` en `email` parameters.
+  - ✅ Input validatie en professionele styling geïmplementeerd.
+
+- [x] **Fase 2.1: `Checkout Page` Geïmplementeerd**
+  - ✅ Nieuwe route `/routes/checkout` aangemaakt.
+  - ✅ Pagina toont een samenvatting van de gekozen tier en de te scannen URL.
+  - ✅ Formulier met e-mailinvoer en "Ga naar betaling" knop.
+  - ✅ Frontend roept `/api/payment/create` aan en redirect naar de Mollie betaalpagina.
+  - ✅ Solide foutafhandeling voor ongeldige data of API-fouten.
+
+- [x] **Integratie met Hoofdpagina (`+page.svelte`)**
+  - ✅ Hoofdpagina luistert naar het `startBasicScan` event en koppelt dit aan de bestaande `handleScan` functie.
+  - ✅ Naadloze ervaring voor de gratis scan-flow is behouden.
+
+**Key Technical Wins:**
+- ✅ **Component Hergebruik**: De bestaande `URLInput` en `Button` componenten zijn succesvol hergebruikt.
+- ✅ **Client-side Navigatie**: Correct gebruik van `goto()` voor de navigatie naar de checkout-pagina.
+- ✅ **API Integratie**: De nieuwe checkout-pagina integreert feilloos met de bestaande `/api/payment/create` backend.
+
+**Lessons Learned:**
+- Het creëren van een aparte checkout-pagina was de juiste beslissing. Het houdt de landingspagina schoon en de betaal-flow gefocust en expliciet.
+- Conditionele rendering van het e-mailveld op de `PricingSection` is een goede UX-verbetering.
+
+---
+
 SESSIONLOG-Template
 **voeg de laatste session log boven in het document toe**
 ### <📅 DATUM UU:MM - Session #> | <Session omschrijving>
@@ -173,11 +209,11 @@ curl "localhost:5173/api/test/pdf-generation?tier=enterprise&test=performance"
 **Duration:** 2 hours  
 **Objective:** Complete Fase 0 - ScanOrchestrator Strategy Pattern Refactoring
 
-## =� Session Overview
+## = Session Overview
 
 Successfully implemented the Strategy Pattern refactoring of ScanOrchestrator as preparation for Phase 2 tier-specific functionality. This fundamental architectural change enables clean separation of tier-specific scan logic while maintaining backwards compatibility.
 
-## <� Goals Achieved
+## < Goals Achieved
 
 ### **Fase 0: Strategy Pattern Refactoring (COMPLETED)**
 -   Analyzed current ScanOrchestrator implementation (1035 lines)

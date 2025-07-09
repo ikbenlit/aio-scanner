@@ -11,14 +11,18 @@
 | **FASE 1: Frontend & UX** | 1.1 Pricing Section Refactor | 🔴 To do | 60 min | Landingspagina met 4 tiers + correcte prijzen |
 | | 1.2 Results Page Tier-Aware | 🔴 To do | 90 min | Dynamische UI (locks, banners, content) per tier |
 | | 1.3 Navigatie & CTA Flow | 🔴 To do | 30 min | Zorgen dat knoppen naar de juiste flow leiden |
-| **FASE 2: Payment & Scan Flow** | 2.1 Payment Return Page | 🔴 To do | 60 min | Automatisch scan starten na succesvolle betaling |
-| | 2.2 E-mail & PDF Delivery | 🔴 To do | 30 min | Triggeren van PDF-generatie & e-mail na betaling |
+| **FASE 2: Payment & Scan Flow** | 2.1 Checkout Page Implementation | 🔴 To do | 60 min | **NIEUW:** Ontbrekende schakel voor e-mail capture |
+| | 2.2 Payment Return Page | 🔴 To do | 60 min | Automatisch scan starten na succesvolle betaling |
+| | 2.3 Post-Scan Async Processing | 🔴 To do | 75 min | **NIEUW:** Decoupled PDF/E-mail service |
 | **FASE 3: Output Verfijning** | 3.1 Enterprise PDF Template | 🔴 To do | 45 min | Specifiek template met KPI Dashboard & multi-page data |
 | | 3.2 Styling Consistentie | 🔴 To do | 30 min | Visuele uniformiteit over alle PDF-rapporten |
 | **FASE 4: Afronding** | 4.1 Code Cleanup | 🔴 To do | 45 min | `// TODO`'s oplossen, test-code verwijderen |
 | | 4.2 Documentatie Update | 🔴 To do | 30 min | `README.md` etc. actualiseren met finale werking |
+| **FASE 5: UX Polish (Low Prio)** | 5.1 Enhanced Error Handling | 🔴 To do | 45 min | Wat als de scan faalt na betaling? |
+| | 5.2 Results Page Loading State | 🔴 To do | 60 min | In-progress UI tonen tijdens het scannen |
+| | 5.3 Email Scan Result Link | 🔴 To do | 30 min | E-mailen van de link naar het online rapport |
 
-**Totale tijd:** ~ 6 uur  
+**Totale tijd:** ~ 10 uur  
 **Dependencies:** Alle backend-logica (scanning, AI, PDF-basis) is voltooid ✅  
 **Next Step:** Productie deployment na afronding van deze fasen.
 
@@ -59,11 +63,11 @@
 **Doel:** De statische prijstabel functioneel en correct maken.
 **Conceptuele Implementatie:**
 1.  **Data:** Maak een array met 4 tier-objecten (naam, prijs, features, CTA-tekst).
-2.  **Renderen:** Gebruik een `#each` block om de 4 tier-kaarten dynamisch te renderen.
-3.  **Functionaliteit:**
-    *   Bind een `on:click` event aan elke CTA-knop.
+2.  **E-mail Input**: Voeg een e-mail inputveld toe in de UI, vereist voordat een betaalde scan kan worden gestart.
+3.  **Renderen:** Gebruik een `#each` block om de 4 tier-kaarten dynamisch te renderen.
+4.  **Functionaliteit (`on:click`):**
     *   **Basic Tier Knop**: Roep een `dispatch` event aan (bv. `startBasicScan`) die op `+page.svelte` wordt opgevangen om de gratis scan te starten.
-    *   **Betaalde Tier Knoppen**: Navigeer de gebruiker naar de betaal-API met de juiste parameters. Concept: `goto('/api/payment/create?tier=starter&url=' + scanUrl)`.
+    *   **Betaalde Tier Knoppen**: Navigeer de gebruiker naar de nieuwe checkout pagina. Concept: `goto(`/checkout?tier=starter&url=${encodeURIComponent(scanUrl)}`)`.
 
 #### **1.2 Results Page Tier-Aware**
 **Bestand:** `src/routes/scan/[scanId]/results/+page.svelte`  
@@ -83,19 +87,60 @@
     *   **Quick Wins Title**: Pas de titel aan. Als `isBasicTier`, toon de `aiPreviewBadge`.
     *   **PDF Download Knop**: Render deze knop alleen als `!isBasicTier` en de PDF-status `completed` is.
 
-### **FASE 2: Payment & Scan Flow (± 1.5 uur)**
+### **FASE 2: Payment & Scan Flow (± 2.5 uur)**
 
-#### **2.1 Payment Return Page**
-**Bestand:** `src/routes/scan/payment-return/+page.svelte`  
-**Doel:** De betaal-bevestigingspagina automatiseren.
+#### **2.1 Checkout Page Implementation**
+**Bestand:** `src/routes/checkout/+page.svelte` - **NIEUW**
+**Doel:** De ontbrekende schakel tussen de tier-selectie en de Mollie-betaling.
 **Conceptuele Implementatie:**
-1.  **Data uit URL**: Haal `paymentId`, `tier`, en `scanUrl` uit de URL-parameters in `onMount`.
-2.  **Backend Verificatie**: `fetch` naar een nieuw backend endpoint (bv. `/api/payment/verify`) met de `paymentId`.
-3.  **Scan Starten**: Als de verificatie slaagt:
-    *   `fetch` naar het juiste scan-endpoint (`/api/scan/starter` of `/api/scan/business`) met de benodigde `url`, `email` en `paymentId`.
-    *   Wacht op de `scanId` die de API retourneert.
-4.  **Redirect**: Stuur de gebruiker direct door naar de resultatenpagina: `goto('/scan/' + scanId + '/results')`.
-5.  **UI**: Toon een laad-indicator ("Bezig met verwerken...", "Scan wordt gestart...") tijdens dit proces.
+1.  **Data uit URL**: Haal in de `load` functie de `tier` en `url` uit de URL-parameters.
+2.  **UI**: Toon de geselecteerde tier en prijs ter bevestiging. Voeg een `input` veld toe dat verplicht is voor het e-mailadres.
+3.  **Payment Initiation (`on:click` op "Ga naar betaling"):**
+    *   Roep een `async` functie aan die de `tier`, `url` en het ingevulde `email` adres verzamelt.
+    *   Doet een `fetch` request naar `/api/payment/create` met de data in de body.
+    *   Ontvangt de `{ paymentUrl }` en stuurt de gebruiker door via `window.location.href = paymentUrl`.
+4.  **Error Handling**: Toon duidelijke foutmeldingen als het e-mailadres ongeldig is of de API faalt.
+
+#### **2.2 Payment Return Page**
+**Bestand:** `src/routes/scan/payment-return/+page.svelte`  
+**Doel:** De betaal-bevestigingspagina automatiseren en de scan starten.
+**Conceptuele Implementatie (Vereenvoudigd):**
+1.  **Data uit URL**: Haal in `onMount` de `paymentId`, `tier`, `url`, en `email` uit de URL-parameters.
+2.  **Direct Scan Starten**: Doe *direct* een `fetch` naar het **bestaande** scan-endpoint. De betalingsverificatie is daar al ingebouwd.
+    ```javascript
+    // Concept in payment-return/+page.svelte onMount
+    const response = await fetch(`/api/scan/${tier}`, {
+        method: 'POST',
+        body: JSON.stringify({ url, email, paymentId })
+    });
+    const result = await response.json();
+    ```
+3.  **Redirect**: Als de `scanId` wordt ontvangen, stuur de gebruiker direct door.
+    ```javascript
+    if (result.scanId) {
+        goto(`/scan/${result.scanId}/results`);
+    } else {
+        // Toon foutmelding aan gebruiker
+    }
+    ```
+4.  **UI**: Toon een laad-indicator ("Betaling wordt geverifieerd, scan wordt gestart...") tijdens dit proces.
+
+#### **2.3 Asynchronous Post-Scan Processing**
+**Bestand:** `src/lib/services/PostScanProcessorService.ts` & `supabase/functions/process-scan/index.ts` - **NIEUW**
+**Doel:** PDF-generatie en e-mailverzending loskoppelen van de `ScanOrchestrator` voor betere performance en SoC.
+**Conceptuele Implementatie:**
+1.  **`ScanOrchestrator` Aanpassing**:
+    *   De *enige* toevoeging aan de `ScanOrchestrator` is een "fire-and-forget" aanroep op het einde van een succesvolle scan.
+    *   `await supabase.functions.invoke('process-scan', { body: { scanId } })`
+2.  **`PostScanProcessorService` (Nieuwe Service)**:
+    *   Deze service bevat de logica die voorheen in de orchestrator zou komen.
+    *   `handle(scanId)`: Haalt scan op -> genereert PDF -> slaat PDF op -> verstuurt e-mail.
+3.  **Supabase Edge Function (`process-scan`)**:
+    *   Een simpele wrapper die de `PostScanProcessorService` aanroept. Dit zorgt voor de asynchrone executie.
+**Flow:**
+*   `ScanOrchestrator` voltooit de scan en slaat resultaten op.
+*   Gebruiker wordt *direct* naar de webresultaten gestuurd.
+*   Ondertussen draait de Edge Function op de achtergrond om de PDF te maken en te mailen.
 
 ### **FASE 3: Output Verfijning (± 1.25 uur)**
 
@@ -104,10 +149,20 @@
 **Doel:** De visuele weergave van Enterprise-data in het PDF-rapport.
 **Conceptuele Implementatie:**
 1.  **Data Check**: Controleer in de `TierAwarePDFGenerator` of er `enterpriseFeatures` in het `scanResult` object zitten.
-2.  **Nieuwe Secties**: Creëer HTML-generatie functies voor:
-    *   `generateKPIDashboard(enterpriseFeatures.kpiData)`
-    *   `generateMultiPageAnalysis(enterpriseFeatures.multiPageAnalysis)`
-3.  **Template Logica**: In de `generatePdfHtml` methode, voeg conditionele logica toe om deze nieuwe secties alleen te renderen als de tier 'enterprise' is.
+2.  **Duidelijk Data-Contract**: De te ontwikkelen functies moeten een duidelijk data-contract hebben. Voorbeeld:
+    ```typescript
+    interface KpiData {
+        estimatedRoi: number;
+        roiTimeframeMonths: number;
+        benchmarkScore: number;
+        topCompetitorScore: number;
+    }
+    interface MultiPageData { /* ... */ }
+    ```
+3.  **Nieuwe Secties**: Creëer HTML-generatie functies met dit contract:
+    *   `generateKPIDashboard(kpiData: KpiData)`
+    *   `generateMultiPageAnalysis(multiPageData: MultiPageData)`
+4.  **Template Logica**: In de `generatePdfHtml` methode, voeg conditionele logica toe om deze nieuwe secties alleen te renderen als de tier 'enterprise' is en de data beschikbaar is.
 
 ### **FASE 4: Afronding (± 1.25 uur)**
 
@@ -124,6 +179,31 @@
 **Acties:**
 1.  **README**: Update de "Getting Started" sectie en beschrijf kort de tier-structuur.
 2.  **Architectuur Document**: Werk een document zoals `02-phase-2-5-prequel-pattern-refactor.md` bij om de finale frontend-structuur en de user-flow per tier te beschrijven.
+
+### **FASE 5: UX Polish & Robustness (Lage Prioriteit)**
+
+#### **5.1 Enhanced Error Handling**
+**Doel:** Een robuuste gebruikerservaring bieden, zelfs als er iets misgaat na de betaling.
+**Conceptuele Implementatie:**
+1.  **Results Page Logic**: In `src/routes/scan/[scanId]/results/+page.svelte`, controleer op `data.scan.status === 'failed'`.
+2.  **Error Component**: Maak een specifieke error component die wordt getoond bij een gefaalde scan.
+3.  **User Message**: De component moet de gebruiker geruststellen en duidelijke instructies geven: "Je betaling is succesvol ontvangen, maar helaas kon de scan voor [URL] niet worden voltooid. Neem contact op met support en vermeld scan ID: [scanId] voor een gratis nieuwe scan of een terugbetaling."
+
+#### **5.2 Results Page Loading State**
+**Doel:** De gebruiker informeren en betrokken houden terwijl de scan wordt uitgevoerd.
+**Conceptuele Implementatie:**
+1.  **Directe Navigatie**: De `goto` na het starten van een scan stuurt de gebruiker *onmiddellijk* naar de resultatenpagina.
+2.  **Loading UI**: De `+page.svelte` checkt de `data.scan.status`.
+    *   Indien `pending` of `running`: Toon een laad-UI (bv. een progress bar, animatie) met de boodschap: "Analyse voor [URL] wordt uitgevoerd... Dit duurt ongeveer 60 seconden."
+    *   Indien `completed` of `failed`: Toon het resultaat of de foutmelding.
+3.  **Auto-Refresh**: Implementeer een mechanisme (bv. een `meta http-equiv="refresh"` tag met een interval van 15 seconden, of een Svelte-action die pollt) om de pagina data opnieuw te laden totdat de scan voltooid is.
+
+#### **5.3 Email Scan Result Link**
+**Doel:** Zorgen dat een gebruiker zijn betaalde rapport niet kwijtraakt.
+**Conceptuele Implementatie:**
+1.  **Aanpassing `PostScanProcessorService`**: In `src/lib/services/PostScanProcessorService.ts`, breid de `handle(scanId)` functie uit.
+2.  **Nieuwe E-mail Taak**: Naast het genereren van de PDF, roep de `EmailService` nogmaals aan (of breid de bestaande aanroep uit).
+3.  **E-mail Inhoud**: Verstuur een simpele e-mail met de tekst: "Je AIO Scanner rapport voor [URL] is klaar. Je kunt het online bekijken via de volgende link: [domain]/scan/[scanId]/results. De PDF-versie is bijgevoegd."
 
 ---
 

@@ -1,13 +1,45 @@
 import type { EngineScanResult, NarrativeReport, AIInsights, ScanTier, ModuleResult } from '$lib/types/scan';
 import { generatePDFFromHTML } from './generator.js';
+import { generateBusinessPDFHTML, type BusinessPDFData } from './businessTemplate.js';
+import { translateFindings, getPositiveFindings } from '$lib/results/translation';
+import { prioritizeBusinessActions } from '$lib/results/prioritization';
 
 export class NarrativePDFGenerator {
   async generateBusinessReport(
     scanResult: EngineScanResult,
     narrative: NarrativeReport
   ): Promise<Buffer> {
+    console.log('🔄 Generating enhanced Business PDF with charts...');
     
-    const htmlContent = this.buildNarrativeHTML(scanResult, narrative, 'business');
+    // Translate findings to business actions
+    const businessActions = translateFindings(scanResult.moduleResults.flatMap(m => m.findings));
+    
+    // Get positive findings
+    const positiveFindings = getPositiveFindings(scanResult.moduleResults);
+    
+    // Prioritize actions for business tier
+    const prioritizedActions = prioritizeBusinessActions(businessActions);
+    
+    // Generate current date
+    const generatedAt = new Date().toLocaleDateString('nl-NL', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+    
+    // Create business PDF data
+    const businessData: BusinessPDFData = {
+      scanResult,
+      businessActions: prioritizedActions,
+      positiveFindings,
+      generatedAt,
+      narrative
+    };
+    
+    // Generate HTML using new business template
+    const htmlContent = generateBusinessPDFHTML(businessData);
+    
+    console.log(`📊 Business PDF HTML generated with charts, length: ${htmlContent.length} chars`);
     
     return await generatePDFFromHTML(htmlContent, {
       filename: `ai-business-report-${scanResult.scanId}.pdf`,
@@ -785,6 +817,388 @@ export class NarrativePDFGenerator {
       max-width: 200px;
       line-height: 1.3;
     }
+
+    /* KPI Dashboard Styles */
+    .kpi-dashboard {
+      page-break-before: always;
+    }
+    
+    .kpi-intro {
+      margin-bottom: 30px;
+      padding: 20px;
+      background: linear-gradient(135deg, #fef7ff 0%, #f3e8ff 100%);
+      border-radius: 12px;
+      border-left: 4px solid #7c3aed;
+    }
+    
+    .kpi-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 30px;
+    }
+    
+    .kpi-card {
+      background: white;
+      border-radius: 12px;
+      border: 1px solid var(--border-light);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      overflow: hidden;
+      page-break-inside: avoid;
+    }
+    
+    .kpi-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px 25px;
+      background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+      border-bottom: 1px solid var(--border-light);
+    }
+    
+    .kpi-header h3 {
+      margin: 0;
+      font-size: 18px;
+      color: var(--text-primary);
+    }
+    
+    .kpi-badge {
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+    
+    .kpi-badge.enterprise {
+      background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
+      color: white;
+    }
+    
+    .kpi-badge.performance {
+      background: linear-gradient(135deg, #2E9BDA 0%, #4FACFE 100%);
+      color: white;
+    }
+    
+    .kpi-badge.strategic {
+      background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%);
+      color: white;
+    }
+
+    /* ROI Calculator Styles */
+    .roi-calculator .roi-metrics {
+      padding: 25px;
+    }
+    
+    .roi-metric.primary {
+      text-align: center;
+      margin-bottom: 25px;
+      padding: 20px;
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      border-radius: 12px;
+      color: white;
+    }
+    
+    .roi-metric.primary .metric-value {
+      font-size: 36px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+    
+    .roi-metric.primary .metric-label {
+      font-size: 14px;
+      opacity: 0.9;
+    }
+    
+    .roi-breakdown {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    
+    .roi-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 0;
+      border-bottom: 1px solid #f1f5f9;
+    }
+    
+    .roi-item:last-child {
+      border-bottom: none;
+    }
+    
+    .roi-label {
+      font-size: 14px;
+      color: var(--text-secondary);
+    }
+    
+    .roi-value {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+    
+    .roi-chart {
+      padding: 0 25px 25px 25px;
+    }
+    
+    .roi-chart-container h4 {
+      margin: 0 0 15px 0;
+      font-size: 16px;
+      color: var(--text-primary);
+    }
+    
+    .chart-container {
+      margin-bottom: 10px;
+    }
+    
+    .roi-svg {
+      width: 100%;
+      height: 150px;
+    }
+    
+    .chart-note {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+    
+    .positive-indicator {
+      color: #10b981;
+      font-size: 16px;
+    }
+
+    /* Performance Metrics Styles */
+    .performance-metrics .performance-grid {
+      padding: 25px;
+    }
+    
+    .performance-overview {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+      margin-bottom: 30px;
+    }
+    
+    .performance-metric {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      padding: 15px;
+      background: #f8fafc;
+      border-radius: 8px;
+      border: 1px solid var(--border-light);
+    }
+    
+    .metric-icon {
+      font-size: 24px;
+      width: 40px;
+      text-align: center;
+    }
+    
+    .metric-info {
+      flex: 1;
+    }
+    
+    .metric-value {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 4px;
+    }
+    
+    .metric-label {
+      font-size: 12px;
+      color: var(--text-secondary);
+      margin-bottom: 4px;
+    }
+    
+    .metric-trend {
+      font-size: 11px;
+      font-weight: 500;
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+    
+    .metric-trend.positive {
+      background: #dcfce7;
+      color: #166534;
+    }
+    
+    .metric-trend.neutral {
+      background: #f1f5f9;
+      color: #475569;
+    }
+    
+    .benchmark-comparison h4 {
+      margin: 0 0 15px 0;
+      font-size: 16px;
+      color: var(--text-primary);
+    }
+    
+    .benchmark-bar {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    
+    .benchmark-item {
+      display: grid;
+      grid-template-columns: 120px 1fr 40px;
+      align-items: center;
+      gap: 15px;
+      font-size: 12px;
+    }
+    
+    .bar-container {
+      height: 20px;
+      background: #f1f5f9;
+      border-radius: 10px;
+      overflow: hidden;
+      position: relative;
+    }
+    
+    .bar {
+      height: 100%;
+      border-radius: 10px;
+      transition: width 0.3s ease;
+    }
+    
+    .bar.your-score {
+      background: linear-gradient(135deg, var(--primary-blue) 0%, #1e40af 100%);
+    }
+    
+    .bar.industry-avg {
+      background: linear-gradient(135deg, #64748b 0%, #475569 100%);
+    }
+    
+    .bar.top-performers {
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    }
+
+    /* Strategic Recommendations Styles */
+    .strategic-recommendations .strategy-content {
+      padding: 25px;
+    }
+    
+    .strategy-section {
+      margin-bottom: 30px;
+    }
+    
+    .strategy-section h4 {
+      margin: 0 0 15px 0;
+      font-size: 16px;
+      color: var(--text-primary);
+    }
+    
+    .strategy-list {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+    
+    .strategy-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 15px;
+      padding: 15px;
+      border-radius: 8px;
+      border: 1px solid var(--border-light);
+    }
+    
+    .strategy-item.high-impact {
+      background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+      border-color: #fca5a5;
+    }
+    
+    .strategy-item.quick-win {
+      background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+      border-color: #bbf7d0;
+    }
+    
+    .strategy-number {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: var(--primary-blue);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+    
+    .strategy-details {
+      flex: 1;
+    }
+    
+    .strategy-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 8px;
+    }
+    
+    .strategy-meta {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    
+    .impact-badge, .time-badge, .value-badge {
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 500;
+    }
+    
+    .impact-badge.high {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+    
+    .impact-badge.quick {
+      background: #dcfce7;
+      color: #166534;
+    }
+    
+    .time-badge {
+      background: #fef3c7;
+      color: #92400e;
+    }
+    
+    .value-badge {
+      background: #dbeafe;
+      color: #1e40af;
+    }
+    
+    .executive-summary-box {
+      margin-top: 25px;
+      padding: 20px;
+      background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+      border-radius: 8px;
+      border-left: 4px solid var(--primary-blue);
+    }
+    
+    .executive-summary-box h4 {
+      margin: 0 0 15px 0;
+      font-size: 16px;
+      color: var(--text-primary);
+    }
+    
+    .executive-insights p {
+      margin-bottom: 12px;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+    
+    .executive-insights p:last-child {
+      margin-bottom: 0;
+    }
   </style>
 </head>
 <body>
@@ -862,6 +1276,8 @@ export class NarrativePDFGenerator {
         </div>
       </div>
     </div>
+
+    ${tier === 'enterprise' ? this.generateKPIDashboard(scanResult, narrative) : ''}
 
     <div class="section implementation-roadmap">
       <h2>🗺️ Implementatie Roadmap</h2>
@@ -1487,6 +1903,307 @@ export class NarrativePDFGenerator {
         </div>
       </div>
     `;
+  }
+
+  private generateKPIDashboard(scanResult: EngineScanResult, narrative: NarrativeReport): string {
+    return `
+      <div class="section kpi-dashboard">
+        <h2>📊 Executive KPI Dashboard</h2>
+        
+        <div class="kpi-intro">
+          <div class="narrative-content">
+            <p><strong>Enterprise Strategisch Overzicht:</strong> Deze KPI-dashboard biedt executive-level inzichten voor strategische besluitvorming en ROI-planning.</p>
+          </div>
+        </div>
+
+        <div class="kpi-grid">
+          ${this.generateROICalculator(scanResult)}
+          ${this.generatePerformanceMetrics(scanResult)}
+          ${this.generateStrategicRecommendations(scanResult, narrative)}
+        </div>
+      </div>
+    `;
+  }
+
+  private generateROICalculator(scanResult: EngineScanResult): string {
+    const totalActions = this.extractAllOpportunities(scanResult).length;
+    const estimatedImprovement = this.calculateEstimatedImprovement(scanResult);
+    const timeframe = this.calculateTimeframe(scanResult);
+    const investmentHours = totalActions * 2; // Gemiddeld 2 uur per actie
+    const monthlyTraffic = 1000; // Geschatte baseline
+    const conversionRate = 2.5; // Geschatte baseline %
+    
+    // ROI berekeningen
+    const currentMonthlyValue = monthlyTraffic * (conversionRate / 100) * 150; // €150 gemiddelde waarde
+    const improvedMonthlyValue = monthlyTraffic * ((conversionRate + estimatedImprovement) / 100) * 150;
+    const monthlyGain = improvedMonthlyValue - currentMonthlyValue;
+    const yearlyGain = monthlyGain * 12;
+    const investmentCost = investmentHours * 75; // €75 per uur
+    const roi = ((yearlyGain - investmentCost) / investmentCost * 100);
+
+    return `
+      <div class="kpi-card roi-calculator">
+        <div class="kpi-header">
+          <h3>💰 ROI Calculator</h3>
+          <div class="kpi-badge enterprise">Enterprise Analytics</div>
+        </div>
+        
+        <div class="roi-metrics">
+          <div class="roi-metric primary">
+            <div class="metric-value">${Math.round(roi)}%</div>
+            <div class="metric-label">Geschatte ROI (12 maanden)</div>
+          </div>
+          
+          <div class="roi-breakdown">
+            <div class="roi-item">
+              <span class="roi-label">Maandelijkse winst toename:</span>
+              <span class="roi-value">€${Math.round(monthlyGain).toLocaleString()}</span>
+            </div>
+            <div class="roi-item">
+              <span class="roi-label">Jaarlijkse impact:</span>
+              <span class="roi-value">€${Math.round(yearlyGain).toLocaleString()}</span>
+            </div>
+            <div class="roi-item">
+              <span class="roi-label">Implementatie investering:</span>
+              <span class="roi-value">€${investmentCost.toLocaleString()}</span>
+            </div>
+            <div class="roi-item">
+              <span class="roi-label">Terugverdientijd:</span>
+              <span class="roi-value">${Math.round(investmentCost / monthlyGain)} maanden</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="roi-chart">
+          ${this.generateROIChart(monthlyGain, investmentCost)}
+        </div>
+      </div>
+    `;
+  }
+
+  private generatePerformanceMetrics(scanResult: EngineScanResult): string {
+    const currentScore = scanResult.overallScore;
+    const targetScore = Math.min(currentScore + this.calculateEstimatedImprovement(scanResult), 100);
+    const moduleMetrics = this.calculateModuleMetrics(scanResult);
+    
+    return `
+      <div class="kpi-card performance-metrics">
+        <div class="kpi-header">
+          <h3>📈 Performance Metrics</h3>
+          <div class="kpi-badge performance">Real-time Analytics</div>
+        </div>
+        
+        <div class="performance-grid">
+          <div class="performance-overview">
+            <div class="performance-metric">
+              <div class="metric-icon">🎯</div>
+              <div class="metric-info">
+                <div class="metric-value">${currentScore}/100</div>
+                <div class="metric-label">Huidige AI Score</div>
+                <div class="metric-trend positive">+${targetScore - currentScore} potentie</div>
+              </div>
+            </div>
+            
+            <div class="performance-metric">
+              <div class="metric-icon">⚡</div>
+              <div class="metric-info">
+                <div class="metric-value">${moduleMetrics.completedModules}/${moduleMetrics.totalModules}</div>
+                <div class="metric-label">Modules Geanalyseerd</div>
+                <div class="metric-trend neutral">${Math.round(moduleMetrics.completionRate)}% compleet</div>
+              </div>
+            </div>
+            
+            <div class="performance-metric">
+              <div class="metric-icon">🔍</div>
+              <div class="metric-info">
+                <div class="metric-value">${this.getConfidenceScore(scanResult)}%</div>
+                <div class="metric-label">Analyse Betrouwbaarheid</div>
+                <div class="metric-trend positive">Hoge zekerheid</div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="benchmark-comparison">
+            <h4>Industry Benchmark</h4>
+            <div class="benchmark-bar">
+              <div class="benchmark-item">
+                <span>Uw Website</span>
+                <div class="bar-container">
+                  <div class="bar your-score" style="width: ${currentScore}%"></div>
+                </div>
+                <span>${currentScore}</span>
+              </div>
+              <div class="benchmark-item">
+                <span>Industry Gemiddelde</span>
+                <div class="bar-container">
+                  <div class="bar industry-avg" style="width: 65%"></div>
+                </div>
+                <span>65</span>
+              </div>
+              <div class="benchmark-item">
+                <span>Top 10% Performers</span>
+                <div class="bar-container">
+                  <div class="bar top-performers" style="width: 85%"></div>
+                </div>
+                <span>85</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  private generateStrategicRecommendations(scanResult: EngineScanResult, narrative: NarrativeReport): string {
+    const opportunities = this.extractAllOpportunities(scanResult);
+    const highImpactActions = opportunities.filter(o => o.difficulty === 'hard').slice(0, 3);
+    const quickWins = opportunities.filter(o => o.difficulty === 'easy').slice(0, 2);
+    
+    return `
+      <div class="kpi-card strategic-recommendations">
+        <div class="kpi-header">
+          <h3>🎯 Strategic Recommendations</h3>
+          <div class="kpi-badge strategic">C-Level Insights</div>
+        </div>
+        
+        <div class="strategy-content">
+          <div class="strategy-section">
+            <h4>🚀 High-Impact Initiatieven</h4>
+            <div class="strategy-list">
+              ${highImpactActions.map((action, index) => `
+                <div class="strategy-item high-impact">
+                  <div class="strategy-number">${index + 1}</div>
+                  <div class="strategy-details">
+                    <div class="strategy-title">${action.title}</div>
+                    <div class="strategy-meta">
+                      <span class="impact-badge high">Hoge Impact</span>
+                      <span class="time-badge">${action.estimatedTime}</span>
+                      <span class="value-badge">${action.impact}</span>
+                    </div>
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+          
+          <div class="strategy-section">
+            <h4>⚡ Quick Wins (Eerste 30 dagen)</h4>
+            <div class="strategy-list">
+              ${quickWins.map((action, index) => `
+                <div class="strategy-item quick-win">
+                  <div class="strategy-number">${index + 1}</div>
+                  <div class="strategy-details">
+                    <div class="strategy-title">${action.title}</div>
+                    <div class="strategy-meta">
+                      <span class="impact-badge quick">Quick Win</span>
+                      <span class="time-badge">${action.estimatedTime}</span>
+                      <span class="value-badge">${action.impact}</span>
+                    </div>
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+          
+          <div class="executive-summary-box">
+            <h4>💼 Executive Summary</h4>
+            <div class="executive-insights">
+              <p><strong>Strategische Focus:</strong> Prioriteer de implementatie van AI-content optimalisatie en structured data voor maximale ROI impact.</p>
+              <p><strong>Resource Allocatie:</strong> Geschatte ${Math.round(opportunities.length * 2)} development uren voor volledige implementatie.</p>
+              <p><strong>Risico Assessment:</strong> Laag risico, hoge impact strategie met meetbare resultaten binnen 3-6 maanden.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  private generateROIChart(monthlyGain: number, investmentCost: number): string {
+    const months = 12;
+    const cumulativeGains = [];
+    let cumulative = -investmentCost; // Start met negatieve investering
+    
+    for (let i = 1; i <= months; i++) {
+      cumulative += monthlyGain;
+      cumulativeGains.push(Math.round(cumulative));
+    }
+    
+    const maxValue = Math.max(...cumulativeGains);
+    const minValue = Math.min(-investmentCost, 0);
+    const range = maxValue - minValue;
+    
+    return `
+      <div class="roi-chart-container">
+        <h4>ROI Projectie (12 maanden)</h4>
+        <div class="chart-container">
+          <svg viewBox="0 0 400 150" class="roi-svg">
+            <!-- Grid lines -->
+            <defs>
+              <pattern id="grid" width="33.33" height="30" patternUnits="userSpaceOnUse">
+                <path d="M 33.33 0 L 0 0 0 30" fill="none" stroke="#e2e8f0" stroke-width="0.5"/>
+              </pattern>
+            </defs>
+            <rect width="400" height="150" fill="url(#grid)" />
+            
+            <!-- Zero line -->
+            <line x1="50" y1="${150 - ((-minValue / range) * 120) - 15}" x2="380" y2="${150 - ((-minValue / range) * 120) - 15}" stroke="#64748b" stroke-width="1" stroke-dasharray="2,2"/>
+            
+            <!-- ROI curve -->
+            <polyline
+              fill="none"
+              stroke="#10b981"
+              stroke-width="3"
+              points="${cumulativeGains.map((value, index) => {
+                const x = 50 + (index * 27.5);
+                const y = 150 - ((value - minValue) / range * 120) - 15;
+                return `${x},${y}`;
+              }).join(' ')}"
+            />
+            
+            <!-- Data points -->
+            ${cumulativeGains.map((value, index) => {
+              const x = 50 + (index * 27.5);
+              const y = 150 - ((value - minValue) / range * 120) - 15;
+              return `<circle cx="${x}" cy="${y}" r="3" fill="#10b981" stroke="white" stroke-width="2"/>`;
+            }).join('')}
+            
+            <!-- Axis labels -->
+            <text x="25" y="20" font-size="10" fill="#64748b">€${Math.round(maxValue/1000)}k</text>
+            <text x="25" y="75" font-size="10" fill="#64748b">€0</text>
+            <text x="25" y="130" font-size="10" fill="#64748b">-€${Math.round(Math.abs(minValue)/1000)}k</text>
+            
+            <!-- Month labels -->
+            <text x="50" y="145" font-size="8" fill="#64748b">M1</text>
+            <text x="160" y="145" font-size="8" fill="#64748b">M6</text>
+            <text x="350" y="145" font-size="8" fill="#64748b">M12</text>
+          </svg>
+        </div>
+        <div class="chart-note">
+          <span class="positive-indicator">●</span>
+          <span>Break-even punt: Maand ${Math.ceil(investmentCost / monthlyGain)}</span>
+        </div>
+      </div>
+    `;
+  }
+
+  private calculateModuleMetrics(scanResult: EngineScanResult): { 
+    completedModules: number; 
+    totalModules: number; 
+    completionRate: number; 
+  } {
+    if (!scanResult.moduleResults || scanResult.moduleResults.length === 0) {
+      return { completedModules: 6, totalModules: 6, completionRate: 100 };
+    }
+    
+    const completed = scanResult.moduleResults.filter(m => m.status === 'completed').length;
+    const total = scanResult.moduleResults.length;
+    const rate = (completed / total) * 100;
+    
+    return {
+      completedModules: completed,
+      totalModules: total,
+      completionRate: rate
+    };
   }
 }
 

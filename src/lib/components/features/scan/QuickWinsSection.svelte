@@ -2,9 +2,12 @@
 <script lang="ts">
   import ActionCard from './ActionCard.svelte';
   import type { PrioritizedAction } from '$lib/results/prioritization';
+  import type { ScanTier } from '$lib/types/scan';
 
   export let quickWins: PrioritizedAction[];
   export let totalActions: number = 0;
+  export let tier: ScanTier;
+  export let aiPreviewBadge: string | null = null;
 
   let expandedCards = new Set<string>();
 
@@ -18,6 +21,11 @@
     }
     expandedCards = expandedCards; // Trigger reactivity
   }
+
+  // Tier-aware computed properties
+  $: isBasicTier = tier === 'basic';
+  $: hasMoreActions = totalActions > quickWins.length;
+  $: moreActionsCount = totalActions - quickWins.length;
 
   // Calculate total time and impact
   $: totalTime = quickWins.reduce((sum, win) => {
@@ -49,12 +57,25 @@
     <div class="flex items-center justify-center gap-3 mb-3">
       <span class="text-2xl">🚀</span>
       <h2 class="text-2xl font-bold text-gray-900">
-        {quickWins.length} Stappen om nog beter te worden
+        {#if isBasicTier}
+          {quickWins.length} Snelle Quick Wins
+        {:else}
+          {quickWins.length} Stappen om nog beter te worden
+        {/if}
       </h2>
+      {#if isBasicTier && aiPreviewBadge}
+        <span class="text-sm bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
+          {aiPreviewBadge}
+        </span>
+      {/if}
     </div>
     
     <p class="text-gray-600 max-w-2xl mx-auto">
-      Deze acties hebben de grootste impact op je AI-vindbaarheid. Start waar je wilt - elke stap telt.
+      {#if isBasicTier}
+        Deze snelle acties zijn speciaal geselecteerd: 1 AI-actie plus de 2 hoogste impactvolle stappen.
+      {:else}
+        Deze acties hebben de grootste impact op je AI-vindbaarheid. Start waar je wilt - elke stap telt.
+      {/if}
     </p>
 
     <!-- Quick stats -->
@@ -68,10 +89,16 @@
           <span>📈</span>
           <span>+{totalImpact} punten mogelijk</span>
         </div>
-        {#if totalActions > quickWins.length}
+        {#if hasMoreActions}
           <div class="flex items-center gap-1">
             <span>💡</span>
-            <span>{totalActions - quickWins.length} meer in volledig rapport</span>
+            <span>
+              {#if isBasicTier}
+                {moreActionsCount} meer beschikbaar met upgrade
+              {:else}
+                {moreActionsCount} meer in volledig rapport
+              {/if}
+            </span>
           </div>
         {/if}
       </div>
@@ -104,7 +131,7 @@
   {/if}
 
   <!-- Additional context for premium features -->
-  {#if totalActions > quickWins.length && quickWins.length > 0}
+  {#if hasMoreActions && quickWins.length > 0}
     <div class="bg-blue-50 rounded-xl p-6 border border-blue-100">
       <div class="flex items-start gap-4">
         <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
@@ -112,10 +139,18 @@
         </div>
         <div>
           <h3 class="font-semibold text-blue-900 mb-2">
-            Meer mogelijkheden beschikbaar
+            {#if isBasicTier}
+              {moreActionsCount} meer acties beschikbaar
+            {:else}
+              Meer mogelijkheden beschikbaar
+            {/if}
           </h3>
           <p class="text-blue-800 text-sm leading-relaxed">
-            Deze {quickWins.length} acties zijn de snelste wins. In het volledige rapport vind je nog {totalActions - quickWins.length} andere optimalisaties, inclusief geavanceerde AI-strategieën en technische verbeteringen.
+            {#if isBasicTier}
+              Deze {quickWins.length} acties zijn jouw snelle wins. Upgrade voor {moreActionsCount} andere optimalisaties, inclusief geavanceerde AI-strategieën en volledige technische analyses.
+            {:else}
+              Deze {quickWins.length} acties zijn de snelste wins. In het volledige rapport vind je nog {moreActionsCount} andere optimalisaties, inclusief geavanceerde AI-strategieën en technische verbeteringen.
+            {/if}
           </p>
         </div>
       </div>

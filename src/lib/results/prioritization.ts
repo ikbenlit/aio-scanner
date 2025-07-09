@@ -301,3 +301,118 @@ export function formatTimeEstimate(timeEstimate: string): {
     };
   }
 }
+
+/**
+ * Selects 3 varied quick wins for Basic tier (free users)
+ * Strategy: 1 AI-category action + 2 highest impact other actions
+ * Ensures at least one <15min task with ≥8 points for instant gratification
+ */
+export function selectVariedQuickWins(actions: BusinessAction[]): PrioritizedAction[] {
+  if (actions.length === 0) {
+    return [];
+  }
+
+  // Calculate priority scores for all actions
+  const prioritizedActions: PrioritizedAction[] = actions.map(action => {
+    const priorityScore = calculatePriorityScore(action);
+    const reasoning = generateReasoning(action, priorityScore);
+
+    return {
+      ...action,
+      priorityScore,
+      reasoning
+    };
+  });
+
+  // Sort by priority score
+  const sorted = prioritizedActions.sort((a, b) => b.priorityScore - a.priorityScore);
+
+  // 1. Find AI-category actions (business-info, ai-content, authority)
+  const aiCategories = ['business-info', 'ai-content', 'authority'];
+  const aiActions = sorted.filter(action => aiCategories.includes(action.category));
+  
+  // 2. Find non-AI actions
+  const nonAiActions = sorted.filter(action => !aiCategories.includes(action.category));
+
+  const selected: PrioritizedAction[] = [];
+
+  // 3. Select 1 AI-category action (preferably high scoring)
+  if (aiActions.length > 0) {
+    // Randomize among top 3 AI actions to provide variety
+    const topAiActions = aiActions.slice(0, Math.min(3, aiActions.length));
+    const randomAiAction = topAiActions[Math.floor(Math.random() * topAiActions.length)];
+    selected.push(randomAiAction);
+  }
+
+  // 4. Select 2 highest impact non-AI actions
+  let addedNonAi = 0;
+  for (const action of nonAiActions) {
+    if (addedNonAi >= 2) break;
+    
+    // Skip if already selected
+    if (selected.some(s => s.id === action.id)) continue;
+    
+    selected.push(action);
+    addedNonAi++;
+  }
+
+  // 5. If we don't have enough non-AI actions, fill with remaining actions
+  while (selected.length < 3 && selected.length < sorted.length) {
+    for (const action of sorted) {
+      if (selected.length >= 3) break;
+      
+      if (!selected.some(s => s.id === action.id)) {
+        selected.push(action);
+        break;
+      }
+    }
+  }
+
+  // 6. Ensure we have at least one <15min task with ≥8 points for instant gratification
+  const hasQuickWin = selected.some(action => {
+    const timeNumber = parseInt(action.timeEstimate);
+    const impactNumber = parseInt(action.impactPoints.replace(/[^\d]/g, ''));
+    return timeNumber <= 15 && impactNumber >= 8;
+  });
+
+  // If no quick win, try to replace the lowest scoring action with a quick win
+  if (!hasQuickWin) {
+    const quickWinCandidates = sorted.filter(action => {
+      const timeNumber = parseInt(action.timeEstimate);
+      const impactNumber = parseInt(action.impactPoints.replace(/[^\d]/g, ''));
+      return timeNumber <= 15 && impactNumber >= 8 && !selected.some(s => s.id === action.id);
+    });
+
+    if (quickWinCandidates.length > 0) {
+      // Replace the lowest scoring selected action with a quick win
+      const lowestScoreIndex = selected.reduce((minIndex, action, index) => 
+        action.priorityScore < selected[minIndex].priorityScore ? index : minIndex, 0);
+      
+      selected[lowestScoreIndex] = quickWinCandidates[0];
+    }
+  }
+
+  return selected.slice(0, 3);
+}
+
+/**
+ * Check if actions represent AI-related categories
+ * Used for Basic tier AI-preview filtering
+ */
+export function isAICategory(category: string): boolean {
+  const aiCategories = ['business-info', 'ai-content', 'authority'];
+  return aiCategories.includes(category);
+}
+
+/**
+ * Get AI-preview badge text for Basic tier
+ */
+export function getAIPreviewBadge(quickWins: PrioritizedAction[]): string | null {
+  const aiActions = quickWins.filter(action => isAICategory(action.category));
+  
+  if (aiActions.length > 0) {
+    return `🤖 AI-Preview (${aiActions.length}/3)`;
+  }
+  
+  return null;
+}

@@ -286,8 +286,8 @@ export function identifyTranslationKey(finding: Finding): string | null {
   const category = finding.category?.toLowerCase() || '';
 
   // Schema markup patterns
-  if (category.includes('structured-data') || title.includes('schema')) {
-    if (title.includes('ontbrekend') || title.includes('geen')) {
+  if (category.includes('structured-data') || title.includes('schema') || title === 'missing_schema_organization') {
+    if (title.includes('ontbrekend') || title.includes('geen') || title === 'missing_schema_organization') {
       return 'missing_schema_organization';
     }
     if (title.includes('onvolledig') || description.includes('ontbrekend')) {

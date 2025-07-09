@@ -78,6 +78,11 @@ GET /api/test/business-tier?mode=quick                   # Business tier
 GET /api/test/enterprise-tier?mode=quick                 # Enterprise tier
 GET /api/test/llm-integration?mode=full                  # AI integration
 
+# 3. Phase Implementation Tests
+GET /api/test/fase-1-1-server-logic                     # Server logic validation
+GET /api/test/fase-1-2-frontend-components               # Frontend components
+GET /api/test/fase-1-3-ai-narrative                     # AI Narrative component
+
 # 3. PDF Pipeline (Aanbevolen Workflow)
 # Stap 1: Genereer ECHTE data
 GET /api/test/business-tier?mode=full&url=https://example.com # Noteer de scanId
@@ -111,6 +116,9 @@ GET /api/test/pdf-generation?download=true&scanId=UW_ECHTE_SCAN_ID_HIER
 | `/api/test/enhanced-extractor/` | Enhanced extraction | No parameters |
 | `/api/test/vertex-client/` | AI client functionality | `?mode=insights` |
 | `/api/test/vertex/` | Basic AI connectivity | No parameters |
+| `/api/test/fase-1-1-server-logic/` | Fase 1.1 Server Logic | No parameters |
+| `/api/test/fase-1-2-frontend-components/` | Fase 1.2 Frontend Components | No parameters |
+| `/api/test/fase-1-3-ai-narrative/` | Fase 1.3 AI Narrative | No parameters |
 
 ### Service Tests
 | Endpoint | Purpose | Quick Test |
@@ -356,7 +364,33 @@ Write-Host "2. Test basic scan with 'example.com'"
 Write-Host "3. Check browser console for logs"
 ```
 
-### Scenario 5: Snel PDF Templates Aanpassen (Aanbevolen)
+### Scenario 5: Fase Implementatie Validatie
+**Doel:** Controleren of alle fase-implementaties correct werken
+
+```powershell
+# Stap 1: Test server logic
+Write-Host "🔧 Testing server logic..."
+$serverTest = Invoke-RestMethod -Uri "http://localhost:5173/api/test/fase-1-1-server-logic"
+Write-Host "Server Logic: $($serverTest.success)" -ForegroundColor $(if($serverTest.success) {'Green'} else {'Red'})
+
+# Stap 2: Test frontend components  
+Write-Host "🎨 Testing frontend components..."
+$frontendTest = Invoke-RestMethod -Uri "http://localhost:5173/api/test/fase-1-2-frontend-components"
+Write-Host "Frontend Components: $($frontendTest.success)" -ForegroundColor $(if($frontendTest.success) {'Green'} else {'Red'})
+
+# Stap 3: Test AI narrative component
+Write-Host "🤖 Testing AI narrative..."
+$aiTest = Invoke-RestMethod -Uri "http://localhost:5173/api/test/fase-1-3-ai-narrative"
+Write-Host "AI Narrative: $($aiTest.success)" -ForegroundColor $(if($aiTest.success) {'Green'} else {'Red'})
+
+# Samenvatting
+Write-Host "`n📊 Fase Implementation Status:"
+Write-Host "- Server Logic (1.1): $(if($serverTest.success) {'✅'} else {'❌'})"
+Write-Host "- Frontend Components (1.2): $(if($frontendTest.success) {'✅'} else {'❌'})"
+Write-Host "- AI Narrative (1.3): $(if($aiTest.success) {'✅'} else {'❌'})"
+```
+
+### Scenario 6: Snel PDF Templates Aanpassen (Aanbevolen)
 **Doel:** Efficiënt de PDF layout en content aanpassen zonder herhaaldelijk scans uit te voeren.
 
 ```powershell
@@ -791,6 +825,63 @@ GET /api/test/pdf-flow?tier=business&mock=true              # Fast, reliable
 GET /api/test/pdf-flow?tier=business&url=https://example.com # Real URL
 GET /api/test/pdf-flow?tier=enterprise&mock=true            # Enterprise features
 ```
+
+---
+
+### `/api/test/fase-1-1-server-logic/` - Server Logic Testing
+
+**Purpose:** Phase 1.1 implementation - Validate tier-aware Quick Wins server logic
+
+**Parameters:** None
+
+**Test Variations:**
+```bash
+GET /api/test/fase-1-1-server-logic              # Full server logic validation
+```
+
+**Expected Results:**
+- ✅ Basic tier: Shows limited Quick Wins (≤3) with AI preview badge
+- ✅ Paid tier: Shows full Quick Wins with all business actions
+- ✅ AI categorization working correctly
+- ✅ Impact/time scoring algorithm functioning
+
+---
+
+### `/api/test/fase-1-2-frontend-components/` - Frontend Components
+
+**Purpose:** Phase 1.2 implementation - Validate tier-aware frontend component rendering
+
+**Parameters:** None
+
+**Test Variations:**
+```bash
+GET /api/test/fase-1-2-frontend-components        # Frontend component validation
+```
+
+**Expected Results:**
+- ✅ QuickWinsSection renders different content per tier
+- ✅ GentleConversion shows appropriate upgrade messaging
+- ✅ TypeScript interfaces work correctly
+- ✅ Conditional rendering logic functions properly
+
+---
+
+### `/api/test/fase-1-3-ai-narrative/` - AI Narrative Component
+
+**Purpose:** Phase 1.3 implementation - Validate AI-Narrative component functionality
+
+**Parameters:** None
+
+**Test Variations:**
+```bash
+GET /api/test/fase-1-3-ai-narrative               # AI Narrative component validation
+```
+
+**Expected Results:**
+- ✅ Basic/Starter tiers: Shows locked overlay with upgrade CTA
+- ✅ Business/Enterprise tiers: Shows full AI narrative content
+- ✅ Markdown rendering works correctly
+- ✅ Tier-specific messaging displays properly
 
 ---
 

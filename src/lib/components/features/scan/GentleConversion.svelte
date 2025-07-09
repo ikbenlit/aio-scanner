@@ -7,6 +7,7 @@
   export let quickWinsCount: number = 3;
   export let totalActionsCount: number = 5;
   export let placement: 'after-positive' | 'after-quickwins' | 'bottom' = 'after-quickwins';
+  export let aiPreviewBadge: string | null = null;
 
   // Calculate remaining actions
   $: remainingActions = Math.max(0, totalActionsCount - quickWinsCount);
@@ -18,14 +19,16 @@
         return {
           title: 'Wil je het complete implementatie rapport?',
           teaser: `Deze ${quickWinsCount} stappen zijn nog maar het begin. Er zijn nog ${remainingActions} andere optimalisaties gevonden...`,
-          value: 'Krijg een compleet overzicht met alle verbeterstappen + tijdsinschattingen',
+          value: aiPreviewBadge ? 
+            `Krijg een compleet overzicht met alle verbeterstappen + AI-specifieke acties (${aiPreviewBadge})` :
+            'Krijg een compleet overzicht met alle verbeterstappen + tijdsinschattingen',
           cta: 'Download Volledig Rapport',
           ctaSecondary: 'Bekijk alle beschikbare acties',
           benefits: [
             'Stap-voor-stap implementatie gids',
             'Prioritering op basis van impact',
             'Tijdsinschattingen per actie',
-            'Technische uitleg waar nodig'
+            aiPreviewBadge ? 'Volledig AI-optimalisatie overzicht' : 'Technische uitleg waar nodig'
           ]
         };
       case 'starter':
@@ -88,6 +91,12 @@
 
   function handlePrimaryCTA() {
     // Track conversion intent
+    console.log('ANALYTICS: upgrade_cta_clicked', { 
+      source_tier: tier, 
+      target_tier: tier === 'basic' ? 'starter' : tier === 'starter' ? 'business' : 'pdf_download',
+      location: 'gentle_conversion_primary'
+    });
+    
     if (tier === 'basic') {
       // Navigate to pricing or scan upgrade
       window.location.href = '/pricing?from=results&tier=starter';
@@ -101,6 +110,12 @@
   }
 
   function handleSecondaryCTA() {
+    console.log('ANALYTICS: secondary_cta_clicked', { 
+      source_tier: tier, 
+      action: tier === 'basic' ? 'show_features' : tier === 'starter' ? 'learn_business' : 'email_report',
+      location: 'gentle_conversion_secondary'
+    });
+    
     if (tier === 'basic') {
       // Show more details about what's included
       console.log('Show detailed feature comparison');
@@ -185,7 +200,10 @@
   <div class="mt-4 flex items-center justify-center">
     <button 
       class="group flex items-center gap-2 text-sm text-gray-500 hover:text-gray-700 transition-colors"
-      on:click={() => console.log('Show PDF preview modal')}
+      on:click={() => {
+        console.log('ANALYTICS: pdf_preview_clicked', { source_tier: tier, location: 'gentle_conversion_preview' });
+        console.log('Show PDF preview modal');
+      }}
     >
       <span>👀</span>
       <span class="group-hover:underline">Krijg een voorproefje van het volledige rapport</span>

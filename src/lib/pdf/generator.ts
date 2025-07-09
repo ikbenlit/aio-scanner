@@ -3,6 +3,9 @@ import { chromium } from 'playwright';
 import type { EngineScanResult, ScanTier, NarrativeReport, PDFGenerationOptions } from '$lib/types/scan';
 import { generateScanEmailTemplate, convertToEmailFormat, type EmailTemplateResult } from '$lib/email/templates';
 import { NarrativePDFGenerator } from './narrativeGenerator.js';
+import { generateStarterPDFHTML, type StarterPDFData } from './starterTemplate.js';
+import { translateFindings, getPositiveFindings } from '$lib/results/translation';
+import { prioritizeBusinessActions } from '$lib/results/prioritization';
 
 interface PDFOptions {
   filename: string;
@@ -151,13 +154,37 @@ export class TierAwarePDFGenerator {
   }
   
   private async generateStarterPDF(scanResult: EngineScanResult): Promise<Buffer> {
-    const templateData: EmailTemplateResult = {
-      ...convertToEmailFormat(scanResult),
-      includeRecommendations: true,
-      tier: 'starter'
+    console.log('🔄 Generating enhanced Starter PDF...');
+    
+    // Translate findings to business actions
+    const businessActions = translateFindings(scanResult.moduleResults.flatMap(m => m.findings));
+    
+    // Get positive findings
+    const positiveFindings = getPositiveFindings(scanResult.moduleResults);
+    
+    // Prioritize actions for starter tier (show all actions)
+    const prioritizedActions = prioritizeBusinessActions(businessActions);
+    
+    // Generate current date
+    const generatedAt = new Date().toLocaleDateString('nl-NL', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+    
+    // Create starter PDF data
+    const starterData: StarterPDFData = {
+      scanResult,
+      businessActions: prioritizedActions,
+      positiveFindings,
+      generatedAt
     };
     
-    const html = generateScanEmailTemplate(templateData);
+    // Generate HTML using new starter template
+    const html = generateStarterPDFHTML(starterData);
+    
+    console.log(`📄 Starter PDF HTML generated, length: ${html.length} chars`);
+    
     return await generatePDFFromHTML(html, {
       filename: `scan-report-starter-${scanResult.scanId}.pdf`,
       websiteUrl: scanResult.url,

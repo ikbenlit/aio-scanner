@@ -11,6 +11,7 @@
   import PositiveReinforcement from '$lib/components/features/scan/PositiveReinforcement.svelte';
   import QuickWinsSection from '$lib/components/features/scan/QuickWinsSection.svelte';
   import GentleConversion from '$lib/components/features/scan/GentleConversion.svelte';
+  import AiNarrativeSection from '$lib/components/features/scan/AiNarrativeSection.svelte';
   
   // Legacy components (keep for fallback/debugging)
   import ProgressCircle from '$lib/components/features/scan/ProgressCircle.svelte';
@@ -58,6 +59,16 @@
       positiveFindings: string[];
       totalActions: number;
       allActions: BusinessAction[];
+      // Phase 2: AI narrative and insights
+      aiNarrative: any;
+      aiInsights: any;
+      // Tier-specific metadata
+      tier: ScanTier;
+      aiPreviewBadge: string | null;
+      // Content filtering info
+      isBasicTier: boolean;
+      hasAIContent: boolean;
+      hasAdvancedInsights: boolean;
     };
     screenshot: string | null;
     error: string | null;
@@ -204,14 +215,25 @@
         <QuickWinsSection 
           quickWins={businessInsights.quickWins}
           totalActions={businessInsights.totalActions}
+          tier={businessInsights.tier}
+          aiPreviewBadge={businessInsights.aiPreviewBadge}
         />
 
         <!-- Phase 3: Gentle Conversion -->
         <GentleConversion 
-          tier={getScanTier(scan.tier)}
+          tier={businessInsights.tier}
           quickWinsCount={businessInsights.quickWins.length}
           totalActionsCount={businessInsights.totalActions}
           placement="after-quickwins"
+          aiPreviewBadge={businessInsights.aiPreviewBadge}
+        />
+
+        <!-- Phase 4: AI-Narrative Section -->
+        <AiNarrativeSection 
+          aiNarrative={businessInsights.aiNarrative}
+          aiInsights={businessInsights.aiInsights}
+          tier={businessInsights.tier}
+          isLocked={businessInsights.isBasicTier}
         />
 
         <!-- Email & PDF Section -->

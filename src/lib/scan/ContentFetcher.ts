@@ -1,6 +1,14 @@
 import * as cheerio from 'cheerio';
 import { chromium } from 'playwright';
-import type { ScanMetadata } from './types.js';
+// TODO: Fix import - ScanMetadata should be in scan types
+// import type { ScanMetadata } from '../types/scan.js';
+
+interface ScanMetadata {
+    title: string;
+    description: string;
+    keywords: string[];
+    canonicalUrl?: string;
+}
 
 export interface ContentFetchResult {
   html: string;

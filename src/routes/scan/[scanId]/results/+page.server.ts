@@ -2,8 +2,9 @@ import { error } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 import { getSupabaseClient } from '$lib/supabase';
 import { translateFindings, getPositiveFindings } from '$lib/results/translation';
-import { selectTop3QuickWins } from '$lib/results/prioritization';
+import { selectTop3QuickWins, selectVariedQuickWins, getAIPreviewBadge } from '$lib/results/prioritization';
 import type { Finding } from '$lib/types/scan';
+import type { ScanTier } from '$lib/types/database';
 
 interface ScanModule {
   id?: string;
@@ -32,6 +33,10 @@ interface DatabaseScan {
   result_json: {
     modules?: ScanModule[];
     moduleResults?: ScanModule[];
+    // Phase 2: Additional AI data
+    aiReport?: any;
+    aiInsights?: any;
+    narrativeReport?: any;
   } | null;
   created_at: string;
   completed_at: string | null;
@@ -148,7 +153,15 @@ export const load = (async ({ params }: { params: { scanId: string } }) => {
           quickWins: [],
           positiveFindings: [],
           totalActions: 0,
-          allActions: []
+          allActions: [],
+          // Phase 2: Empty AI data for incomplete scans
+          aiNarrative: null,
+          aiInsights: null,
+          tier: typedScan.tier || 'basic',
+          aiPreviewBadge: null,
+          isBasicTier: (typedScan.tier || 'basic') === 'basic',
+          hasAIContent: false,
+          hasAdvancedInsights: false
         }
       };
     }
@@ -180,15 +193,48 @@ export const load = (async ({ params }: { params: { scanId: string } }) => {
     const businessActions = translateFindings(allFindings);
     console.log(`✨ Translated ${businessActions.length} findings to business actions`);
     
-    // Select top 3 quick wins
-    const quickWins = selectTop3QuickWins(businessActions);
-    console.log(`🚀 Selected ${quickWins.length} quick wins`);
+    // Extract tier and determine Quick Wins strategy
+    const scanTier = (typedScan.tier || 'basic') as ScanTier;
+    console.log(`🎯 Scan tier: ${scanTier}`);
+    
+    // Phase 2: Tier-aware Quick Wins selection
+    let quickWins;
+    let aiPreviewBadge = null;
+    
+    if (scanTier === 'basic') {
+      // Basic tier: 3 varied actions (1 AI + 2 highest impact)
+      quickWins = selectVariedQuickWins(businessActions);
+      aiPreviewBadge = getAIPreviewBadge(quickWins);
+      console.log(`🤖 Basic tier: Selected ${quickWins.length} varied quick wins (AI Preview: ${aiPreviewBadge})`);
+    } else {
+      // Paid tiers: Show all actions (filtered by selectTop3QuickWins for display)
+      quickWins = businessActions; // Show all for paid tiers
+      console.log(`💎 ${scanTier} tier: Showing all ${quickWins.length} business actions`);
+    }
     
     // Get positive reinforcement points
     const positiveFindings = getPositiveFindings(allFindings);
     console.log(`✅ Found ${positiveFindings.length} positive points`);
     
-    // 4. Return complete data with new business-friendly structure
+    // 4. Extract AI narrative and insights based on tier
+    let aiNarrative = null;
+    let aiInsights = null;
+    
+    if (scanTier !== 'basic' && typedScan.result_json) {
+      // Extract AI narrative for Starter+ tiers
+      if (typedScan.result_json.narrativeReport) {
+        aiNarrative = typedScan.result_json.narrativeReport;
+        console.log(`📜 AI Narrative available for ${scanTier} tier`);
+      }
+      
+      // Extract AI insights for Business+ tiers  
+      if ((scanTier === 'business' || scanTier === 'enterprise') && typedScan.result_json.aiInsights) {
+        aiInsights = typedScan.result_json.aiInsights;
+        console.log(`🧠 AI Insights available for ${scanTier} tier`);
+      }
+    }
+    
+    // 5. Return complete data with new business-friendly structure and tier-aware content
     return {
       scan: {
         id: typedScan.id,
@@ -207,12 +253,22 @@ export const load = (async ({ params }: { params: { scanId: string } }) => {
         sentAt: typedScan.email_sent_at || null,
         sent: typedScan.email_sent || false
       },
-      // New business-friendly data
+      // Phase 2: Enhanced business-friendly data with tier-aware content
       businessInsights: {
         quickWins,
         positiveFindings,
         totalActions: businessActions.length,
-        allActions: businessActions
+        allActions: businessActions,
+        // Phase 2: AI narrative and insights
+        aiNarrative,
+        aiInsights,
+        // Tier-specific metadata
+        tier: scanTier,
+        aiPreviewBadge,
+        // Content filtering info
+        isBasicTier: scanTier === 'basic',
+        hasAIContent: scanTier !== 'basic',
+        hasAdvancedInsights: scanTier === 'business' || scanTier === 'enterprise'
       }
     };
 

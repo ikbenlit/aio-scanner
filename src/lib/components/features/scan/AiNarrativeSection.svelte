@@ -77,7 +77,10 @@
   }
 
   // Format AI narrative text (basic markdown support)
-  function formatNarrative(text: string): string {
+  function formatNarrative(text: string | null): string {
+    if (!text || typeof text !== 'string') {
+      return '';
+    }
     return text
       .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
       .replace(/\*(.*?)\*/g, '<em>$1</em>')

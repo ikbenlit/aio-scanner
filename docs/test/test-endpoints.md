@@ -374,7 +374,7 @@ http://localhost:5173/api/test/raw-data?url=https://example.com&tier=business&de
 http://localhost:5173/api/test/pdf-generation?download=true&scanId=JOUW_SCAN_ID
 
 # Bijvoorbeeld:
-http://localhost:5173/api/test/pdf-generation?download=true&scanId=aac92063-4e5a-4a52-ac96-5394b5c093bf
+http://localhost:5173/api/test/pdf-generation?download=true&scanId=35591b2a-afcc-4293-8714-69a9939d3d26
 ```
 
 ---

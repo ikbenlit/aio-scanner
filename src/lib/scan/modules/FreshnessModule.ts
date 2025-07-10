@@ -29,12 +29,12 @@ export class FreshnessModule {
     try {
       // Use provided content or fetch (backward compatibility)
       const actualHtml = html || await fetch(url).then(r => r.text());
-      const actual$ = $ || cheerio.load(actualHtml);
+      const actual$ = $ || cheerio.load(actualHtml || '');
       
       // Load pattern configuration
       const config = await this.configLoader.loadConfig('Freshness');
       
-      const findings = await this.analyzeFreshness(actual$, actualHtml, url, config);
+      const findings = await this.analyzeFreshness(actual$, actualHtml || '', url, config);
       const score = this.calculateScore(findings);
 
       return {

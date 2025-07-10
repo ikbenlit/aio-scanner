@@ -24,8 +24,8 @@ export class BasicTierStrategy extends BaseTierStrategy {
         
         const { modules, sharedContentService } = dependencies;
         
-        // Fetch shared content once for all modules
-        const sharedContent = await sharedContentService.fetchSharedContent(url);
+        // Fetch shared content once for all modules using fetch strategy for basic tier
+        const sharedContent = await sharedContentService.fetchSharedContent(url, 'fetch');
         
         // Execute core modules in parallel (TechnicalSEO + SchemaMarkup)
         const moduleResults = await Promise.all(

@@ -1,5 +1,6 @@
 // src/lib/pdf/chartGenerator.ts
-import type { EngineScanResult, BusinessAction, ModuleResult } from '$lib/types/scan';
+import type { EngineScanResult, ModuleResult } from '$lib/types/scan';
+import type { BusinessAction } from '$lib/results/translation';
 
 export interface ChartData {
   moduleScores: { name: string; score: number }[];

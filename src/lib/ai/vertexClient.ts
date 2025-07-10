@@ -174,7 +174,8 @@ export class VertexAIClient {
    */
   private buildInsightsPrompt(
     moduleResults: ModuleResult[], 
-    enhancedContent: EnhancedContent
+    enhancedContent: EnhancedContent,
+    url: string
   ): string {
     return `
 Je bent een AI SEO-consultant die websites analyseert voor AI-readiness en citability.
@@ -266,6 +267,12 @@ Scan Results: ${JSON.stringify(moduleResults, null, 2)}
 AI Insights: ${JSON.stringify(insights, null, 2)}
 Authority Content: ${JSON.stringify(enhancedContent.authorityMarkers.slice(0, 3))}
 
+SMART ANALYSIS DATA:
+De scan bevat verrijkte findings met:
+- Evidence: Contextuele quotes en voorbeelden uit de werkelijke content
+- Suggestions: Concrete, implementeerbare verbeteringen per finding
+Gebruik deze evidence als proof points en suggestions als actionable advice.
+
 TAAK:
 Schrijf een persoonlijk, professioneel rapport in vloeiende Nederlandse tekst.
 
@@ -283,16 +290,17 @@ STRUCTUUR:
    - Top 3 belangrijkste kansen
 
 2. **Detailed Analysis** (300-400 woorden)
-   - Dieper ingaan op specifieke bevindingen
+   - Dieper ingaan op specifieke bevindingen MET evidence quotes
    - Uitleggen waarom dit belangrijk is voor hun business
-   - Concrete voorbeelden uit hun eigen content
+   - Gebruik de evidence velden als concrete voorbeelden uit hun content
    - Focus op AI-readiness en citation potential
+   - Integreer suggestions als directe verbeteringsadvies
 
 3. **Implementation Roadmap** (200-250 woorden)
    - Prioriteer acties op impact vs effort
-   - Stap-voor-stap instructies
+   - Gebruik suggestion velden voor stap-voor-stap instructies
    - Realistische tijdschattingen
-   - Quick wins eerst
+   - Quick wins eerst, gebaseerd op suggestions
 
 4. **Conclusion & Next Steps** (100-150 woorden)
    - Samenvatten belangrijkste acties
@@ -312,9 +320,11 @@ RESPONSE FORMAT (Strict JSON):
 BELANGRIJKE INSTRUCTIES:
 - Geef ALLEEN valid JSON terug
 - Schrijf in vloeiend Nederlands
-- Gebruik hun werkelijke content voorbeelden
+- Gebruik hun werkelijke content voorbeelden UIT EVIDENCE VELDEN
 - Maak het persoonlijk en specifiek
 - Focus op AI citation opportunities
+- Gebruik suggestion velden voor concrete actie-items
+- Quote evidence in blockquotes waar relevant
 - Geen algemene SEO clichés
 `;
   }

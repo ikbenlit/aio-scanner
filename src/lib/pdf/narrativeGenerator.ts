@@ -15,7 +15,7 @@ export class NarrativePDFGenerator {
     const businessActions = translateFindings(scanResult.moduleResults.flatMap(m => m.findings));
     
     // Get positive findings
-    const positiveFindings = getPositiveFindings(scanResult.moduleResults);
+    const positiveFindings = getPositiveFindings(scanResult.moduleResults.flatMap(m => m.findings));
     
     // Prioritize actions for business tier
     const prioritizedActions = selectVariedQuickWins(businessActions);

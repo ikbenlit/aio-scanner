@@ -30,8 +30,9 @@
       const isDevelopment = window.location.hostname === 'localhost';
       if (isDevelopment) {
         console.log('🧪 Development mode: Using mock paymentId voor testing');
-        // Use Mollie-compatible test payment ID format
-        paymentId = `tr_test_${Date.now()}`;
+        // Use Mollie-compatible test payment ID format with email encoded
+        const emailEncoded = email.replace('@', '--').replace(/\./g, '-');
+        paymentId = `tr_test_${Date.now()}_${emailEncoded}`;
       } else {
         error = 'Betalingsverificatie mislukt. Geen payment ID ontvangen van Mollie. Probeer de betaling opnieuw of neem contact op met support.';
         isProcessing = false;

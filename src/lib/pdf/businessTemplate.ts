@@ -1,5 +1,6 @@
 // src/lib/pdf/businessTemplate.ts
-import type { EngineScanResult, BusinessAction, NarrativeReport } from '$lib/types/scan';
+import type { EngineScanResult, NarrativeReport } from '$lib/types/scan';
+import type { BusinessAction } from '$lib/results/translation';
 import { generateStarterPDFHTML, type StarterPDFData } from './starterTemplate.js';
 import { generateChartData, generateChartsHTML, getChartsCSS } from './chartGenerator.js';
 

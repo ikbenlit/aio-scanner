@@ -13,12 +13,12 @@ export class AIContentModule {
       // Use provided content or fetch (backward compatibility)
       const normalizedUrl = normalizeUrl(url);
       const actualHtml = html || await fetch(normalizedUrl).then(r => r.text());
-      const actual$ = $ || cheerio.load(actualHtml);
+      const actual$ = $ || cheerio.load(actualHtml || '');
       
       // Load pattern configuration
       const config = await this.configLoader.loadConfig('AIContent');
       
-      const findings = await this.analyzeAIContent(actual$, actualHtml, config);
+      const findings = await this.analyzeAIContent(actual$, actualHtml || '', config);
       const score = this.calculateScore(findings);
 
       return {
@@ -73,6 +73,7 @@ export class AIContentModule {
 
     let faqSectionsFound = 0;
     let questionsFound = 0;
+    const faqEvidence: string[] = []; // Phase 1.2: Collect evidence
 
     // Check for explicit FAQ sections
     faqSelectors.forEach(selector => {
@@ -80,12 +81,20 @@ export class AIContentModule {
       if (elements.length > 0) {
         faqSectionsFound += elements.length;
         
-        // Count questions within FAQ sections
+        // Count questions within FAQ sections AND collect evidence
         elements.each((_, element) => {
           const text = $(element).text();
           const questionMatches = text.match(/\?/g);
           if (questionMatches) {
             questionsFound += questionMatches.length;
+            
+            // Extract contextual evidence (max 3)
+            if (faqEvidence.length < 3) {
+              const sentences = text.split(/[.!?]/).filter(s => s.trim().length > 10);
+              if (sentences.length > 0) {
+                faqEvidence.push(sentences[0].trim().substring(0, 150) + '...');
+              }
+            }
           }
         });
       }
@@ -109,6 +118,10 @@ export class AIContentModule {
         if (foundQuestions.length < 3) { // Limit examples
           foundQuestions.push(text);
         }
+        // Also add to evidence if we don't have enough yet
+        if (faqEvidence.length < 3) {
+          faqEvidence.push(`Heading: "${text}"`);
+        }
       }
     });
 
@@ -122,7 +135,9 @@ export class AIContentModule {
         title: 'FAQ Content: Uitstekend',
         description: `${faqSectionsFound} FAQ secties en ${questionHeadings} vraag-koppen gevonden.${exampleText} FAQ content is ideaal voor AI-citaties en verbetert de kans dat je website wordt gebruikt als bron.`,
         priority: 'low',
-        category: 'ai-content'
+        category: 'ai-content',
+        evidence: faqEvidence.slice(0, 3),
+        suggestion: 'Behoud deze sterke FAQ structuur en voeg regelmatig nieuwe vragen toe gebaseerd op klantvragen.'
       });
 
       if (questionsFound >= 5) {
@@ -130,7 +145,9 @@ export class AIContentModule {
           title: 'Uitgebreide FAQ Content: Ideaal voor AI',
           description: `${questionsFound} vragen gevonden in FAQ secties. Dit uitgebreide vraag-antwoord format is perfect voor AI-assistenten om te citeren bij gebruikersvragen.`,
           priority: 'low',
-          category: 'ai-content'
+          category: 'ai-content',
+          evidence: faqEvidence.slice(0, 3),
+          suggestion: 'Structureer antwoorden met korte, directe alinea\'s voor optimale AI-leesbaarheid.'
         });
       }
     } else if (questionHeadings >= 1) {
@@ -142,20 +159,25 @@ export class AIContentModule {
         title: 'FAQ Content: Beperkt',
         description: `Slechts ${questionHeadings} vraag-koppen gevonden.${exampleText} Voeg meer FAQ content toe om beter vindbaar te worden door AI-assistenten.`,
         priority: 'medium',
-        category: 'ai-content'
+        category: 'ai-content',
+        evidence: foundQuestions.length > 0 ? [`"${foundQuestions[0]}"`] : [],
+        suggestion: 'Creëer een volledige FAQ sectie met minimaal 5-10 veel voorkomende klantvragen en duidelijke antwoorden.'
       });
     } else {
       findings.push({
         title: 'FAQ Content: Ontbrekend',
         description: 'Website mist vraag-antwoord content die AI-assistenten kunnen citeren. Voeg een FAQ sectie toe met vragen zoals "Wat doet [bedrijf]?" of "Hoe werkt [service]?".',
         priority: 'high',
-        category: 'ai-content'
+        category: 'ai-content',
+        evidence: [], // No evidence as content is missing
+        suggestion: 'Start met 5 basale FAQ items: "Wat doen wij?", "Hoe werkt onze service?", "Wat zijn de kosten?", "Hoe neem ik contact op?", "Waar zijn jullie gevestigd?".'
       });
     }
   }
 
   private analyzeConversationalTone($: cheerio.CheerioAPI, findings: Finding[]): void {
     const bodyText = $('body').text().toLowerCase();
+    const originalText = $('body').text(); // Keep original for evidence
     const wordCount = bodyText.split(/\s+/).length;
     
     if (wordCount < 50) {
@@ -163,10 +185,15 @@ export class AIContentModule {
         title: 'Te weinig content voor analyse',
         description: 'Onvoldoende tekst om conversational tone te beoordelen',
         priority: 'low',
-        category: 'ai-content'
+        category: 'ai-content',
+        evidence: [],
+        suggestion: 'Voeg meer content toe (minimaal 100 woorden) voor een volledige tone analyse.'
       });
       return;
     }
+
+    // Phase 1.2: Collect evidence examples
+    const toneEvidence: string[] = [];
 
     // Detect personal pronouns (conversational indicators)
     const personalPronouns = ['je ', 'jij ', 'jouw ', 'jullie ', 'u ', 'you ', 'your ', 'we ', 'wij ', 'ons '];
@@ -174,6 +201,16 @@ export class AIContentModule {
       const matches = bodyText.match(new RegExp(pronoun, 'g'));
       return count + (matches ? matches.length : 0);
     }, 0);
+
+    // Collect evidence of conversational language
+    const sentences = originalText.split(/[.!?]/).filter(s => s.trim().length > 20);
+    for (const sentence of sentences) {
+      if (toneEvidence.length >= 3) break;
+      const lowerSentence = sentence.toLowerCase();
+      if (personalPronouns.some(pronoun => lowerSentence.includes(pronoun))) {
+        toneEvidence.push(`"${sentence.trim().substring(0, 120)}..."`);  
+      }
+    }
 
     // Detect formal/corporate language
     const corporateTerms = ['klanten', 'gebruikers', 'organisatie', 'bedrijf', 'dienstverlening', 'oplossingen'];
@@ -198,6 +235,8 @@ export class AIContentModule {
         description: `Goede balans tussen persoonlijke en professionele taal (score: ${conversationalScore})`,
         priority: 'low',
         category: 'ai-content',
+        evidence: toneEvidence.slice(0, 3),
+        suggestion: 'Behoud deze persoonlijke toon - dit helpt AI-assistenten om je content natuurlijker te citeren.',
         metrics: {
           score: conversationalScore,
           benchmark: 'boven gemiddeld',
@@ -214,6 +253,8 @@ export class AIContentModule {
         description: `Toon kan persoonlijker (score: ${conversationalScore})`,
         priority: 'medium',
         category: 'ai-content',
+        evidence: toneEvidence.slice(0, 3),
+        suggestion: 'Gebruik meer persoonlijke voornaamwoorden ("je", "we", "jouw") en stel directe vragen om conversationeler te worden.',
         metrics: {
           score: conversationalScore,
           benchmark: 'gemiddeld',
@@ -230,6 +271,8 @@ export class AIContentModule {
         description: `Content is te formeel voor AI-assistenten (score: ${conversationalScore})`,
         priority: 'high',
         category: 'ai-content',
+        evidence: toneEvidence.length > 0 ? toneEvidence.slice(0, 3) : ['Geen conversational voorbeelden gevonden'],
+        suggestion: 'Herschrijf formele zinnen naar persoonlijke taal: "Wij bieden" → "We helpen je met", "Onze organisatie" → "Ons team".',
         metrics: {
           score: conversationalScore,
           benchmark: 'onder gemiddeld',
@@ -282,21 +325,27 @@ export class AIContentModule {
         title: 'Sterke educationele content structuur',
         description: `${stepMatches} stappen, ${totalListItems} lijst items, ${howToMatches} how-to patterns`,
         priority: 'low',
-        category: 'ai-content'
+        category: 'ai-content',
+        evidence: [],
+        suggestion: 'Behoud deze duidelijke structuur - voeg indien mogelijk nummering en bullets toe voor betere AI-parsing.'
       });
     } else if (educationalScore >= 5) {
       findings.push({
         title: 'Beperkte educationele structuur',
         description: 'Content heeft enige structuur maar kan beter',
         priority: 'medium',
-        category: 'ai-content'
+        category: 'ai-content',
+        evidence: [],
+        suggestion: 'Voeg meer genummerde stappen en "hoe-te" secties toe voor betere AI-begrijpbaarheid.'
       });
     } else {
       findings.push({
         title: 'Ontbrekende educationele structuur',
         description: 'Content mist duidelijke structuur die AI-assistenten kunnen gebruiken',
         priority: 'high',
-        category: 'ai-content'
+        category: 'ai-content',
+        evidence: [],
+        suggestion: 'Structureer content met duidelijke stappen: "Stap 1:", "Vervolgens:", "Ten slotte:" voor betere AI-interpretatie.'
       });
     }
   }
@@ -336,21 +385,27 @@ export class AIContentModule {
         title: 'Uitstekende directe antwoorden',
         description: `${directAnswers} directe antwoorden en ${shortAnswers} concise verklaringen`,
         priority: 'low',
-        category: 'ai-content'
+        category: 'ai-content',
+        evidence: [],
+        suggestion: 'Behoud deze directe antwoordstijl - dit is ideaal voor AI-citaties.'
       });
     } else if (directAnswers >= 1 || shortAnswers >= 3) {
       findings.push({
         title: 'Beperkte directe antwoorden',
         description: `${directAnswers} directe antwoorden gevonden`,
         priority: 'medium',
-        category: 'ai-content'
+        category: 'ai-content',
+        evidence: [],
+        suggestion: 'Begin paragrafen met directe antwoorden: "Ja, dit kost €X" of "Nee, dit is niet mogelijk omdat...".'
       });
     } else {
       findings.push({
         title: 'Ontbrekende directe antwoorden',
         description: 'Content geeft geen duidelijke, directe antwoorden op vragen',
         priority: 'high',
-        category: 'ai-content'
+        category: 'ai-content',
+        evidence: [],
+        suggestion: 'Herschrijf content om directe antwoorden te geven: start alinea\'s met "Ja", "Nee", "De prijs is", "Dit betekent".'
       });
     }
   }
@@ -377,21 +432,27 @@ export class AIContentModule {
         title: 'Goede vraag-structuur',
         description: `${questionMarks} vragen totaal, ${questionHeadings.length} vraag-koppen`,
         priority: 'low',
-        category: 'ai-content'
+        category: 'ai-content',
+        evidence: [],
+        suggestion: 'Uitstekend! Behoud deze interactieve vraag-structuur voor optimale AI-engagement.'
       });
     } else if (questionMarks >= 5) {
       findings.push({
         title: 'Beperkte vraag-structuur',
         description: `${questionMarks} vragen gevonden, meer zou beter zijn`,
         priority: 'medium',
-        category: 'ai-content'
+        category: 'ai-content',
+        evidence: [],
+        suggestion: 'Voeg meer retorische vragen toe in headings en content om engagement te verhogen.'
       });
     } else {
       findings.push({
         title: 'Weinig interactieve content',
         description: `Slechts ${questionMarks} vragen gevonden`,
         priority: 'medium',
-        category: 'ai-content'
+        category: 'ai-content',
+        evidence: [],
+        suggestion: 'Maak content interactiever met vragen als "Wist je dat...?", "Heb je je afgevraagd...?", "Wat betekent dit voor jou?".'
       });
     }
   }

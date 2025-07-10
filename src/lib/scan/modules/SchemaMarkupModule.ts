@@ -13,12 +13,12 @@ export class SchemaMarkupModule {
       // Use provided content or fetch (backward compatibility)
       const normalizedUrl = normalizeUrl(url);
       const actualHtml = html || await fetch(normalizedUrl).then(r => r.text());
-      const actual$ = $ || cheerio.load(actualHtml);
+      const actual$ = $ || cheerio.load(actualHtml || '');
       
       // Load pattern configuration
       const config = await this.configLoader.loadConfig('SchemaMarkup');
       
-      const findings = await this.analyzeSchemaMarkup(actual$, actualHtml, config);
+      const findings = await this.analyzeSchemaMarkup(actual$, actualHtml || '', config);
       const score = this.calculateScore(findings);
 
       return {

@@ -238,7 +238,21 @@ export const findingTranslations: Record<string, Omit<BusinessAction, 'id' | 'or
     impactPoints: '+8 punten',
     difficulty: 'gemiddeld',
     priority: 'medium',
-    category: 'technical'
+    category: 'technical',
+    expandedDetails: {
+      steps: [
+        'Maak een nieuw tekstbestand en noem het "robots.txt"',
+        'Voeg deze regels toe: "User-agent: *" en "Allow: /"',
+        'Upload het bestand naar je website hoofdmap (naast index.html)',
+        'Test op: jouwdomain.nl/robots.txt'
+      ],
+      whyItWorks: 'AI-crawlers zoals GPT en Bing Chat controleren robots.txt om te weten welke content ze mogen gebruiken voor antwoorden.',
+      examples: [
+        'User-agent: *',
+        'Allow: /',
+        'Sitemap: https://jouwdomain.nl/sitemap.xml'
+      ]
+    }
   },
 
   'sitemap_missing': {
@@ -261,7 +275,21 @@ export const findingTranslations: Record<string, Omit<BusinessAction, 'id' | 'or
     impactPoints: '+9 punten',
     difficulty: 'gemiddeld',
     priority: 'medium',
-    category: 'ai-content'
+    category: 'ai-content',
+    expandedDetails: {
+      steps: [
+        'Ga door je hoofdpagina en vervang "u" door "je"',
+        'Voeg vragen toe zoals "Heb je hulp nodig met...?"',
+        'Gebruik korte, duidelijke zinnen (max 20 woorden)',
+        'Vertel wat je doet in plaats van wat je kunt doen'
+      ],
+      whyItWorks: 'AI-assistenten citeren liever conversationele tekst omdat het natuurlijker klinkt in gesprekken met gebruikers.',
+      examples: [
+        'Was: "Wij kunnen u helpen" → Nu: "We helpen je graag"',
+        'Was: "Onze dienstverlening" → Nu: "Wat we voor je doen"',
+        'Voeg toe: "Heb je vragen? Bel ons!"'
+      ]
+    }
   },
 
   // Contact Information
@@ -273,7 +301,21 @@ export const findingTranslations: Record<string, Omit<BusinessAction, 'id' | 'or
     impactPoints: '+6 punten',
     difficulty: 'makkelijk',
     priority: 'medium',
-    category: 'business-info'
+    category: 'business-info',
+    expandedDetails: {
+      steps: [
+        'Ga naar je footer en contact pagina',
+        'Controleer of telefoon, email en adres kloppen',
+        'Voeg ontbrekende gegevens toe',
+        'Zorg dat deze info op elke pagina hetzelfde is'
+      ],
+      whyItWorks: 'AI-assistenten controleren contactgegevens om betrouwbaarheid te valideren. Consistente info verhoogt je autoriteit.',
+      examples: [
+        'Tel: +31 20 123 4567',
+        'Email: info@jouwbedrijf.nl', 
+        'Adres: Hoofdstraat 1, 1000 AA Amsterdam'
+      ]
+    }
   }
 };
 
@@ -293,6 +335,21 @@ export function identifyTranslationKey(finding: Finding): string | null {
     if (title.includes('onvolledig') || description.includes('ontbrekend')) {
       return 'incomplete_schema_organization';
     }
+  }
+
+  // Business transparency patterns (more specific)
+  if (category.includes('businessTransparency') || title.includes('businessTransparency')) {
+    return 'contact_info_incomplete';
+  }
+
+  // Authority markers patterns (more specific)
+  if (category.includes('authorityMarkers') || title.includes('authorityMarkers')) {
+    return 'author_info_missing';
+  }
+
+  // Robots.txt patterns (more specific)
+  if (title.includes('robots.txt') || title.includes('robots')) {
+    return 'robots_txt_missing';
   }
 
   // FAQ content patterns
@@ -404,45 +461,80 @@ export function translateFindings(findings: Finding[]): BusinessAction[] {
 export function getPositiveFindings(findings: Finding[]): string[] {
   const positivePatterns = [
     'uitstekend',
-    'goed',
+    'goed', 
     'prima',
     'aanwezig',
     'gevonden',
     'consistent',
     'fresh',
-    'optimaal'
+    'optimaal',
+    'sterke'
   ];
 
-  return findings
+  const positiveFindings = findings
     .filter(finding => {
       const text = `${finding.title} ${finding.description}`.toLowerCase();
-      return positivePatterns.some(pattern => text.includes(pattern)) && 
-             finding.priority === 'low'; // Low priority often means "good"
+      return positivePatterns.some(pattern => text.includes(pattern)) ||
+             finding.priority === 'low' ||
+             text.includes('elementen gevonden') ||
+             text.includes('awards') ||
+             text.includes('klant');
     })
     .map(finding => {
-      // Convert to business-friendly language
-      const title = finding.title.replace(/:/g, '').toLowerCase();
+      // Convert to specific business-friendly language
+      const title = finding.title.toLowerCase();
+      const description = finding.description.toLowerCase();
       
-      if (title.includes('robots') || title.includes('toegankelijk')) {
-        return 'Website is technisch gezond';
+      // Authority/Awards mentions
+      if (title.includes('authoritymarkers') && description.includes('awards')) {
+        return 'Awards en erkenningen zichtbaar';
       }
-      if (title.includes('schema') || title.includes('gestructureerd')) {
+      if (title.includes('authoritymarkers') && description.includes('klant')) {
+        return 'Klantgegevens goed gepresenteerd';
+      }
+      if (title.includes('authoritymarkers') && description.includes('media')) {
+        return 'Media mentions aanwezig';
+      }
+      
+      // Business transparency
+      if (title.includes('businesstransparency') && description.includes('elementen gevonden')) {
         return 'Bedrijfsinformatie is goed leesbaar';
       }
-      if (title.includes('faq') || title.includes('vraag')) {
-        return 'FAQ sectie aanwezig';
-      }
-      if (title.includes('meta') || title.includes('beschrijving')) {
-        return 'Pagina-beschrijvingen zijn goed';
-      }
-      if (title.includes('fresh') || title.includes('recent')) {
+      
+      // Content structure
+      if (title.includes('content') && description.includes('fresh')) {
         return 'Content is up-to-date';
       }
-      if (title.includes('contact') || title.includes('info')) {
-        return 'Contact informatie is volledig';
+      if (description.includes('faq') || title.includes('faq')) {
+        return 'FAQ sectie aanwezig';
       }
       
-      return 'Goede site structuur gevonden';
+      // Technical
+      if (title.includes('robots') || title.includes('toegankelijk')) {
+        return 'Website is technisch toegankelijk';
+      }
+      
+      // Schema/Structure
+      if (title.includes('schema') || title.includes('gestructureerd')) {
+        return 'Gestructureerde data aanwezig';
+      }
+      
+      // Generic positive
+      if (description.includes('uitstekend') || description.includes('goed')) {
+        return 'Goede site structuur gevonden';
+      }
+      
+      return 'Goede site structuur gevonden'; // Fallback
     })
     .slice(0, 4); // Max 4 positive points
+
+  // Ensure we have at least 2 positive findings
+  if (positiveFindings.length < 2) {
+    positiveFindings.push('Website is technisch toegankelijk');
+    if (positiveFindings.length < 2) {
+      positiveFindings.push('Goede site structuur gevonden');
+    }
+  }
+
+  return positiveFindings;
 }

@@ -24,8 +24,8 @@ export class StarterTierStrategy extends BaseTierStrategy {
         
         const { modules, aiReportGenerator, pdfGenerator, sharedContentService } = dependencies;
         
-        // Fetch shared content once for all modules
-        const sharedContent = await sharedContentService.fetchSharedContent(url);
+        // Fetch shared content once for all modules using Playwright for Starter+ tiers
+        const sharedContent = await sharedContentService.fetchSharedContent(url, 'playwright');
         
         // Execute basic modules first (TechnicalSEO + SchemaMarkup)
         const basicResults = await Promise.all(

@@ -13,12 +13,12 @@ export class AICitationModule {
       // Use provided content or fetch (backward compatibility)
       const normalizedUrl = normalizeUrl(url);
       const actualHtml = html || await fetch(normalizedUrl).then(r => r.text());
-      const actual$ = $ || cheerio.load(actualHtml);
+      const actual$ = $ || cheerio.load(actualHtml || '');
       
       // Load pattern configuration
       const config = await this.configLoader.loadConfig('AICitation');
       
-      const findings = await this.analyzeAICitation(actual$, actualHtml, config);
+      const findings = await this.analyzeAICitation(actual$, actualHtml || '', config);
       const score = this.calculateScore(findings);
 
       return {
@@ -76,6 +76,7 @@ export class AICitationModule {
 
     let authorSectionsFound = 0;
     let professionalTitles = 0;
+    const authorEvidence: string[] = []; // Phase 1.2: Collect evidence
 
     // Check for explicit author sections
     authorSelectors.forEach(selector => {
@@ -109,21 +110,27 @@ export class AICitationModule {
         title: 'Uitgebreide author/team informatie',
         description: `${authorSectionsFound} team secties met ${professionalTitles} professionele titels`,
         priority: 'low',
-        category: 'authority'
+        category: 'authority',
+        evidence: authorEvidence.slice(0, 3),
+        suggestion: 'Uitstekend! Deze autoriteit informatie helpt AI-assistenten je content betrouwbaar te beoordelen.'
       });
     } else if (authorSectionsFound >= 1 || professionalTitles >= 1) {
       findings.push({
         title: 'Beperkte author informatie',
         description: `${authorSectionsFound} author secties gevonden`,
         priority: 'medium',
-        category: 'authority'
+        category: 'authority',
+        evidence: authorEvidence.slice(0, 3),
+        suggestion: 'Voeg meer teaminfo toe met functietitels en ervaring voor betere AI-autoriteit.'
       });
     } else {
       findings.push({
         title: 'Ontbrekende author/team informatie',
         description: 'Website mist duidelijke informatie over wie er achter het bedrijf zit',
         priority: 'high',
-        category: 'authority'
+        category: 'authority',
+        evidence: [],
+        suggestion: 'Voeg een "Over ons" sectie toe met namen, functietitels, en korte bio\'s van teamleden.'
       });
     }
   }

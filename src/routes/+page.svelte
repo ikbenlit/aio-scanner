@@ -53,7 +53,7 @@
     }
   }
   
-  // Handle Business scan - direct test endpoint for testing (bypasses payment)
+  // Handle Business scan - use real business endpoint 
   async function handleBusinessScan(event: CustomEvent<{ url: string; email: string }>) {
     console.log('💼 handleBusinessScan called in +page.svelte with event:', event);
     const { url, email } = event.detail;
@@ -62,30 +62,40 @@
     
     try {
       isBusinessScanning = true;
-      console.log(`🚀 Starting business test scan for URL: ${url}`);
+      console.log(`🚀 Starting business scan for URL: ${url}`);
       
-      // Use test endpoint for development/testing
-      const testResponse = await fetch(`/api/test/business-tier?mode=full&url=${encodeURIComponent(url)}&email=${encodeURIComponent(email)}`);
+      // Use real business endpoint with development payment ID
+      const response = await fetch('/api/scan/business', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ 
+          url: url.includes('gifsvoorinsta.nl') ? 'https://example.com' : url, // Force URL with more content for smart findings testing
+          email,
+          paymentId: 'dev_business_scan_test' // Development bypass
+        })
+      });
       
-      if (!testResponse.ok) {
-        const errorData = await testResponse.json();
-        throw new Error(errorData.error || 'Business test scan failed');
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Business scan failed');
       }
       
-      const testData = await testResponse.json();
-      console.log('Business test scan result:', testData);
+      const data = await response.json();
+      console.log('Business scan result:', data);
       
-      if (testData.status === 'success' && testData.scanResult?.scanId) {
+      if (data.scanId) {
         // Redirect to results page with the scan ID
-        goto(`/scan/${testData.scanResult.scanId}/results`);
+        goto(`/scan/${data.scanId}/results`);
       } else {
-        throw new Error('Test scan completed but no scan ID returned');
+        throw new Error('Business scan completed but no scan ID returned');
       }
       
     } catch (error) {
-      console.error('Business test scan error:', error);
+      console.error('Business scan error:', error);
       const errorMessage = error instanceof Error ? error.message : 'Onbekende fout';
-      alert(`Business test scan kon niet worden gestart: ${errorMessage}`);
+      alert(`Business scan kon niet worden gestart: ${errorMessage}`);
     } finally {
       isBusinessScanning = false;
     }

@@ -12,6 +12,7 @@ export type DBScan = Database['public']['Tables']['scans']['Row'] & {
 	tier: ScanTier;
 	payment_reference: string | null;
 	user_email: string | null;
+	page_title?: string | null;
 	ai_report?: any;
 	error?: any;
 	ai_insights?: any;
@@ -43,6 +44,9 @@ export interface Finding {
     category?: string;
     technicalDetails?: string;
     estimatedTime?: string;
+    // Phase 1.2: Smart Analysis - Evidence and suggestions for contextual findings
+    evidence?: string[];  // Max 3 contextual quotes/examples
+    suggestion?: string;  // Concrete, actionable suggestion
     // MVP Enhancement: Add metrics field for business intelligence
     metrics?: {
         score?: number;
@@ -76,6 +80,7 @@ export interface AIReport {
 export interface BaseScanResult {
     scanId: string;
     url: string;
+    pageTitle?: string;
     status: 'pending' | 'running' | 'completed' | 'failed';
     overallScore: number;
     createdAt: string;
@@ -227,6 +232,7 @@ export function transformDBToEngine(
     return {
         scanId: dbScan.id,
         url: dbScan.url,
+        pageTitle: dbScan.page_title || undefined,
         status: dbScan.status as any,
         overallScore: dbScan.overall_score || 0,
         createdAt: dbScan.created_at,
@@ -353,5 +359,5 @@ export interface ScoredResult {
 
 // Scan module interface
 export interface ScanModule {
-    execute(url: string): Promise<ModuleResult>;
+    execute(url: string, html?: string, $?: any): Promise<ModuleResult>;
 }

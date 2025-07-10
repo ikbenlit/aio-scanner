@@ -1,5 +1,6 @@
 // src/lib/pdf/starterTemplate.ts
-import type { EngineScanResult, BusinessAction } from '$lib/types/scan';
+import type { EngineScanResult } from '$lib/types/scan';
+import type { BusinessAction } from '$lib/results/translation';
 import { translateFindings, getPositiveFindings } from '$lib/results/translation';
 import { selectVariedQuickWins } from '$lib/results/prioritization';
 import { TierAwarePDFGenerator } from './generator.js';

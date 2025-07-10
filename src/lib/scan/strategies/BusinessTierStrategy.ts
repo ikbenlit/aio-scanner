@@ -26,10 +26,13 @@ export class BusinessTierStrategy extends BaseTierStrategy {
         const { modules, contentExtractor, llmEnhancementService, pdfGenerator, sharedContentService } = dependencies;
         
         try {
-            // 1. Fetch shared content once for all modules
+            // 1. Fetch shared content once for all modules using Playwright for Business+ tiers
             console.log('📊 Extracting enhanced content...');
-            const sharedContent = await sharedContentService.fetchSharedContent(url);
+            const sharedContent = await sharedContentService.fetchSharedContent(url, 'playwright');
             const enhancedContent = await contentExtractor.extractEnhancedContent(sharedContent.html);
+            
+            // Extract page title from shared content
+            const pageTitle = sharedContent.$('title').text() || 'Titel niet gevonden';
             
             if (context?.progressCallback) {
                 context.progressCallback(20);
@@ -49,7 +52,8 @@ export class BusinessTierStrategy extends BaseTierStrategy {
             console.log('🧠 Enhancing findings with AI...');
             const { insights, narrative } = await llmEnhancementService.enhanceFindings(
                 moduleResults,
-                enhancedContent
+                enhancedContent,
+                url
             );
             
             if (context?.progressCallback) {
@@ -89,6 +93,7 @@ export class BusinessTierStrategy extends BaseTierStrategy {
             const businessResult: EngineScanResult = {
                 scanId,
                 url,
+                pageTitle,
                 status: 'completed',
                 createdAt: new Date().toISOString(),
                 overallScore: hybridScore,

@@ -202,7 +202,7 @@ export class TierAwarePDFGenerator {
       
       // Get positive findings with fallback
       const positiveFindings = moduleResults.length > 0 
-        ? getPositiveFindings(moduleResults)
+        ? getPositiveFindings(moduleResults.flatMap(m => m.findings))
         : this.getDefaultPositiveFindings();
       
       // Prioritize actions for starter tier (show all actions)

@@ -1,7 +1,7 @@
 // src/lib/services/PostScanProcessorService.ts
 import { getSupabaseClient } from '$lib/supabase';
 import { sendScanReport } from '$lib/email/sender';
-import type { EngineScanResult as ScanResult } from '$lib/types/scan';
+import type { EngineScanResult as ScanResult, EngineScanResult } from '$lib/types/scan';
 import type { ScanTier } from '$lib/types/database';
 
 export interface PostScanProcessorOptions {
@@ -129,16 +129,16 @@ export class PostScanProcessorService {
         return null;
       }
 
-      // Convert database scan to ScanResult format (gracefully handle missing columns)
-      const scanResult: ScanResult = {
-        scanId: scan.id,
-        url: scan.url,
+      // Convert database scan to EngineScanResult format (gracefully handle missing columns)
+      const scanResult: EngineScanResult = {
+        scanId: scan.id as string,
+        url: scan.url as string,
         status: scan.status as any,
-        overallScore: scan.overall_score || 0,
-        createdAt: scan.created_at,
-        completedAt: scan.completed_at || undefined,
+        overallScore: (scan.overall_score as number) || 0,
+        createdAt: scan.created_at as string,
+        completedAt: scan.completed_at as string | undefined,
         tier: scan.tier as ScanTier,
-        moduleResults: scan.result_json?.moduleResults || [],
+        moduleResults: (scan.result_json as any)?.moduleResults || [],
         // Gracefully handle columns that might not exist yet
         aiReport: (scan as any).ai_report ? JSON.parse((scan as any).ai_report) : undefined,
         aiInsights: (scan as any).ai_insights ? JSON.parse((scan as any).ai_insights) : undefined,
@@ -163,12 +163,13 @@ export class PostScanProcessorService {
       const { TierAwarePDFGenerator } = await import('$lib/pdf/generator');
       const pdfGenerator = new TierAwarePDFGenerator();
 
-      const pdfPath = await pdfGenerator.generateAndStorePDF(
+      const pdfBuffer = await pdfGenerator.generatePDF(
         scanResult,
+        scanResult.tier,
         scanResult.narrativeReport
       );
 
-      if (pdfPath) {
+      if (pdfBuffer) {
         // Update scan record with PDF information
         await this.supabase
           .from('scans')
@@ -176,7 +177,7 @@ export class PostScanProcessorService {
             pdf_generated: true,
             pdf_generated_at: new Date().toISOString(),
             pdf_generation_status: 'completed',
-            pdf_path: pdfPath
+            pdf_path: null // PDF buffer stored differently
           })
           .eq('id', scanResult.scanId);
 

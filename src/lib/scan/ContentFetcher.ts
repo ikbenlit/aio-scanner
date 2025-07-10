@@ -8,6 +8,11 @@ interface ScanMetadata {
     description: string;
     keywords: string[];
     canonicalUrl?: string;
+    domain?: string;
+    userAgent?: string;
+    fetchMethod?: string;
+    responseTime?: number;
+    statusCode?: number;
 }
 
 export interface ContentFetchResult {
@@ -16,12 +21,36 @@ export interface ContentFetchResult {
   screenshot?: string; // Base64 encoded screenshot
 }
 
+export interface FetchError {
+  type: 'network_error' | 'timeout' | 'http_error' | 'playwright_error' | 'parse_error';
+  url: string;
+  message: string;
+  timestamp: string;
+  duration: number;
+  strategy: FetchStrategy;
+  statusCode?: number;
+}
+
+export type FetchStrategy = 'fetch' | 'playwright';
+
 export class ContentFetcher {
   private static readonly USER_AGENT = 'AIO-Scanner/1.0 (+https://aio-scanner.nl/bot)';
-  private static readonly TIMEOUT = 10000; // 10 seconden
+  private static readonly TIMEOUT = 30000; // 30 seconden voor betaalde tiers
   private static readonly SCREENSHOT_TIMEOUT = 5000; // 5 seconden voor screenshot
 
+  async execute(url: string, strategy: FetchStrategy = 'fetch', includeScreenshot = true): Promise<ContentFetchResult> {
+    if (strategy === 'playwright') {
+      return await this.fetchWithPlaywright(url, includeScreenshot);
+    }
+    return await this.fetchWithCheerio(url, includeScreenshot);
+  }
+
+  // Legacy method for backwards compatibility
   async fetchContent(url: string, includeScreenshot = true): Promise<ContentFetchResult> {
+    return await this.fetchWithCheerio(url, includeScreenshot);
+  }
+
+  private async fetchWithCheerio(url: string, includeScreenshot = true): Promise<ContentFetchResult> {
     const startTime = Date.now();
     
     try {
@@ -43,7 +72,7 @@ export class ContentFetcher {
       const html = await response.text();
       const responseTime = Date.now() - startTime;
 
-      // Check of site JavaScript-heavy is
+      // Voor Cheerio strategie: check of site JavaScript-heavy is voor fallback
       if (this.isJavaScriptHeavy(html)) {
         console.log(`JavaScript-heavy site gedetecteerd voor ${url}, fallback naar Playwright`);
         return await this.fetchWithPlaywright(url, includeScreenshot);
@@ -64,6 +93,9 @@ export class ContentFetcher {
         html,
         screenshot,
         metadata: {
+          title: '', // Will be extracted from HTML if needed
+          description: '', // Will be extracted from HTML if needed
+          keywords: [], // Will be extracted from HTML if needed
           domain: new URL(url).hostname,
           userAgent: ContentFetcher.USER_AGENT,
           fetchMethod: 'cheerio',
@@ -73,7 +105,8 @@ export class ContentFetcher {
       };
 
     } catch (error) {
-      console.log(`Cheerio fetch gefaald voor ${url}:`, error instanceof Error ? error.message : String(error));
+      const errorDetails = this.createStandardError(error, url, 'fetch', Date.now() - startTime, response?.status);
+      console.log(`Cheerio fetch gefaald voor ${url}:`, errorDetails.message);
       // Fallback naar Playwright
       return await this.fetchWithPlaywright(url, includeScreenshot);
     }
@@ -116,16 +149,16 @@ export class ContentFetcher {
       });
       
       const page = await browser.newPage({
-        userAgent: ContentFetcher.USER_AGENT,
+        userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36', // Realistische Chrome User-Agent
         viewport: { width: 1280, height: 720 }
       });
 
-      // Timeout en error handling
+      // Configureerbare timeout van 30 seconden
       page.setDefaultTimeout(ContentFetcher.TIMEOUT);
       
-      // Navigate en wacht op network idle
+      // Navigate en wacht op networkidle0 voor volledige load
       const response = await page.goto(url, { 
-        waitUntil: 'networkidle',
+        waitUntil: 'networkidle0', // Zoals gespecificeerd in het plan
         timeout: ContentFetcher.TIMEOUT 
       });
 
@@ -159,6 +192,9 @@ export class ContentFetcher {
         html,
         screenshot,
         metadata: {
+          title: '', // Will be extracted from HTML if needed
+          description: '', // Will be extracted from HTML if needed
+          keywords: [], // Will be extracted from HTML if needed
           domain: new URL(url).hostname,
           userAgent: ContentFetcher.USER_AGENT,
           fetchMethod: 'playwright',
@@ -168,7 +204,8 @@ export class ContentFetcher {
       };
 
     } catch (error: unknown) {
-      throw new Error(`Playwright fetch failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      const errorDetails = this.createStandardError(error, url, 'playwright', Date.now() - startTime);
+      throw new Error(`Playwright fetch failed: ${JSON.stringify(errorDetails)}`);
     } finally {
       if (browser) {
         await browser.close();
@@ -259,5 +296,42 @@ export class ContentFetcher {
     }
     
     return null;
+  }
+
+  /**
+   * Standaard error handling voor alle fetch methoden
+   */
+  private createStandardError(
+    error: unknown, 
+    url: string, 
+    strategy: FetchStrategy, 
+    duration: number, 
+    statusCode?: number
+  ): FetchError {
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    let type: FetchError['type'] = strategy === 'playwright' ? 'playwright_error' : 'network_error';
+    
+    // Bepaal specifiek error type
+    if (error instanceof Error) {
+      if (message.includes('timeout')) {
+        type = 'timeout';
+      } else if (message.includes('net::ERR_') || message.includes('Failed to fetch')) {
+        type = 'network_error';
+      } else if (message.includes('HTTP') || statusCode) {
+        type = 'http_error';
+      } else if (message.includes('parse') || message.includes('JSON')) {
+        type = 'parse_error';
+      }
+    }
+    
+    return {
+      type,
+      url,
+      message,
+      timestamp: new Date().toISOString(),
+      duration,
+      strategy,
+      statusCode
+    };
   }
 }

@@ -26,7 +26,8 @@ export class LLMEnhancementService {
 
     async enhanceFindings(
         moduleResults: ModuleResult[],
-        enhancedContent: EnhancedContent
+        enhancedContent: EnhancedContent,
+        url: string
     ): Promise<{ insights: AIInsights; narrative: NarrativeReport }> {
         console.log('🔮 Enhancing findings with LLM...');
 
@@ -40,7 +41,7 @@ export class LLMEnhancementService {
         try {
             // Generate structured insights using VertexAI
             console.log('🧠 Generating AI insights...');
-            const insights = await this.vertexClient.generateInsights(moduleResults, enhancedContent);
+            const insights = await this.vertexClient.generateInsights(moduleResults, enhancedContent, url);
             
             // Generate narrative report using VertexAI
             console.log('📝 Generating narrative report...');

@@ -1,5 +1,7 @@
 import * as cheerio from 'cheerio';
 import { normalizeUrl } from '../utils.js';
+import { SharedContentService } from './SharedContentService.js';
+import type { FetchStrategy } from './ContentFetcher.js';
 
 // Enhanced Content Extraction Types
 export interface ContentSamples {
@@ -100,8 +102,10 @@ export interface AIOptimizationHint {
  * Voor gebruik in AI-enhanced scan modules
  */
 export class ContentExtractor {
+  private sharedContentService = new SharedContentService();
   
-  public async fetchContent(url: string): Promise<string> {
+  // DRY: Use SharedContentService instead of duplicate fetch logic
+  public async fetchContent(url: string, strategy: FetchStrategy = 'fetch'): Promise<string> {
     try {
       const normalizedUrl = normalizeUrl(url);
       
@@ -112,11 +116,9 @@ export class ContentExtractor {
         throw new Error(`Invalid URL format: ${normalizedUrl}`);
       }
 
-      const response = await fetch(normalizedUrl);
-      if (!response.ok) {
-        throw new Error(`Failed to fetch ${normalizedUrl}: ${response.statusText}`);
-      }
-      return await response.text();
+      // Use SharedContentService with strategy pattern
+      const sharedContent = await this.sharedContentService.fetchSharedContent(normalizedUrl, strategy);
+      return sharedContent.html;
     } catch (error) {
       console.error(`Error fetching content from ${url}:`, error);
       throw new Error(`Could not retrieve content from ${url}.`);

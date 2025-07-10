@@ -144,9 +144,10 @@ export class ScanOrchestrator {
     }
 
     // DEPRECATED: Legacy method - use Strategy Pattern instead
+    // TODO: Remove after full Strategy Pattern migration
     // Kept for backwards compatibility only
     private async executeBasicScan(url: string, scanId: string): Promise<EngineScanResult> {
-        console.warn('⚠️ Using deprecated executeBasicScan - consider using Strategy Pattern');
+        console.warn('⚠️ DEPRECATED: executeBasicScan - use TierStrategyFactory.createStrategy("basic") instead');
         const { BasicTierStrategy } = await import('./strategies/BasicTierStrategy');
         const strategy = new BasicTierStrategy();
         const dependencies: ScanDependencies = {
@@ -154,14 +155,16 @@ export class ScanOrchestrator {
             aiReportGenerator: this.aiReportGenerator,
             contentExtractor: this.contentExtractor,
             llmEnhancementService: this.llmEnhancementService,
-            pdfGenerator: this.pdfGenerator
+            pdfGenerator: this.pdfGenerator,
+            sharedContentService: this.sharedContentService
         };
         return strategy.execute(url, scanId, dependencies, { startTime: Date.now() });
     }
 
     // DEPRECATED: Legacy method - use Strategy Pattern instead
+    // TODO: Remove after full Strategy Pattern migration
     private async executeStarterScan(url: string, scanId: string): Promise<EngineScanResult> {
-        console.warn('⚠️ Using deprecated executeStarterScan - consider using Strategy Pattern');
+        console.warn('⚠️ DEPRECATED: executeStarterScan - use TierStrategyFactory.createStrategy("starter") instead');
         const { StarterTierStrategy } = await import('./strategies/StarterTierStrategy');
         const strategy = new StarterTierStrategy();
         const dependencies: ScanDependencies = {
@@ -169,14 +172,17 @@ export class ScanOrchestrator {
             aiReportGenerator: this.aiReportGenerator,
             contentExtractor: this.contentExtractor,
             llmEnhancementService: this.llmEnhancementService,
-            pdfGenerator: this.pdfGenerator
+            pdfGenerator: this.pdfGenerator,
+            sharedContentService: this.sharedContentService
         };
         return strategy.execute(url, scanId, dependencies, { startTime: Date.now() });
     }
 
     // DEPRECATED: Legacy method - use Strategy Pattern instead
-    // TODO: Remove after Strategy Pattern fully tested
+    // TODO: Remove after full Strategy Pattern migration - uses old ContentExtractor.fetchContent
+    // WARNING: Does not use new tier-based fetch strategy
     private async executeBusinessScan(url: string, scanId: string): Promise<EngineScanResult> {
+        console.warn('⚠️ DEPRECATED: executeBusinessScan - uses old fetch method, use TierStrategyFactory.createStrategy("business") instead');
         console.log('🚀 Starting business tier AI-enhanced scan for', url);
         const scanStartTime = Date.now();
 
@@ -196,7 +202,8 @@ export class ScanOrchestrator {
             console.log('🧠 Enhancing findings with AI...');
             const { insights, narrative } = await this.llmEnhancementService.enhanceFindings(
                 moduleResults,
-                enhancedContent
+                enhancedContent,
+                url
             );
 
             // 4. Calculate hybrid score
@@ -269,8 +276,10 @@ export class ScanOrchestrator {
     }
 
     // DEPRECATED: Legacy method - use Strategy Pattern instead  
-    // TODO: Remove after Strategy Pattern fully tested
+    // TODO: Remove after full Strategy Pattern migration
+    // WARNING: Does not use new tier-based fetch strategy
     private async executeEnterpriseScan(url: string, scanId: string): Promise<EngineScanResult> {
+        console.warn('⚠️ DEPRECATED: executeEnterpriseScan - use TierStrategyFactory.createStrategy("enterprise") instead');
         console.log('🏢 Starting enterprise tier scan for', url);
         const scanStartTime = Date.now();
 

@@ -8,6 +8,7 @@ import { GOOGLE_CLOUD_PROJECT, VERTEX_AI_LOCATION, GOOGLE_APPLICATION_CREDENTIAL
 import { resolve } from 'path';
 import type { ModuleResult } from '../types/scan.js';
 import type { EnhancedContent } from '../scan/ContentExtractor.js';
+import { WebsiteContextAnalyzer, type WebsiteContext } from './prompts/WebsiteContextAnalyzer.js';
 
 // Phase 3.2A Types
 export interface AIInsights {
@@ -101,7 +102,8 @@ export class VertexAIClient {
    */
   async generateInsights(
     moduleResults: ModuleResult[], 
-    enhancedContent: EnhancedContent
+    enhancedContent: EnhancedContent,
+    url: string
   ): Promise<AIInsights> {
     
     // Budget check
@@ -109,7 +111,7 @@ export class VertexAIClient {
       throw new Error('BUDGET_EXCEEDED');
     }
     
-    const prompt = this.buildInsightsPrompt(moduleResults, enhancedContent);
+    const prompt = this.buildInsightsPrompt(moduleResults, enhancedContent, url);
     
     try {
       console.log('🧠 Generating AI insights...');

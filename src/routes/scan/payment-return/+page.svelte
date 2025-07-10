@@ -8,7 +8,7 @@
   const email = $page.url.searchParams.get('email');
   const scanUrl = $page.url.searchParams.get('url');
   // Mollie typically adds 'id' parameter containing the payment ID
-  const paymentId = $page.url.searchParams.get('id') || $page.url.searchParams.get('paymentId');
+  let paymentId = $page.url.searchParams.get('id') || $page.url.searchParams.get('paymentId');
   
   let status = 'Betaling wordt geverifieerd...';
   let isProcessing = true;
@@ -20,6 +20,23 @@
       error = 'Ontbrekende parameters voor het starten van de scan. Controleer de URL en probeer opnieuw.';
       isProcessing = false;
       return;
+    }
+    
+    // Check if paymentId is missing
+    if (!paymentId) {
+      console.warn('⚠️ PaymentId missing - mogelijk directe toegang of Mollie fout');
+      
+      // Development override: Allow testing without payment
+      const isDevelopment = window.location.hostname === 'localhost';
+      if (isDevelopment) {
+        console.log('🧪 Development mode: Using mock paymentId voor testing');
+        // Use Mollie-compatible test payment ID format
+        paymentId = `tr_test_${Date.now()}`;
+      } else {
+        error = 'Betalingsverificatie mislukt. Geen payment ID ontvangen van Mollie. Probeer de betaling opnieuw of neem contact op met support.';
+        isProcessing = false;
+        return;
+      }
     }
     
     try {

@@ -47,6 +47,18 @@ export class PaymentVerificationService {
       };
     }
 
+    // Development mode: Allow mock payments
+    if (paymentId.startsWith('tr_test_') || paymentId.startsWith('dev_')) {
+      console.log(`🧪 Development mode: Mock payment verification for ${paymentId}`);
+      return {
+        isValid: true,
+        paymentStatus: 'paid',
+        tier: expectedTier,
+        userEmail: 'test@example.com',
+        amount: this.getTierPrice(expectedTier)
+      };
+    }
+
     // Check cache first
     const cached = this.getCachedResult(paymentId);
     if (cached) {

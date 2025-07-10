@@ -15,7 +15,8 @@
       "Bash(mkdir:*)",
       "Bash(mv:*)",
       "Bash(curl:*)",
-      "Bash(ls:*)"
+      "Bash(ls:*)",
+      "Bash(tsc --noEmit --skipLibCheck)"
     ],
     "deny": []
   },

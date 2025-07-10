@@ -2,6 +2,27 @@
 import { error } from '@sveltejs/kit';
 import type { PageLoad } from './$types';
 
+// Smart URL formatting function
+function formatAndValidateUrl(url: string): string {
+  if (!url) {
+    throw new Error('URL is required');
+  }
+  
+  // Auto-add https:// if no protocol specified
+  let formattedUrl = url;
+  if (!url.startsWith('http://') && !url.startsWith('https://')) {
+    formattedUrl = `https://${url}`;
+  }
+  
+  // Validate the formatted URL
+  try {
+    new URL(formattedUrl);
+    return formattedUrl;
+  } catch {
+    throw new Error('Invalid URL format');
+  }
+}
+
 export const load: PageLoad = async ({ url }) => {
   // Extract parameters from URL
   const tier = url.searchParams.get('tier');
@@ -18,16 +39,17 @@ export const load: PageLoad = async ({ url }) => {
     throw error(400, 'Ongeldige tier geselecteerd');
   }
   
-  // Validate URL format
+  // Smart URL formatting and validation
+  let formattedScanUrl: string;
   try {
-    new URL(scanUrl);
-  } catch {
-    throw error(400, 'Ongeldige URL format');
+    formattedScanUrl = formatAndValidateUrl(scanUrl);
+  } catch (err) {
+    throw error(400, 'Ongeldige URL format. Voer een geldige website URL in (bijv. mijnwebsite.nl)');
   }
   
   return {
     tier,
-    scanUrl,
+    scanUrl: formattedScanUrl, // Return the formatted URL
     email: email || '',
     tierConfig: {
       starter: {

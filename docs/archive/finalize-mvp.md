@@ -12,19 +12,18 @@
 | | 1.2 Results Page Tier-Aware | 🟢 Done | 90 min | Dynamische UI (locks, banners, content) per tier |
 | | 1.3 Navigatie & CTA Flow | 🟢 Done | 30 min | Zorgen dat knoppen naar de juiste flow leiden |
 | **FASE 2: Payment & Scan Flow** | 2.1 Checkout Page Implementation | 🟢 Done | 60 min | **NIEUW:** Ontbrekende schakel voor e-mail capture |
-| | 2.2 Payment Return Page | 🔴 To do | 60 min | Automatisch scan starten na succesvolle betaling |
-| | 2.3 Post-Scan Async Processing | 🔴 To do | 75 min | **NIEUW:** Decoupled PDF/E-mail service |
-| **FASE 3: Output Verfijning** | 3.1 Enterprise PDF Template | 🔴 To do | 45 min | Specifiek template met KPI Dashboard & multi-page data |
-| | 3.2 Styling Consistentie | 🔴 To do | 30 min | Visuele uniformiteit over alle PDF-rapporten |
+| | 2.2 Payment Return Page | 🟢 Done | 60 min | Automatisch scan starten na succesvolle betaling |
+| | 2.3 Post-Scan Async Processing | 🟢 Done | 75 min | **NIEUW:** Decoupled PDF/E-mail service |
+| **FASE 3: Output Verfijning** | 3.1 Enhanced PDF Styling | 🟢 Done | 25 min | **SIMPLIFIED:** Betere styling zonder over-engineering |
+| | 3.2 PDF Quality Polish | 🟢 Done | 20 min | Production-ready output, error handling |
 | **FASE 4: Afronding** | 4.1 Code Cleanup | 🔴 To do | 45 min | `// TODO`'s oplossen, test-code verwijderen |
 | | 4.2 Documentatie Update | 🔴 To do | 30 min | `README.md` etc. actualiseren met finale werking |
-| **FASE 5: UX Polish (Low Prio)** | 5.1 Enhanced Error Handling | 🔴 To do | 45 min | Wat als de scan faalt na betaling? |
-| | 5.2 Results Page Loading State | 🔴 To do | 60 min | In-progress UI tonen tijdens het scannen |
-| | 5.3 Email Scan Result Link | 🔴 To do | 30 min | E-mailen van de link naar het online rapport |
+| **FASE 5: UX Polish** | 5.1 Basic Error Recovery | 🔴 To do | 30 min | **SIMPLIFIED:** Minimale error handling |
+| | 5.2 Simple Loading States | 🔴 To do | 30 min | **SIMPLIFIED:** Polling-based progress (NO WebSockets) |
 
-**Totale tijd:** ~ 10 uur  
-**Dependencies:** Alle backend-logica (scanning, AI, PDF-basis) is voltooid ✅  
-**Next Step:** Productie deployment na afronding van deze fasen.
+**Totale tijd REMAINING:** ~ 3 uur (was 10 uur)  
+**COMPLETED:** Fasen 1 & 2 volledig afgerond ✅  
+**REMAINING:** Fasen 3, 4, 5 voor productie-gereed MVP
 
 **Status Legenda:**
 - 🔴 To do - Nog niet gestart
@@ -181,4 +180,172 @@ export const ScanRequestSchema = z.object({
 **Conceptuele Implementatie:**
 1.  **`ScanOrchestrator` Aanpassing**:
     *   De *enige* toevoeging aan de `ScanOrchestrator` is een "fire-and-forget" aanroep op het einde van een succesvolle scan.
-    *   `
+    *   ```typescript
+        // Aan het einde van ScanOrchestrator.execute()
+        await this.eventEmitter.emit('scan-completed', { scanId, tier, email, businessInsights });
+        ```
+2.  **`PostScanProcessorService`**:
+    *   Luistert naar het `scan-completed` event.
+    *   Start asynchroon de PDF-generatie via de bestaande `PdfGeneratorService`.
+    *   Verstuurt de e-mail met het rapport via de bestaande `EmailService`.
+    *   Logt de status naar de database (nieuwe tracking kolommen).
+3.  **Database Schema Update**: Voeg tracking kolommen toe voor post-scan processing status.
+
+---
+
+### **FASE 3: Output Verfijning - SIMPLIFIED MVP VERSION (± 45 min)**
+
+#### **3.1 Enhanced PDF Styling (INSTEAD of complex Enterprise template)**
+**Bestand:** `src/lib/services/pdf/PdfGeneratorService.ts` - **VERBETERING**
+**Doel:** Betere styling voor alle tiers zonder over-engineering.
+**MVP Implementatie:**
+1.  **Unified Brand Styles:**
+    ```typescript
+    // Bestaande PDF generator uitbreiden met betere styling
+    const BRAND_STYLES = {
+      primaryColor: '#2563eb',
+      headerFont: 'Helvetica-Bold',
+      bodyFont: 'Helvetica',
+      margins: { top: 60, bottom: 60, left: 40, right: 40 }
+    };
+    ```
+2.  **Tier-Specific Content (NOT complex templates):**
+    *   Basic: 1 pagina, basis styling
+    *   Starter/Business: 2 pagina's, logo + betere formatting  
+    *   Enterprise: 2-3 pagina's, extra sectie voor industry benchmarks
+3.  **NO separate template classes** - gewoon conditional content in bestaande generator
+4.  **Hergebruik bestaande logica** - geen nieuwe architectuur
+
+#### **3.2 PDF Quality Polish**  
+**Bestand:** Bestaande PDF generator
+**Doel:** Production-ready PDF output zonder architectural changes.
+**MVP Implementatie:**
+1.  **Header/Footer consistency** - Logo en datum op elke pagina
+2.  **Better typography** - Consistent font sizes en spacing
+3.  **Error handling** - Graceful fallbacks als content ontbreekt
+4.  **File naming** - `scan-${scanId}-${timestamp}.pdf` format
+
+---
+
+### **FASE 4: Afronding (± 1.25 uur)**
+
+#### **4.1 Code Cleanup**
+**Bestanden:** Verschillende bestanden door het hele project
+**Doel:** Production-ready code door het verwijderen van development artifacts.
+**Conceptuele Implementatie:**
+1.  **TODO Comments Audit:**
+    ```bash
+    # Zoek alle TODO's
+    grep -r "TODO\|FIXME\|HACK" src/ --exclude-dir=node_modules
+    ```
+2.  **Debug Code Removal:**
+    *   Verwijder `console.log` statements uit production code
+    *   Verwijder test data en mock responses
+    *   Clean up commented-out code blocks
+3.  **Import Optimization:**
+    *   Verwijder unused imports
+    *   Consolideer duplicate imports
+    *   Optimize dynamic imports
+4.  **Type Safety Review:**
+    *   Fix any `@ts-ignore` comments
+    *   Ensure all functions have proper return types
+    *   Validate Zod schemas are used consistently
+
+#### **4.2 Documentatie Update**
+**Bestanden:** `README.md`, `docs/`, package.json
+**Doel:** Actuele en volledige documentatie voor deployment en onderhoud.
+**Conceptuele Implementatie:**
+1.  **README.md Update:**
+    ```markdown
+    # AIO Scanner - SEO Analysis Platform
+    
+    ## Features
+    - Multi-tier SEO scanning (Basic/Starter/Business/Enterprise)
+    - AI-powered insights and recommendations
+    - PDF report generation with tier-specific templates
+    - Payment integration via Mollie
+    - Event-driven async processing
+    
+    ## Architecture
+    - SvelteKit frontend with TypeScript
+    - Supabase backend (Auth, Database, Edge Functions)
+    - Event-driven post-scan processing
+    - Tier-based access control
+    ```
+2.  **API Documentation:**
+    *   Document alle public endpoints
+    *   Request/Response schemas
+    *   Authentication requirements
+3.  **Deployment Guide:**
+    *   Environment variables checklist
+    *   Database migration steps
+    *   Production configuration
+4.  **Maintenance Guide:**
+    *   Monitoring and logging setup
+    *   Common troubleshooting scenarios
+
+---
+
+### **FASE 5: Essential UX Polish (± 1 uur) - MVP ONLY**
+
+#### **5.1 Basic Error Recovery (SIMPLIFIED)**
+**Bestanden:** `src/routes/scan/payment-return/+page.svelte`
+**Doel:** Minimale error handling zonder complex retry systemen.
+**MVP Implementatie:**
+1.  **Simple Error States:**
+    ```typescript
+    type SimpleErrorState = 'payment-failed' | 'scan-failed' | 'success';
+    ```
+2.  **Basic Recovery:** 
+    *   Duidelijke foutmeldingen 
+    *   Contact link naar support
+    *   GEEN automatische retries (te complex)
+3.  **Graceful Degradation:** Toon partial results indien mogelijk
+
+#### **5.2 Simple Loading States (NO WebSockets)**
+**Bestand:** `src/routes/scan/[scanId]/results/+page.svelte`
+**Doel:** Basic progress indication zonder real-time complexity.
+**MVP Implementatie:**
+1.  **Polling-based updates** (simple, reliable):
+    ```javascript
+    // Check scan status every 5 seconds
+    const pollInterval = setInterval(async () => {
+      const status = await fetch(`/api/scan/${scanId}/status`);
+      if (status.data.completed) {
+        clearInterval(pollInterval);
+        location.reload(); // Simple refresh
+      }
+    }, 5000);
+    ```
+2.  **Basic skeleton UI** - loading placeholders voor content
+3.  **NO complex progress tracking** - gewoon "scanning..." message
+
+#### **~~5.3 Email Scan Result Link~~ - REMOVED (Not MVP essential)**
+
+---
+
+## 🎯 **REVISED SCOPE & BENEFITS**
+
+### **What we REMOVED (Over-engineering):**
+- ❌ Complex 5-page Enterprise PDF templates
+- ❌ WebSocket real-time updates  
+- ❌ Email tracking/analytics
+- ❌ Complex retry mechanisms
+- ❌ New template architecture
+
+### **What we KEPT (MVP Essential):**
+- ✅ Better PDF styling (simple enhancement)
+- ✅ Code cleanup & documentation  
+- ✅ Basic error handling
+- ✅ Simple loading states
+- ✅ Event-driven post-scan processing (already done)
+
+### **SOC/DRY/Complexity Benefits:**
+- **SOC**: PostScanProcessorService keeps ScanOrchestrator clean
+- **DRY**: Shared brand styles, no duplicate PDF logic
+- **Complexity**: NO new architectures, enhance existing code
+- **MVP**: Focus op production-ready, niet feature-creep
+
+**Totale tijd:** ~3 uur (was 10 uur)  
+**Risk**: Laag - geen breaking changes  
+**Value**: Hoog - production-ready MVP

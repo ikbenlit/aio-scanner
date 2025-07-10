@@ -2,6 +2,7 @@
 import type { EngineScanResult, BusinessAction } from '$lib/types/scan';
 import { translateFindings, getPositiveFindings } from '$lib/results/translation';
 import { selectVariedQuickWins } from '$lib/results/prioritization';
+import { TierAwarePDFGenerator } from './generator.js';
 
 export interface StarterPDFData {
   scanResult: EngineScanResult;
@@ -271,6 +272,9 @@ function renderFooter(scanId: string): string {
 }
 
 function getStarterPDFStyles(): string {
+  const brandStyles = TierAwarePDFGenerator.getBrandStyles();
+  const typo = brandStyles.typography;
+  
   return `
     /* Reset and base styles */
     * {
@@ -280,10 +284,51 @@ function getStarterPDFStyles(): string {
     }
     
     body {
-      font-family: 'Segoe UI', 'Arial', sans-serif;
-      line-height: 1.6;
-      color: #1a1a1a;
+      font-family: ${brandStyles.bodyFont};
+      font-size: ${typo.body.fontSize};
+      line-height: ${typo.body.lineHeight};
+      color: ${brandStyles.textPrimary};
       background: white;
+    }
+    
+    /* Enhanced typography (Fase 3.2) */
+    h1 {
+      font-size: ${typo.h1.fontSize};
+      font-weight: ${typo.h1.fontWeight};
+      line-height: ${typo.h1.lineHeight};
+      margin-bottom: ${typo.h1.marginBottom};
+    }
+    
+    h2 {
+      font-size: ${typo.h2.fontSize};
+      font-weight: ${typo.h2.fontWeight};
+      line-height: ${typo.h2.lineHeight};
+      margin-bottom: ${typo.h2.marginBottom};
+    }
+    
+    h3 {
+      font-size: ${typo.h3.fontSize};
+      font-weight: ${typo.h3.fontWeight};
+      line-height: ${typo.h3.lineHeight};
+      margin-bottom: ${typo.h3.marginBottom};
+    }
+    
+    h4 {
+      font-size: ${typo.h4.fontSize};
+      font-weight: ${typo.h4.fontWeight};
+      line-height: ${typo.h4.lineHeight};
+      margin-bottom: ${typo.h4.marginBottom};
+    }
+    
+    p {
+      font-size: ${typo.body.fontSize};
+      line-height: ${typo.body.lineHeight};
+      margin-bottom: ${typo.body.marginBottom};
+    }
+    
+    small {
+      font-size: ${typo.small.fontSize};
+      line-height: ${typo.small.lineHeight};
     }
     
     .document {
@@ -297,7 +342,7 @@ function getStarterPDFStyles(): string {
     .pdf-header {
       margin-bottom: 30px;
       padding-bottom: 20px;
-      border-bottom: 2px solid #2E9BDA;
+      border-bottom: 2px solid ${brandStyles.primaryColor};
     }
     
     .header-content {
@@ -320,13 +365,13 @@ function getStarterPDFStyles(): string {
     .logo-text h1 {
       font-size: 24px;
       font-weight: 700;
-      color: #2E9BDA;
+      color: ${brandStyles.primaryColor};
       margin-bottom: 5px;
     }
     
     .logo-text p {
       font-size: 14px;
-      color: #64748b;
+      color: ${brandStyles.textSecondary};
     }
     
     .website-info {
@@ -336,13 +381,13 @@ function getStarterPDFStyles(): string {
     .website-info h2 {
       font-size: 20px;
       font-weight: 600;
-      color: #1a1a1a;
+      color: ${brandStyles.textPrimary};
       margin-bottom: 5px;
     }
     
     .url {
       font-size: 14px;
-      color: #64748b;
+      color: ${brandStyles.textSecondary};
       font-family: monospace;
     }
     
@@ -351,7 +396,7 @@ function getStarterPDFStyles(): string {
       text-align: center;
       margin: 40px 0;
       padding: 30px;
-      background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+      background: linear-gradient(135deg, #f8fafc 0%, ${brandStyles.borderLight} 100%);
       border-radius: 12px;
     }
     

@@ -1,5 +1,5 @@
 <!-- src/lib/components/features/landing/PricingSection.svelte -->
-<script>
+<script lang="ts">
   import { createEventDispatcher } from 'svelte';
   import { goto } from '$app/navigation';
   
@@ -7,17 +7,34 @@
   
   let scanUrl = '';
   let email = '';
-  let selectedTier = null;
+  let selectedTier: string | null = null;
   let showEmailInput = false;
   let urlError = '';
   let emailError = '';
   let isLoading = false;
   
+  // Type definition for tier
+  interface Tier {
+    id: string;
+    name: string;
+    price: number;
+    priceText: string;
+    description: string;
+    features: string[];
+    ctaText: string;
+    ctaClass: string;
+    checkColor: string;
+    borderClass: string;
+    isPaid: boolean;
+    isPopular?: boolean;
+    isBasic?: boolean;
+  }
+  
   // URL validatie
   $: isValidUrl = validateUrl(scanUrl);
   $: isValidEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   
-  function validateUrl(url) {
+  function validateUrl(url: string): boolean {
     if (!url) {
       urlError = '';
       return false;
@@ -35,12 +52,12 @@
     }
   }
   
-  function formatUrl(url) {
+  function formatUrl(url: string): string {
     if (!url) return '';
     return url.startsWith('http') ? url : `https://${url}`;
   }
   
-  async function handleTierClick(tier) {
+  async function handleTierClick(tier: Tier): Promise<void> {
     // Eerst URL validatie - verplicht voor ALLE tiers
     if (!isValidUrl) {
       urlError = 'Voer eerst een geldige website URL in';
@@ -74,9 +91,9 @@
           return;
         }
         
-        // Alles OK - ga naar checkout
+        // Alles OK - ga naar checkout (URL formatting happens in checkout load function)
         console.log(`💳 Redirecting to checkout for ${tier.id}`);
-        const checkoutUrl = `/checkout?tier=${tier.id}&url=${encodeURIComponent(formatUrl(scanUrl))}&email=${encodeURIComponent(email)}`;
+        const checkoutUrl = `/checkout?tier=${tier.id}&url=${encodeURIComponent(scanUrl)}&email=${encodeURIComponent(email)}`;
         goto(checkoutUrl);
       }
     } catch (error) {
@@ -89,8 +106,27 @@
     }
   }
   
-  // Tier configuration - REORDERED: paid tiers first, basic last
-  const tiers = [
+  // Tier configuration - BASIC FIRST for better conversion
+  const tiers: Tier[] = [
+    {
+      id: 'basic',
+      name: 'Basic',
+      price: 0,
+      priceText: 'Gratis',
+      description: 'Probeer eerst gratis - essentiële technische SEO analyse',
+      features: [
+        'Technische SEO scan',
+        'Schema markup controle',
+        'Online resultaten',
+        'Geen registratie vereist'
+      ],
+      ctaText: 'Start Gratis Scan',
+      ctaClass: 'bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500',
+      checkColor: 'text-green-500',
+      borderClass: 'border-2 border-green-300 shadow-lg shadow-green-100',
+      isPaid: false,
+      isBasic: true
+    },
     {
       id: 'starter',
       name: 'Starter',
@@ -145,25 +181,6 @@
       checkColor: 'text-gray-500',
       borderClass: 'border-gray-200 hover:border-gray-300',
       isPaid: true
-    },
-    {
-      id: 'basic',
-      name: 'Basic',
-      price: 0,
-      priceText: 'Gratis',
-      description: 'Probeer eerst gratis - essentiële technische SEO analyse',
-      features: [
-        'Technische SEO scan',
-        'Schema markup controle',
-        'Online resultaten',
-        'Geen registratie vereist'
-      ],
-      ctaText: 'Start Gratis Scan',
-      ctaClass: 'bg-green-600 hover:bg-green-500',
-      checkColor: 'text-green-500',
-      borderClass: 'border-green-200 hover:border-green-300',
-      isPaid: false,
-      isBasic: true
     }
   ];
 </script>
@@ -175,7 +192,7 @@
         Kies je scan pakket
       </h2>
       <p class="text-lg text-gray-600 max-w-2xl mx-auto">
-        Van professionele AI-analyse tot gratis basis check
+        Begin gratis of kies direct voor professionele AI-analyse
       </p>
     </div>
 
@@ -251,8 +268,7 @@
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8 max-w-7xl mx-auto">
       {#each tiers as tier}
         <div class="group rounded-2xl {tier.borderClass} bg-white p-6 relative transition-all duration-300 hover:shadow-xl hover:-translate-y-1
-                    {tier.isPopular ? 'shadow-xl shadow-blue-100' : 'shadow-sm'}
-                    {tier.isBasic ? 'order-last lg:order-none' : ''}">
+                    {tier.isPopular ? 'shadow-xl shadow-blue-100' : tier.isBasic ? 'shadow-xl shadow-green-100' : 'shadow-sm'}">
           
           {#if tier.isPopular}
             <div class="absolute -top-3 left-1/2 transform -translate-x-1/2">
@@ -265,7 +281,7 @@
           {#if tier.isBasic}
             <div class="absolute -top-3 left-1/2 transform -translate-x-1/2">
               <span class="bg-gradient-to-r from-green-600 to-emerald-600 text-white px-4 py-1 rounded-full text-xs font-medium shadow-md">
-                🆓 Gratis Proef
+                🚀 Start Hier
               </span>
             </div>
           {/if}
@@ -276,7 +292,8 @@
             </h3>
             <p class="mt-2 text-sm text-gray-500">{tier.description}</p>
             <div class="mt-4 flex items-baseline justify-center gap-x-2">
-              <span class="text-4xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
+              <!-- FIXED: Better price contrast -->
+              <span class="text-4xl font-bold text-gray-900">
                 {tier.priceText}
               </span>
               {#if tier.isPaid}
@@ -324,10 +341,10 @@
       {/each}
     </div>
 
-    <!-- Extra motivatie voor gratis scan -->
+    <!-- CTA tip aangepast voor nieuwe volgorde -->
     <div class="mt-12 text-center">
       <p class="text-sm text-gray-600">
-        💡 <strong>Tip:</strong> Start met de gratis scan om je website te analyseren, upgrade daarna voor diepere inzichten
+        💡 <strong>Tip:</strong> Begin met de gratis scan links, upgrade daarna direct voor AI-inzichten
       </p>
     </div>
   </div>

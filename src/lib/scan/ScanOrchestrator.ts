@@ -1,7 +1,7 @@
 // src/lib/scan/ScanOrchestrator.ts
 import type { EngineScanResult, ModuleResult, ScanModule } from '../types/scan';
 import type { ScanTier } from '../types/database';
-import { upsertUserScanHistory } from '../services/emailHistoryService';
+import { scanEventEmitter } from '../events';
 import { db, type Json } from '../supabase';
 import { AIReportGenerator } from './AIReportGenerator';
 import { TechnicalSEOModule } from './modules/TechnicalSEOModule';
@@ -97,15 +97,16 @@ export class ScanOrchestrator {
                 result.overallScore
             );
 
-            // 7. Update user scan history voor alle tiers
-            if (email) {
-                await upsertUserScanHistory({
-                    email,
-                    scanId: scanId,
-                    isPaid: tier !== 'basic',
-                    amount: this.getTierPrice(tier)
-                });
-            }
+            // 7. Emit scan completed event (fire-and-forget)
+            console.log(`📢 Emitting scan completed event for ${scanId}`);
+            await scanEventEmitter.emitScanCompleted({
+                scanId,
+                tier,
+                email,
+                paymentId,
+                completedAt: new Date().toISOString(),
+                status: 'completed'
+            });
 
             return result;
 
@@ -115,6 +116,16 @@ export class ScanOrchestrator {
             // Update scan status to failed
             try {
                 await db.updateScanStatus(scanId, 'failed');
+                
+                // Emit failed event
+                await scanEventEmitter.emitScanCompleted({
+                    scanId,
+                    tier,
+                    email,
+                    paymentId,
+                    completedAt: new Date().toISOString(),
+                    status: 'failed'
+                });
             } catch (updateError) {
                 console.error(`❌ Failed to update scan status to failed:`, updateError);
             }
@@ -867,16 +878,7 @@ RESPONSE FORMAT (JSON):
         }
     }
 
-    private getTierPrice(tier: ScanTier): number {
-        const prices = {
-            'basic': 0,
-            'starter': 19.95,
-            'business': 49.95,
-            'enterprise': 149.95
-        } as const;
-        
-        return prices[tier];
-    }
+    // getTierPrice method removed - now handled by EmailEventListener
 
     /**
      * Convert EngineScanResult to Json type for database storage

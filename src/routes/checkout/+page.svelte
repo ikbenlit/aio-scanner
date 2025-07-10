@@ -181,17 +181,30 @@
                 <label for="scan-url" class="block text-sm font-medium text-gray-700 mb-2">
                   Website URL
                 </label>
-                <input
-                  id="scan-url"
-                  type="url"
-                  bind:value={scanUrl}
-                  on:input={handleUrlInput}
-                  required
-                  class="w-full px-3 py-2 border {isValidUrl || !scanUrl ? 'border-gray-300' : 'border-red-300'} rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="https://jouwwebsite.nl"
-                />
+                <div class="relative">
+                  <input
+                    id="scan-url"
+                    type="url"
+                    bind:value={scanUrl}
+                    on:input={handleUrlInput}
+                    required
+                    class="w-full px-3 py-2 border {isValidUrl || !scanUrl ? 'border-gray-300' : 'border-red-300'} rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="bijv. mijnwebsite.nl"
+                  />
+                  {#if isValidUrl}
+                    <div class="absolute inset-y-0 right-0 pr-3 flex items-center">
+                      <svg class="h-5 w-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                      </svg>
+                    </div>
+                  {/if}
+                </div>
                 {#if scanUrl && !isValidUrl}
                   <p class="text-sm text-red-600 mt-1">Voer een geldige URL in</p>
+                {:else if scanUrl && isValidUrl && !scanUrl.startsWith('http')}
+                  <p class="text-sm text-green-600 mt-1">✓ Automatisch geformatteerd naar: https://{scanUrl}</p>
+                {:else if scanUrl && isValidUrl}
+                  <p class="text-sm text-green-600 mt-1">✓ Geldige URL</p>
                 {/if}
               </div>
               

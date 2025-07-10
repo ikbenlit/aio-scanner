@@ -43,6 +43,14 @@ export interface Finding {
     category?: string;
     technicalDetails?: string;
     estimatedTime?: string;
+    // MVP Enhancement: Add metrics field for business intelligence
+    metrics?: {
+        score?: number;
+        benchmark?: string;
+        breakdown?: Record<string, any>;
+        details?: Record<string, any>;
+        [key: string]: any;
+    };
 }
 
 export interface ModuleResult {

@@ -23,22 +23,22 @@ export class BusinessTierStrategy extends BaseTierStrategy {
         console.log('🚀 Starting business tier AI-enhanced scan for', url);
         const scanStartTime = context?.startTime || Date.now();
         
-        const { modules, contentExtractor, llmEnhancementService, pdfGenerator } = dependencies;
+        const { modules, contentExtractor, llmEnhancementService, pdfGenerator, sharedContentService } = dependencies;
         
         try {
-            // 1. Fetch and extract enhanced content
+            // 1. Fetch shared content once for all modules
             console.log('📊 Extracting enhanced content...');
-            const html = await contentExtractor.fetchContent(url);
-            const enhancedContent = await contentExtractor.extractEnhancedContent(html);
+            const sharedContent = await sharedContentService.fetchSharedContent(url);
+            const enhancedContent = await contentExtractor.extractEnhancedContent(sharedContent.html);
             
             if (context?.progressCallback) {
                 context.progressCallback(20);
             }
             
-            // 2. Run all 6 pattern modules in parallel
+            // 2. Run all 6 pattern modules in parallel with shared content
             console.log('🔧 Running pattern analysis modules...');
             const moduleResults = await Promise.all(
-                modules.map(module => module.execute(url))
+                modules.map(module => module.execute(url, sharedContent.html, sharedContent.$))
             );
             
             if (context?.progressCallback) {

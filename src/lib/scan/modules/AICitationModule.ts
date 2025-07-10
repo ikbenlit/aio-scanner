@@ -8,18 +8,17 @@ export class AICitationModule {
   private patternMatcher = new PatternMatcher();
   private configLoader = PatternConfigLoader.getInstance();
 
-  async execute(url: string): Promise<ModuleResult> {
+  async execute(url: string, html?: string, $?: cheerio.CheerioAPI): Promise<ModuleResult> {
     try {
-      // Fetch website content
-              const normalizedUrl = normalizeUrl(url);
-        const response = await fetch(normalizedUrl);
-      const html = await response.text();
-      const $ = cheerio.load(html);
+      // Use provided content or fetch (backward compatibility)
+      const normalizedUrl = normalizeUrl(url);
+      const actualHtml = html || await fetch(normalizedUrl).then(r => r.text());
+      const actual$ = $ || cheerio.load(actualHtml);
       
       // Load pattern configuration
       const config = await this.configLoader.loadConfig('AICitation');
       
-      const findings = await this.analyzeAICitation($, html, config);
+      const findings = await this.analyzeAICitation(actual$, actualHtml, config);
       const score = this.calculateScore(findings);
 
       return {
@@ -296,6 +295,10 @@ export class AICitationModule {
 
     const totalAuthoritySignals = mediaSignals + clientSignals + recognitionSignals;
 
+    // Calculate weighted authority score
+    const authorityScore = (mediaSignals * 3) + (clientSignals * 2) + (recognitionSignals * 1);
+    const benchmark = authorityScore >= 20 ? 'sterk' : authorityScore >= 10 ? 'gemiddeld' : 'zwak';
+
     // Build concrete examples
     const authorityExamples: string[] = [];
     if (mediaSignals > 0) authorityExamples.push(`${mediaSignals} media vermeldingen`);
@@ -307,21 +310,48 @@ export class AICitationModule {
         title: 'Sterke Authoriteit Signalen',
         description: `Uitstekende authoriteit met ${authorityExamples.join(', ')}. ${foundRecognition.length > 0 ? `Gevonden termen: ${foundRecognition.slice(0, 3).join(', ')}${foundRecognition.length > 3 ? '...' : ''}. ` : ''}Dit versterkt je geloofwaardigheid bij AI-assistenten.`,
         priority: 'low',
-        category: 'authority'
+        category: 'authority',
+        metrics: {
+          score: authorityScore,
+          benchmark: benchmark,
+          breakdown: {
+            media: mediaSignals,
+            clients: clientSignals,
+            recognition: recognitionSignals
+          }
+        }
       });
     } else if (totalAuthoritySignals >= 3) {
       findings.push({
         title: 'Beperkte Authoriteit Signalen',
         description: `Gevonden: ${authorityExamples.join(', ')}. Voeg meer client testimonials, media vermeldingen of awards toe om je authoriteit te versterken voor AI-citaties.`,
         priority: 'medium',
-        category: 'authority'
+        category: 'authority',
+        metrics: {
+          score: authorityScore,
+          benchmark: benchmark,
+          breakdown: {
+            media: mediaSignals,
+            clients: clientSignals,
+            recognition: recognitionSignals
+          }
+        }
       });
     } else {
       findings.push({
         title: 'Ontbrekende Authoriteit Signalen',
         description: 'Website mist externe validatie zoals klant testimonials, media vermeldingen of industry awards. Dit schaadt je geloofwaardigheid bij AI-assistenten.',
         priority: 'medium',
-        category: 'authority'
+        category: 'authority',
+        metrics: {
+          score: authorityScore,
+          benchmark: benchmark,
+          breakdown: {
+            media: mediaSignals,
+            clients: clientSignals,
+            recognition: recognitionSignals
+          }
+        }
       });
     }
   }
@@ -358,7 +388,6 @@ export class AICitationModule {
 
     // Create detailed findings with specific information
     const foundContactElements = contactElements.filter(element => bodyText.includes(element));
-    const foundBusinessPatterns = businessPatterns.filter(pattern => bodyText.match(pattern));
     
     if (transparencyScore >= 8) {
       findings.push({

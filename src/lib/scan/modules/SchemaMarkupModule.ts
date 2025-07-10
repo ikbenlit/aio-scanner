@@ -8,18 +8,17 @@ export class SchemaMarkupModule {
   private patternMatcher = new PatternMatcher();
   private configLoader = PatternConfigLoader.getInstance();
 
-  async execute(url: string): Promise<ModuleResult> {
+  async execute(url: string, html?: string, $?: cheerio.CheerioAPI): Promise<ModuleResult> {
     try {
-      // Fetch website content
-              const normalizedUrl = normalizeUrl(url);
-        const response = await fetch(normalizedUrl);
-      const html = await response.text();
-      const $ = cheerio.load(html);
+      // Use provided content or fetch (backward compatibility)
+      const normalizedUrl = normalizeUrl(url);
+      const actualHtml = html || await fetch(normalizedUrl).then(r => r.text());
+      const actual$ = $ || cheerio.load(actualHtml);
       
       // Load pattern configuration
       const config = await this.configLoader.loadConfig('SchemaMarkup');
       
-      const findings = await this.analyzeSchemaMarkup($, html, config);
+      const findings = await this.analyzeSchemaMarkup(actual$, actualHtml, config);
       const score = this.calculateScore(findings);
 
       return {

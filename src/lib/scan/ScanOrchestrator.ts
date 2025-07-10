@@ -18,6 +18,7 @@ import { supabase } from '../supabase.js';
 // Strategy Pattern imports
 import { TierStrategyFactory } from './strategies/TierStrategyFactory';
 import type { ScanDependencies, ScanContext } from './strategies/TierScanStrategy';
+import { SharedContentService } from './SharedContentService';
 
 export class ScanOrchestrator {
     private modules: ScanModule[] = [
@@ -33,6 +34,7 @@ export class ScanOrchestrator {
     private contentExtractor = new ContentExtractor();
     private llmEnhancementService = new LLMEnhancementService();
     private pdfGenerator = new TierAwarePDFGenerator();
+    private sharedContentService = new SharedContentService();
 
     // Legacy method - blijft behouden voor backwards compatibility
     async executeScan(url: string, scanId: string): Promise<void> {
@@ -71,7 +73,8 @@ export class ScanOrchestrator {
                 aiReportGenerator: this.aiReportGenerator,
                 contentExtractor: this.contentExtractor,
                 llmEnhancementService: this.llmEnhancementService,
-                pdfGenerator: this.pdfGenerator
+                pdfGenerator: this.pdfGenerator,
+                sharedContentService: this.sharedContentService
             };
             
             // 4. Prepare execution context
@@ -97,7 +100,10 @@ export class ScanOrchestrator {
                 result.overallScore
             );
 
-            // 7. Emit scan completed event (fire-and-forget)
+            // 7. Clear shared content cache
+            this.sharedContentService.clearCache();
+
+            // 8. Emit scan completed event (fire-and-forget)
             console.log(`📢 Emitting scan completed event for ${scanId}`);
             await scanEventEmitter.emitScanCompleted({
                 scanId,
@@ -112,6 +118,9 @@ export class ScanOrchestrator {
 
         } catch (error) {
             console.error(`❌ Scan execution failed for ${scanId}:`, error);
+            
+            // Clear cache on error
+            this.sharedContentService.clearCache();
             
             // Update scan status to failed
             try {

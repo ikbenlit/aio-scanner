@@ -25,17 +25,16 @@ export class FreshnessModule {
   private patternMatcher = new PatternMatcher();
   private configLoader = PatternConfigLoader.getInstance();
 
-  async execute(url: string): Promise<ModuleResult> {
+  async execute(url: string, html?: string, $?: cheerio.CheerioAPI): Promise<ModuleResult> {
     try {
-      // Fetch website content
-      const response = await fetch(url);
-      const html = await response.text();
-      const $ = cheerio.load(html);
+      // Use provided content or fetch (backward compatibility)
+      const actualHtml = html || await fetch(url).then(r => r.text());
+      const actual$ = $ || cheerio.load(actualHtml);
       
       // Load pattern configuration
       const config = await this.configLoader.loadConfig('Freshness');
       
-      const findings = await this.analyzeFreshness($, html, url, config);
+      const findings = await this.analyzeFreshness(actual$, actualHtml, url, config);
       const score = this.calculateScore(findings);
 
       return {

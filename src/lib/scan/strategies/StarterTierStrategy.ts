@@ -22,11 +22,14 @@ export class StarterTierStrategy extends BaseTierStrategy {
     ): Promise<EngineScanResult> {
         console.log(`🔍 Starting starter scan for ${url} (${scanId})`);
         
-        const { modules, aiReportGenerator, pdfGenerator } = dependencies;
+        const { modules, aiReportGenerator, pdfGenerator, sharedContentService } = dependencies;
+        
+        // Fetch shared content once for all modules
+        const sharedContent = await sharedContentService.fetchSharedContent(url);
         
         // Execute basic modules first (TechnicalSEO + SchemaMarkup)
         const basicResults = await Promise.all(
-            modules.slice(0, 2).map(module => module.execute(url))
+            modules.slice(0, 2).map(module => module.execute(url, sharedContent.html, sharedContent.$))
         );
         
         if (context?.progressCallback) {
@@ -35,7 +38,7 @@ export class StarterTierStrategy extends BaseTierStrategy {
         
         // Execute additional starter modules (AIContent + AICitation)
         const additionalResults = await Promise.all(
-            modules.slice(2, 4).map(module => module.execute(url))
+            modules.slice(2, 4).map(module => module.execute(url, sharedContent.html, sharedContent.$))
         );
         
         if (context?.progressCallback) {

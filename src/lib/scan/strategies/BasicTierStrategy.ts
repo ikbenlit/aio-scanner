@@ -22,11 +22,14 @@ export class BasicTierStrategy extends BaseTierStrategy {
     ): Promise<EngineScanResult> {
         console.log(`🔍 Starting basic scan for ${url} (${scanId})`);
         
-        const { modules } = dependencies;
+        const { modules, sharedContentService } = dependencies;
+        
+        // Fetch shared content once for all modules
+        const sharedContent = await sharedContentService.fetchSharedContent(url);
         
         // Execute core modules in parallel (TechnicalSEO + SchemaMarkup)
         const moduleResults = await Promise.all(
-            modules.slice(0, 2).map(module => module.execute(url))
+            modules.slice(0, 2).map(module => module.execute(url, sharedContent.html, sharedContent.$))
         );
         
         // Update progress if callback provided

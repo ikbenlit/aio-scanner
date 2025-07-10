@@ -5,6 +5,7 @@ import type { AIReportGenerator } from '../AIReportGenerator';
 import type { ContentExtractor } from '../ContentExtractor';
 import type { LLMEnhancementService } from '../LLMEnhancementService';
 import type { TierAwarePDFGenerator } from '../../pdf/generator';
+import type { SharedContentService } from '../SharedContentService';
 
 /**
  * Interface for tier-specific scan strategies
@@ -47,6 +48,7 @@ export interface ScanDependencies {
     contentExtractor: ContentExtractor;
     llmEnhancementService: LLMEnhancementService;
     pdfGenerator: TierAwarePDFGenerator;
+    sharedContentService: SharedContentService;
 }
 
 /**

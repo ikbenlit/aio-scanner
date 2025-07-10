@@ -8,18 +8,17 @@ export class AIContentModule {
   private patternMatcher = new PatternMatcher();
   private configLoader = PatternConfigLoader.getInstance();
 
-  async execute(url: string): Promise<ModuleResult> {
+  async execute(url: string, html?: string, $?: cheerio.CheerioAPI): Promise<ModuleResult> {
     try {
-      // Fetch website content
-              const normalizedUrl = normalizeUrl(url);
-        const response = await fetch(normalizedUrl);
-      const html = await response.text();
-      const $ = cheerio.load(html);
+      // Use provided content or fetch (backward compatibility)
+      const normalizedUrl = normalizeUrl(url);
+      const actualHtml = html || await fetch(normalizedUrl).then(r => r.text());
+      const actual$ = $ || cheerio.load(actualHtml);
       
       // Load pattern configuration
       const config = await this.configLoader.loadConfig('AIContent');
       
-      const findings = await this.analyzeAIContent($, html, config);
+      const findings = await this.analyzeAIContent(actual$, actualHtml, config);
       const score = this.calculateScore(findings);
 
       return {
@@ -198,21 +197,48 @@ export class AIContentModule {
         title: 'Conversational tone gedetecteerd',
         description: `Goede balans tussen persoonlijke en professionele taal (score: ${conversationalScore})`,
         priority: 'low',
-        category: 'ai-content'
+        category: 'ai-content',
+        metrics: {
+          score: conversationalScore,
+          benchmark: 'boven gemiddeld',
+          details: {
+            pronouns: pronounMatches,
+            questions: questionMarks,
+            corporate: corporateMatches
+          }
+        }
       });
     } else if (conversationalScore >= 40) {
       findings.push({
         title: 'Gematigd conversational tone',
         description: `Toon kan persoonlijker (score: ${conversationalScore})`,
         priority: 'medium',
-        category: 'ai-content'
+        category: 'ai-content',
+        metrics: {
+          score: conversationalScore,
+          benchmark: 'gemiddeld',
+          details: {
+            pronouns: pronounMatches,
+            questions: questionMarks,
+            corporate: corporateMatches
+          }
+        }
       });
     } else {
       findings.push({
         title: 'Te formele/corporate toon',
         description: `Content is te formeel voor AI-assistenten (score: ${conversationalScore})`,
         priority: 'high',
-        category: 'ai-content'
+        category: 'ai-content',
+        metrics: {
+          score: conversationalScore,
+          benchmark: 'onder gemiddeld',
+          details: {
+            pronouns: pronounMatches,
+            questions: questionMarks,
+            corporate: corporateMatches
+          }
+        }
       });
     }
   }

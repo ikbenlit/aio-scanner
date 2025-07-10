@@ -145,6 +145,7 @@ export class EnterpriseTierStrategy extends BaseTierStrategy {
      */
     private async addEnterpriseFeatures(url: string, businessResult: EngineScanResult, dependencies: ScanDependencies) {
         try {
+            const { sharedContentService } = dependencies;
             const domain = new URL(url).hostname;
             
             // 1. Multi-page content sampling
@@ -156,8 +157,8 @@ export class EnterpriseTierStrategy extends BaseTierStrategy {
             for (const pageUrl of additionalPages.slice(0, 2)) {
                 try {
                     console.log(`📄 Analyzing additional page: ${pageUrl}`);
-                    const html = await dependencies.contentExtractor.fetchContent(pageUrl);
-                    const content = await dependencies.contentExtractor.extractEnhancedContent(html);
+                    const sharedContent = await sharedContentService.fetchSharedContent(pageUrl);
+                    const content = await dependencies.contentExtractor.extractEnhancedContent(sharedContent.html);
                     multiPageContent.push({
                         url: pageUrl,
                         content,

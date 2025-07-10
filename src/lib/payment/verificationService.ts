@@ -50,11 +50,21 @@ export class PaymentVerificationService {
     // Development mode: Allow mock payments
     if (paymentId.startsWith('tr_test_') || paymentId.startsWith('dev_')) {
       console.log(`🧪 Development mode: Mock payment verification for ${paymentId}`);
+      // Extract email from development paymentId if provided (format: tr_test_timestamp_email)
+      let mockEmail = 'test@example.com';
+      const parts = paymentId.split('_');
+      if (parts.length >= 4) {
+        const emailPart = parts.slice(3).join('_').replace(/--/g, '@').replace(/-/g, '.');
+        if (emailPart.includes('@')) {
+          mockEmail = emailPart;
+        }
+      }
+      
       return {
         isValid: true,
         paymentStatus: 'paid',
         tier: expectedTier,
-        userEmail: 'test@example.com',
+        userEmail: mockEmail,
         amount: this.getTierPrice(expectedTier)
       };
     }

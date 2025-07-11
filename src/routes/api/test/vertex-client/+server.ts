@@ -1,41 +1,43 @@
 import { json } from '@sveltejs/kit';
 import { VertexAIClient } from '$lib/ai/vertexClient.js';
 import { ContentExtractor } from '$lib/scan/ContentExtractor.js';
+import { PromptFactory } from '$lib/ai/prompts/PromptFactory.js';
 import type { RequestHandler } from './$types';
 
-// Test data for Phase 3.2A validation
+// Import strategies to ensure auto-registration
+import '$lib/ai/prompts/InsightsPromptStrategy.js';
+import '$lib/ai/prompts/NarrativePromptStrategy.js';
+import '$lib/ai/prompts/EnterprisePromptStrategy.js';
+
+// Test data for Phase 3.2A validation - Updated for PromptFactory compatibility
 const mockModuleResults = [
   {
-    moduleName: 'TechnicalSEO',
+    name: 'TechnicalSEO', // Updated from moduleName to name
+    success: true,
     score: 75,
     findings: [
       {
-        recommendation: true,
         type: 'warning' as const,
-        title: 'Missing meta descriptions',
-        description: 'Several pages lack meta descriptions',
-        impact: 'medium' as const,
-        category: 'meta'
+        message: 'Missing meta descriptions - Several pages lack meta descriptions',
+        evidence: 'Found 3 pages without meta descriptions',
+        suggestion: 'Add descriptive meta descriptions to all pages'
       }
     ],
-    status: 'completed' as const,
-    progress: 100
+    timestamp: new Date().toISOString()
   },
   {
-    moduleName: 'AIContent',
+    name: 'AIContent', // Updated from moduleName to name
+    success: true,
     score: 60,
     findings: [
       {
-        recommendation: true,
         type: 'error' as const,
-        title: 'Limited FAQ content',
-        description: 'Only 2 FAQ sections found',
-        impact: 'high' as const,
-        category: 'content'
+        message: 'Limited FAQ content - Only 2 FAQ sections found',
+        evidence: 'Found FAQ sections: "Hoe werkt jullie service?", "Wat kost het?"',
+        suggestion: 'Add more comprehensive FAQ content covering common questions'
       }
     ],
-    status: 'completed' as const,
-    progress: 100
+    timestamp: new Date().toISOString()
   }
 ];
 
@@ -90,7 +92,14 @@ export const GET: RequestHandler = async ({ url }) => {
     if (testMode === 'insights' || testMode === 'full') {
       console.log('🧠 Testing AI insights generation...');
       try {
-        const insights = await vertexClient.generateInsights(mockModuleResults, enhancedContent);
+        // Use PromptFactory approach for insights generation
+        const insightsStrategy = PromptFactory.create('insights');
+        const insightsPrompt = insightsStrategy.buildPrompt({
+          moduleResults: mockModuleResults,
+          enhancedContent,
+          url: 'https://testbedrijf.example.com'
+        });
+        const insights = await vertexClient.generateInsights(insightsPrompt);
         
         result.aiInsights = {
           status: 'success',
@@ -105,11 +114,14 @@ export const GET: RequestHandler = async ({ url }) => {
         if (testMode === 'full') {
           console.log('📝 Testing narrative report generation...');
           try {
-            const narrative = await vertexClient.generateNarrativeReport(
-              mockModuleResults, 
-              enhancedContent, 
+            // Use PromptFactory approach for narrative generation
+            const narrativeStrategy = PromptFactory.create('narrative');
+            const narrativePrompt = narrativeStrategy.buildPrompt({
+              moduleResults: mockModuleResults,
+              enhancedContent,
               insights
-            );
+            });
+            const narrative = await vertexClient.generateNarrativeReport(narrativePrompt);
             
             result.narrativeReport = {
               status: 'success',
@@ -151,15 +163,16 @@ export const GET: RequestHandler = async ({ url }) => {
     };
     
     result.implementation = {
-      phase: '3.2A',
+      phase: '5.1 - PromptFactory Integration',
       status: 'COMPLETED',
       features: [
-        'VertexAI Client with production configuration',
-        'AI insights generation with structured prompts',
-        'Narrative report generation',
+        'VertexAI Client with PromptFactory integration',
+        'AI insights generation via PromptFactory strategies',
+        'Narrative report generation via PromptFactory strategies',
         'Cost monitoring and budget controls',
         'Response parsing and validation',
-        'Error handling and fallbacks'
+        'Error handling and fallbacks',
+        'Centralized prompt management'
       ],
       readyForIntegration: true
     };
@@ -173,10 +186,10 @@ export const GET: RequestHandler = async ({ url }) => {
     
     return json({
       status: 'error',
-      phase: '3.2A VertexAI Client Test',
+      phase: '5.1 - PromptFactory Integration Test',
       error: error.message,
       implementation: {
-        phase: '3.2A',
+        phase: '5.1 - PromptFactory Integration',
         status: 'FAILED',
         readyForIntegration: false
       }

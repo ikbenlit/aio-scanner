@@ -3,6 +3,7 @@ import { BaseTierStrategy, type ScanDependencies, type ScanContext } from './Tie
 import type { EngineScanResult, NarrativeReport } from '../../types/scan';
 import type { ScanTier } from '../../types/database';
 import { PromptFactory } from '../../ai/prompts/PromptFactory.js';
+import { VertexAIClient } from '../../ai/vertexClient.js';
 
 /**
  * Enterprise tier strategy - includes multi-page analysis and strategic features
@@ -260,9 +261,8 @@ export class EnterpriseTierStrategy extends BaseTierStrategy {
                 }
             });
             
-            // Use VertexClient through LLMEnhancementService to generate enterprise report
-            const { llmEnhancementService } = dependencies;
-            const vertexClient = (llmEnhancementService as any).vertexClient;
+            // Use VertexClient to generate enterprise report
+            const vertexClient = new VertexAIClient();
             const enterpriseReport = await vertexClient.generateEnterpriseReport(enterprisePrompt);
             
             // Convert enterprise report to narrative report format

@@ -113,48 +113,13 @@ export class VertexAIClient {
   }
 
   /**
-   * Phase 4.1: Generate AI Insights - NEW signature with direct prompt (recommended)
+   * Generate AI Insights using a prompt string
    */
-  async generateInsights(prompt: string): Promise<AIInsights>;
-  
-  /**
-   * Phase 3.2A: Generate AI Insights - LEGACY signature (deprecated)
-   * @deprecated Use PromptFactory.create('insights').buildPrompt() + generateInsights(prompt)
-   */
-  async generateInsights(
-    moduleResults: ModuleResult[], 
-    enhancedContent: EnhancedContent,
-    url: string
-  ): Promise<AIInsights>;
-  
-  /**
-   * Implementation for both signatures
-   */
-  async generateInsights(
-    promptOrModuleResults: string | ModuleResult[], 
-    enhancedContent?: EnhancedContent,
-    url?: string
-  ): Promise<AIInsights> {
+  async generateInsights(prompt: string): Promise<AIInsights> {
     
     // Budget check
     if (!this.canAffordRequest()) {
       throw new Error('BUDGET_EXCEEDED');
-    }
-    
-    let prompt: string;
-    
-    if (typeof promptOrModuleResults === 'string') {
-      // New way: direct prompt string
-      prompt = promptOrModuleResults;
-    } else {
-      // Legacy way: build prompt internally with deprecation warning
-      console.warn('⚠️ DEPRECATED: generateInsights(moduleResults, enhancedContent, url) is deprecated. Use PromptFactory.create("insights").buildPrompt() + generateInsights(prompt) instead.');
-      
-      if (!enhancedContent || !url) {
-        throw new Error('LEGACY_SIGNATURE_MISSING_PARAMS');
-      }
-      
-      prompt = this.buildInsightsPrompt(promptOrModuleResults, enhancedContent, url);
     }
     
     try {
@@ -180,47 +145,12 @@ export class VertexAIClient {
   }
 
   /**
-   * Phase 4.1: Generate Narrative Report - NEW signature with direct prompt (recommended)
+   * Generate Narrative Report using a prompt string
    */
-  async generateNarrativeReport(prompt: string): Promise<NarrativeReport>;
-  
-  /**
-   * Phase 3.2A: Generate Narrative Report - LEGACY signature (deprecated)
-   * @deprecated Use PromptFactory.create('narrative').buildPrompt() + generateNarrativeReport(prompt)
-   */
-  async generateNarrativeReport(
-    moduleResults: ModuleResult[], 
-    enhancedContent: EnhancedContent,
-    insights: AIInsights
-  ): Promise<NarrativeReport>;
-  
-  /**
-   * Implementation for both signatures
-   */
-  async generateNarrativeReport(
-    promptOrModuleResults: string | ModuleResult[], 
-    enhancedContent?: EnhancedContent,
-    insights?: AIInsights
-  ): Promise<NarrativeReport> {
+  async generateNarrativeReport(prompt: string): Promise<NarrativeReport> {
     
     if (!this.canAffordRequest()) {
       throw new Error('BUDGET_EXCEEDED');
-    }
-    
-    let prompt: string;
-    
-    if (typeof promptOrModuleResults === 'string') {
-      // New way: direct prompt string
-      prompt = promptOrModuleResults;
-    } else {
-      // Legacy way: build prompt internally with deprecation warning
-      console.warn('⚠️ DEPRECATED: generateNarrativeReport(moduleResults, enhancedContent, insights) is deprecated. Use PromptFactory.create("narrative").buildPrompt() + generateNarrativeReport(prompt) instead.');
-      
-      if (!enhancedContent || !insights) {
-        throw new Error('LEGACY_SIGNATURE_MISSING_PARAMS');
-      }
-      
-      prompt = this.buildNarrativePrompt(promptOrModuleResults, enhancedContent, insights);
     }
     
     try {
@@ -270,165 +200,7 @@ export class VertexAIClient {
     }
   }
 
-  /**
-   * Phase 3.2A: Insights Prompt Engineering
-   */
-  private buildInsightsPrompt(
-    moduleResults: ModuleResult[], 
-    enhancedContent: EnhancedContent,
-    url: string
-  ): string {
-    return `
-Je bent een AI SEO-consultant die websites analyseert voor AI-readiness en citability.
 
-SCAN RESULTATEN:
-${JSON.stringify(moduleResults, null, 2)}
-
-ENHANCED CONTENT ANALYSE:
-Authority Signals: ${JSON.stringify(enhancedContent.authorityMarkers)}
-Time Claims: ${JSON.stringify(enhancedContent.timeSignals)}
-Quality Claims: ${JSON.stringify(enhancedContent.qualityClaims)}
-Business Signals: ${JSON.stringify(enhancedContent.businessSignals)}
-Content Quality: ${JSON.stringify(enhancedContent.contentQualityAssessment)}
-Current Missed Opportunities: ${JSON.stringify(enhancedContent.missedOpportunities)}
-
-TAAK:
-Analyseer deze website voor AI-citation opportunities en geef structured insights.
-
-Focus op:
-1. **Missed Opportunities** - Concrete kansen voor betere AI visibility
-2. **Authority Enhancements** - Hoe bestaande signalen sterker kunnen
-3. **Citability Improvements** - Content optimalisaties voor AI assistants
-
-Geef voor elke missed opportunity:
-- Concrete before/after voorbeelden uit hun eigen content
-- Impact score (1-10) en difficulty (easy/medium/hard)
-- Specifieke implementatie instructies
-- Tijd schatting
-
-RESPONSE FORMAT (Strict JSON):
-{
-  "missedOpportunities": [
-    {
-      "category": "authority|specificity|evidence|differentiation|ai_optimization",
-      "title": "Short descriptive title",
-      "description": "What is missing and why it matters",
-      "solution": "Concrete step-by-step solution",
-      "beforeExample": "Current content example from their site",
-      "afterExample": "How it should be improved",
-      "impactScore": 1-10,
-      "difficulty": "easy|medium|hard",
-      "timeEstimate": "15 minutes|2 hours|etc"
-    }
-  ],
-  "authorityEnhancements": [
-    {
-      "currentSignal": "Existing authority signal found",
-      "enhancedVersion": "How to make it stronger",
-      "explanation": "Why this improvement helps AI citation",
-      "impact": "low|medium|high"
-    }
-  ],
-  "citabilityImprovements": [
-    {
-      "section": "Which part of site",
-      "currentContent": "Current content snippet",
-      "improvedContent": "AI-optimized version",
-      "aiReasoning": "Why AI assistants will prefer improved version",
-      "citationPotential": 1-10
-    }
-  ],
-  "implementationPriority": ["Step 1", "Step 2", "Step 3"],
-  "generatedAt": "${new Date().toISOString()}",
-  "confidence": 1-100
-}
-
-BELANGRIJKE INSTRUCTIES:
-- Geef ALLEEN valid JSON terug
-- Gebruik concrete voorbeelden uit hun werkelijke content
-- Focus op actionable insights, niet algemene SEO tips
-- Prioriteer quick wins met hoge impact
-- Denk als AI assistant: wat zou je willen citeren van deze site?
-`;
-  }
-
-  /**
-   * Phase 3.2A: Narrative Report Prompt Engineering
-   */
-  private buildNarrativePrompt(
-    moduleResults: ModuleResult[], 
-    enhancedContent: EnhancedContent,
-    insights: AIInsights
-  ): string {
-    return `
-Je bent een persoonlijke AI-consultant die een rapport schrijft voor de website eigenaar.
-
-CONTEXT:
-Scan Results: ${JSON.stringify(moduleResults, null, 2)}
-AI Insights: ${JSON.stringify(insights, null, 2)}
-Authority Content: ${JSON.stringify(enhancedContent.authorityMarkers.slice(0, 3))}
-
-SMART ANALYSIS DATA:
-De scan bevat verrijkte findings met:
-- Evidence: Contextuele quotes en voorbeelden uit de werkelijke content
-- Suggestions: Concrete, implementeerbare verbeteringen per finding
-Gebruik deze evidence als proof points en suggestions als actionable advice.
-
-TAAK:
-Schrijf een persoonlijk, professioneel rapport in vloeiende Nederlandse tekst.
-
-TONE:
-- Persoonlijk ("je website", "jouw klanten")
-- Professioneel maar toegankelijk
-- Specifiek voor deze website, niet generiek
-- Gebruik concrete voorbeelden uit hun content
-- Motiverend en actionable
-
-STRUCTUUR:
-1. **Executive Summary** (150-200 woorden)
-   - Persoonlijke opening over hun website
-   - Hoofdbevindingen in context van hun business
-   - Top 3 belangrijkste kansen
-
-2. **Detailed Analysis** (300-400 woorden)
-   - Dieper ingaan op specifieke bevindingen MET evidence quotes
-   - Uitleggen waarom dit belangrijk is voor hun business
-   - Gebruik de evidence velden als concrete voorbeelden uit hun content
-   - Focus op AI-readiness en citation potential
-   - Integreer suggestions als directe verbeteringsadvies
-
-3. **Implementation Roadmap** (200-250 woorden)
-   - Prioriteer acties op impact vs effort
-   - Gebruik suggestion velden voor stap-voor-stap instructies
-   - Realistische tijdschattingen
-   - Quick wins eerst, gebaseerd op suggestions
-
-4. **Conclusion & Next Steps** (100-150 woorden)
-   - Samenvatten belangrijkste acties
-   - Motiveren om te beginnen
-   - Duidelijke volgende stappen
-
-RESPONSE FORMAT (Strict JSON):
-{
-  "executiveSummary": "Complete section text here...",
-  "detailedAnalysis": "Complete section text here...",
-  "implementationRoadmap": "Complete section text here...",
-  "conclusionNextSteps": "Complete section text here...",
-  "generatedAt": "${new Date().toISOString()}",
-  "wordCount": <total_word_count>
-}
-
-BELANGRIJKE INSTRUCTIES:
-- Geef ALLEEN valid JSON terug
-- Schrijf in vloeiend Nederlands
-- Gebruik hun werkelijke content voorbeelden UIT EVIDENCE VELDEN
-- Maak het persoonlijk en specifiek
-- Focus op AI citation opportunities
-- Gebruik suggestion velden voor concrete actie-items
-- Quote evidence in blockquotes waar relevant
-- Geen algemene SEO clichés
-`;
-  }
 
   /**
    * Phase 3.2A: Parse AI Insights Response

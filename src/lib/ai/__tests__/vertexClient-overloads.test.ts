@@ -1,7 +1,7 @@
 /**
- * Tests voor VertexClient method overloads (Phase 4.1)
+ * Tests voor VertexClient new signatures (Phase 5.1)
  * 
- * Verificatie van backwards compatibility en nieuwe prompt-based signatures
+ * Verificatie van PromptFactory integration and new prompt-based signatures
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
@@ -48,7 +48,7 @@ vi.mock('$env/static/private', () => ({
   GOOGLE_APPLICATION_CREDENTIALS: './test-credentials.json'
 }));
 
-describe('VertexClient Method Overloads', () => {
+describe('VertexClient New Signatures', () => {
   let client: VertexAIClient;
   let consoleSpy: any;
 
@@ -119,8 +119,8 @@ describe('VertexClient Method Overloads', () => {
     consoleSpy.mockRestore();
   });
 
-  describe('generateInsights Method Overloads', () => {
-    it('should work with new prompt signature', async () => {
+  describe('generateInsights Method', () => {
+    it('should work with PromptFactory generated prompt', async () => {
       const strategy = PromptFactory.create('insights');
       const prompt = strategy.buildPrompt({
         moduleResults: mockModuleResults,
@@ -133,50 +133,34 @@ describe('VertexClient Method Overloads', () => {
       expect(result).toBeDefined();
       expect(result.missedOpportunities).toBeDefined();
       expect(result.confidence).toBe(85);
-      expect(consoleSpy).not.toHaveBeenCalled(); // No deprecation warning
+      expect(result.generatedAt).toBeDefined();
     });
 
-    it('should work with legacy signature and show deprecation warning', async () => {
-      const result = await client.generateInsights(
-        mockModuleResults,
-        mockEnhancedContent,
-        'https://example.com'
-      );
-
+    it('should work with simple string prompt', async () => {
+      const result = await client.generateInsights('Test prompt for insights generation');
+      
       expect(result).toBeDefined();
       expect(result.missedOpportunities).toBeDefined();
       expect(result.confidence).toBe(85);
+    });
+
+    it('should handle complex prompt structures', async () => {
+      const complexPrompt = `
+        Je bent een AI SEO-consultant die websites analyseert voor AI-readiness.
+        Analyseer de volgende data en geef structured insights terug.
+        Focus op concrete verbetering kansen.
+      `;
+
+      const result = await client.generateInsights(complexPrompt);
       
-      // Should show deprecation warning
-      expect(consoleSpy).toHaveBeenCalledWith(
-        expect.stringContaining('DEPRECATED: generateInsights(moduleResults, enhancedContent, url) is deprecated')
-      );
-    });
-
-    it('should throw error for legacy signature with missing parameters', async () => {
-      await expect(
-        client.generateInsights(mockModuleResults as any)
-      ).rejects.toThrow('LEGACY_SIGNATURE_MISSING_PARAMS');
-    });
-
-    it('should distinguish between string and array parameters', async () => {
-      // Test with string (new signature)
-      const result1 = await client.generateInsights('Test prompt');
-      expect(result1).toBeDefined();
-      expect(consoleSpy).not.toHaveBeenCalled();
-
-      // Test with array (legacy signature)
-      const result2 = await client.generateInsights(
-        mockModuleResults,
-        mockEnhancedContent,
-        'https://example.com'
-      );
-      expect(result2).toBeDefined();
-      expect(consoleSpy).toHaveBeenCalled();
+      expect(result).toBeDefined();
+      expect(result.missedOpportunities).toBeDefined();
+      expect(result.authorityEnhancements).toBeDefined();
+      expect(result.citabilityImprovements).toBeDefined();
     });
   });
 
-  describe('generateNarrativeReport Method Overloads', () => {
+  describe('generateNarrativeReport Method', () => {
     // Mock voor narrative report response
     beforeEach(() => {
       const mockModel = {
@@ -203,7 +187,7 @@ describe('VertexClient Method Overloads', () => {
       vi.mocked(client as any).model = mockModel;
     });
 
-    it('should work with new prompt signature', async () => {
+    it('should work with PromptFactory generated prompt', async () => {
       const strategy = PromptFactory.create('narrative');
       const prompt = strategy.buildPrompt({
         moduleResults: mockModuleResults,
@@ -215,30 +199,27 @@ describe('VertexClient Method Overloads', () => {
 
       expect(result).toBeDefined();
       expect(result.executiveSummary).toBe('Executive summary');
+      expect(result.detailedAnalysis).toBe('Detailed analysis');
+      expect(result.implementationRoadmap).toBe('Implementation roadmap');
+      expect(result.conclusionNextSteps).toBe('Conclusion and next steps');
       expect(result.wordCount).toBeGreaterThan(0);
-      expect(consoleSpy).not.toHaveBeenCalled(); // No deprecation warning
     });
 
-    it('should work with legacy signature and show deprecation warning', async () => {
-      const result = await client.generateNarrativeReport(
-        mockModuleResults,
-        mockEnhancedContent,
-        mockInsights
-      );
-
-      expect(result).toBeDefined();
-      expect(result.executiveSummary).toBe('Executive summary');
+    it('should work with simple string prompt', async () => {
+      const result = await client.generateNarrativeReport('Test prompt for narrative report generation');
       
-      // Should show deprecation warning
-      expect(consoleSpy).toHaveBeenCalledWith(
-        expect.stringContaining('DEPRECATED: generateNarrativeReport(moduleResults, enhancedContent, insights) is deprecated')
-      );
+      expect(result).toBeDefined();
+      expect(result.executiveSummary).toBeDefined();
+      expect(result.detailedAnalysis).toBeDefined();
+      expect(result.implementationRoadmap).toBeDefined();
+      expect(result.conclusionNextSteps).toBeDefined();
     });
 
-    it('should throw error for legacy signature with missing parameters', async () => {
-      await expect(
-        client.generateNarrativeReport(mockModuleResults as any)
-      ).rejects.toThrow('LEGACY_SIGNATURE_MISSING_PARAMS');
+    it('should calculate word count correctly', async () => {
+      const result = await client.generateNarrativeReport('Test prompt');
+      
+      expect(result.wordCount).toBeGreaterThan(0);
+      expect(result.generatedAt).toBeDefined();
     });
   });
 
@@ -322,14 +303,10 @@ describe('VertexClient Method Overloads', () => {
     });
   });
 
-  describe('Backwards Compatibility', () => {
-    it('should maintain existing API contracts', async () => {
-      // Test that existing code still works
-      const insightsResult = await client.generateInsights(
-        mockModuleResults,
-        mockEnhancedContent,
-        'https://example.com'
-      );
+  describe('API Contract Verification', () => {
+    it('should maintain expected return types', async () => {
+      // Test that new signatures return expected structure
+      const insightsResult = await client.generateInsights('test prompt');
       
       expect(insightsResult).toHaveProperty('missedOpportunities');
       expect(insightsResult).toHaveProperty('authorityEnhancements');
@@ -345,11 +322,11 @@ describe('VertexClient Method Overloads', () => {
       vi.mocked(client as any).costTracker.maxBudgetEuros = 0.10;
 
       await expect(
-        client.generateInsights(mockModuleResults, mockEnhancedContent, 'https://example.com')
+        client.generateInsights('test prompt')
       ).rejects.toThrow('BUDGET_EXCEEDED');
 
       await expect(
-        client.generateInsights('test prompt')
+        client.generateNarrativeReport('test prompt')
       ).rejects.toThrow('BUDGET_EXCEEDED');
     });
   });

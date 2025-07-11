@@ -54,7 +54,7 @@ Alle ontwikkeling volgt deze kernprincipes:
 
 *   **Doel:** De nieuwe, rijke data op een heldere manier presenteren aan de gebruiker.
 *   **Backend Engineer Taken:**
-    1.  **Verrijk AI-Prompt voor PDF:** Pas `buildNarrativePrompt` in `src/lib/ai/vertexClient.ts` aan. De prompt moet de AI expliciet instrueren om de nieuwe `evidence` en `suggestion` velden te gebruiken om een rijkere samenvatting te schrijven.
+    1.  **Verrijk AI-Prompt voor PDF:** Gebruik `PromptFactory.create('narrative')` om narrative prompts te genereren. De PromptFactory strategie zorgt ervoor dat de AI de nieuwe `evidence` en `suggestion` velden gebruikt voor een rijkere samenvatting.
 *   **Frontend Engineer Taken:**
     1.  **Ontwikkel `SmartFindingCard.svelte`:** Bouw de Svelte-component die conditioneel (`{#if ...}`) de `evidence` en `suggestion` toont na een klik op een "Toon details & suggestie" knop.
     2.  **Implementeer PDF Download Flow:** De knop `Download PDF met AI-samenvatting` toont een loading state met de tekst: `Een moment geduld, onze AI stelt uw persoonlijke rapport samen...`.

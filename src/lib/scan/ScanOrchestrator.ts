@@ -8,6 +8,8 @@ import { TechnicalSEOModule } from './modules/TechnicalSEOModule';
 import { SchemaMarkupModule } from './modules/SchemaMarkupModule';
 import { AIContentModule } from './modules/AIContentModule';
 import { AICitationModule } from './modules/AICitationModule';
+import { PromptFactory } from '../ai/prompts/PromptFactory.js';
+import { VertexAIClient } from '../ai/vertexClient.js';
 import { FreshnessModule } from './modules/FreshnessModule';
 import { CrossWebFootprintModule } from './modules/CrossWebFootprintModule';
 import { ContentExtractor } from './ContentExtractor';
@@ -616,7 +618,7 @@ export class ScanOrchestrator {
     }
 
     /**
-     * Generate enhanced narrative for enterprise tier
+     * Generate enhanced narrative for enterprise tier using PromptFactory
      */
     private async generateEnterpriseNarrative(
         businessResult: EngineScanResult, 
@@ -630,95 +632,41 @@ export class ScanOrchestrator {
         }
     ): Promise<NarrativeReport> {
         try {
-            // Build enhanced prompt for enterprise narrative
-            const enhancedPrompt = `
-Je bent een senior AI-consultant die een strategisch rapport schrijft voor een enterprise klant (€149.95 tier).
-
-BUSINESS TIER ANALYSIS:
-${JSON.stringify(businessResult.aiInsights, null, 2)}
-
-MULTI-PAGE INSIGHTS:
-Geanalyseerde paginas: ${enterpriseFeatures.multiPageAnalysis?.length || 0}
-Site-wide consistentie: ${enterpriseFeatures.siteWidePatterns?.consistencyScore || 0}/100
-${JSON.stringify(enterpriseFeatures.siteWidePatterns, null, 2)}
-
-COMPETITIVE CONTEXT:
-${JSON.stringify(enterpriseFeatures.competitiveContext, null, 2)}
-
-INDUSTRY BENCHMARK:
-${JSON.stringify(enterpriseFeatures.industryBenchmark, null, 2)}
-
-TAAK:
-Schrijf een uitgebreid strategisch rapport (800-1200 woorden) met deze secties:
-
-1. EXECUTIVE SUMMARY (200-250 woorden)
-   - Strategic overview van AI-readiness across multiple pages
-   - Key competitive advantages en gaps vs industry benchmark
-   - ROI projectie voor implementatie (3-6 maanden)
-   - Investment prioritization recommendations
-
-2. MULTI-PAGE STRATEGIC ANALYSIS (300-400 woorden)
-   - Consistency analysis tussen homepage en subpaginas
-   - Site-wide content strategy recommendations
-   - Cross-page optimization opportunities
-   - Brand voice en messaging consistency
-
-3. COMPETITIVE POSITIONING (200-250 woorden)
-   - Industry benchmark comparison (${enterpriseFeatures.industryBenchmark?.category || 'general'} sector)
-   - Competitive advantages to leverage immediately
-   - Market positioning recommendations
-   - Differentiation opportunities vs competitors
-
-4. STRATEGIC IMPLEMENTATION ROADMAP (200-300 woorden)
-   - 3-6 month phased implementation plan
-   - Resource allocation recommendations (tijd/budget)
-   - Success metrics en KPIs per fase
-   - ROI timeline en realistic expectations
-   - Risk mitigation strategies
-
-SCHRIJFSTIJL:
-- Executive-level strategic focus (niet tactisch)
-- Concrete ROI en business impact cijfers
-- Actionable strategic recommendations
-- Professional consulting tone
-- Nederlandse taal, formeel niveau
-
-RESPONSE FORMAT (JSON):
-{
-  "executiveSummary": "...",
-  "multiPageAnalysis": "...",
-  "competitivePositioning": "...",
-  "strategicRoadmap": "...",
-  "keyMetrics": {
-    "estimatedROI": "...",
-    "implementationTimeframe": "...",
-    "priorityActions": ["...", "...", "..."]
-  }
-}
-`;
-
-            // Use LLM service to generate enhanced narrative  
-            const result = await this.generateLLMContent(enhancedPrompt);
+            console.log('🏢 Generating enterprise narrative using PromptFactory...');
             
-            if (result?.response?.text) {
-                const parsedResponse = JSON.parse(result.response.text());
-                
-                return {
-                    executiveSummary: parsedResponse.executiveSummary,
-                    detailedAnalysis: parsedResponse.multiPageAnalysis,
-                    implementationRoadmap: parsedResponse.strategicRoadmap,
-                    conclusionNextSteps: parsedResponse.competitivePositioning,
-                    generatedAt: new Date().toISOString(),
-                    wordCount: (parsedResponse.executiveSummary + parsedResponse.multiPageAnalysis + 
-                              parsedResponse.strategicRoadmap + parsedResponse.competitivePositioning).split(' ').length,
-                    // Enterprise-specific additions
-                    strategicRoadmap: parsedResponse.strategicRoadmap,
-                    competitivePositioning: parsedResponse.competitivePositioning,
-                    keyMetrics: parsedResponse.keyMetrics
-                };
-            }
+            // Use PromptFactory to generate enterprise narrative
+            const enterpriseStrategy = PromptFactory.create('enterprise');
+            const enterprisePrompt = enterpriseStrategy.buildPrompt({
+                moduleResults: businessResult.moduleResults,
+                enhancedContent: businessResult.aiInsights ? {
+                    // Map business result to enhanced content format
+                    url: businessResult.url,
+                    title: businessResult.pageTitle,
+                    authorityMarkers: businessResult.aiInsights.authorityEnhancements || [],
+                    missedOpportunities: businessResult.aiInsights.missedOpportunities || [],
+                    contentQualityAssessment: { overallQualityScore: businessResult.overallScore }
+                } as any : undefined,
+                enterpriseFeatures: {
+                    multiPageAnalysis: enterpriseFeatures.multiPageAnalysis,
+                    siteWidePatterns: enterpriseFeatures.siteWidePatterns,
+                    competitiveContext: enterpriseFeatures.competitiveContext,
+                    industryBenchmark: enterpriseFeatures.industryBenchmark
+                }
+            });
             
-            throw new Error('No valid response from LLM');
+            // Use VertexClient to generate enterprise report
+            const vertexClient = new VertexAIClient();
+            const enterpriseReport = await vertexClient.generateEnterpriseReport(enterprisePrompt);
+            
+            // Convert enterprise report to narrative report format
+            return {
+                executiveSummary: enterpriseReport.executiveSummary,
+                detailedAnalysis: enterpriseReport.multiPageAnalysis,
+                implementationRoadmap: enterpriseReport.strategicRoadmap,
+                conclusionNextSteps: enterpriseReport.competitivePositioning,
+                generatedAt: enterpriseReport.generatedAt,
+                wordCount: enterpriseReport.wordCount
+            };
             
         } catch (error) {
             console.error('❌ Enterprise narrative generation failed:', error);
@@ -730,13 +678,6 @@ RESPONSE FORMAT (JSON):
                     ...businessNarrative,
                     executiveSummary: `[ENTERPRISE TIER] ${businessNarrative.executiveSummary}\n\nDit rapport is gebaseerd op multi-page analyse van ${enterpriseFeatures.multiPageAnalysis?.length || 0} pagina's met competitive benchmarking.`,
                     wordCount: businessNarrative.wordCount * 1.3, // Estimate 30% more content
-                    strategicRoadmap: businessNarrative.implementationRoadmap,
-                    competitivePositioning: `Competitive positie: ${enterpriseFeatures.competitiveContext?.competitivePosition || 'unknown'} in ${enterpriseFeatures.industryBenchmark?.category || 'general'} sector.`,
-                    keyMetrics: {
-                        estimatedROI: '15-25% binnen 6 maanden',
-                        implementationTimeframe: '3-6 maanden',
-                        priorityActions: ['Multi-page consistency', 'Competitive differentiation', 'Strategic positioning']
-                    }
                 };
             }
             
@@ -747,14 +688,7 @@ RESPONSE FORMAT (JSON):
                 implementationRoadmap: 'Implementatie roadmap wordt handmatig opgesteld.',
                 conclusionNextSteps: 'Neem contact op voor uitgebreide enterprise analyse.',
                 generatedAt: new Date().toISOString(),
-                wordCount: 100,
-                strategicRoadmap: 'Handmatige roadmap vereist',
-                competitivePositioning: 'Competitive analyse beperkt beschikbaar',
-                keyMetrics: {
-                    estimatedROI: 'Te bepalen',
-                    implementationTimeframe: '3-6 maanden',
-                    priorityActions: ['Contact opnemen', 'Handmatige analyse', 'Strategic planning']
-                }
+                wordCount: 100
             };
         }
     }

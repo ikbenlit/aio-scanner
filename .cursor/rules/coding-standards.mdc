@@ -65,16 +65,13 @@ alwaysApply: false
 ## Testing
 - **MVP:** Focus op manual testing en kritieke flows
 - **Production:** Schrijf unit tests voor utilities
-- Schrijf integration tests voor API calls
-- Schrijf E2E tests voor kritieke flows
-- Bereik 80% code coverage **in production**
-- Gebruik Jest en React Testing Library
+- **Test** schrijf test-endpoints en test-snapshots etc in /docs/test
+
 
 ## Performance
 - **MVP:** Basis optimalisatie (geen premature optimization)
 - **Production:** Implementeer code splitting
 - Optimaliseer bundle size
-- Gebruik image optimalisatie
 - Implementeer caching strategieën
 - Monitor Core Web Vitals
 

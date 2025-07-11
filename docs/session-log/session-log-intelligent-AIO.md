@@ -234,7 +234,7 @@ Einde SESSIONLOG-Template
 
 **🏆 MAJOR ACHIEVEMENTS:**
 - [x] **Enhanced AI-Prompt for PDF - COMPLETED**
-  - ✅ Updated `buildNarrativePrompt` in vertexClient.ts om evidence en suggestion velden te benutten
+  - ✅ Updated naar PromptFactory approach voor narrative prompts om evidence en suggestion velden te benutten
   - ✅ Added explicit instructions voor AI om evidence als proof points te gebruiken
   - ✅ Integrated suggestions als concrete actionable advice in rapport
   - ✅ Backward compatible - werkt met bestaande findings zonder evidence/suggestion

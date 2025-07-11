@@ -220,32 +220,47 @@ describe('VertexClient Integration Tests - Fase 4.1', () => {
     });
   });
 
-  describe('LEGACY Signature Backwards Compatibility', () => {
-    it('should show deprecation warning for legacy generateInsights', async () => {
-      // Arrange
-      const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+  describe('PromptFactory Integration Verification', () => {
+    it('should work correctly with all three prompt strategies', async () => {
+      // Test that all strategies can be created and used
+      const insightsStrategy = PromptFactory.create('insights');
+      const narrativeStrategy = PromptFactory.create('narrative');
+      const enterpriseStrategy = PromptFactory.create('enterprise');
 
-      // Act
-      const result = await vertexClient.generateInsights(
-        mockModuleResults,
-        mockEnhancedContent,
-        'https://example.com'
-      );
+      // Test prompt generation
+      const insightsPrompt = insightsStrategy.buildPrompt({
+        moduleResults: mockModuleResults,
+        enhancedContent: mockEnhancedContent,
+        url: 'https://example.com'
+      });
 
-      // Assert
-      expect(consoleSpy).toHaveBeenCalledWith(
-        '⚠️ DEPRECATED: generateInsights(moduleResults, enhancedContent, url) is deprecated. Use PromptFactory.create("insights").buildPrompt() + generateInsights(prompt) instead.'
-      );
-      expect(result).toBeDefined();
-      expect(result.confidence).toBe(85);
+      const narrativePrompt = narrativeStrategy.buildPrompt({
+        moduleResults: mockModuleResults,
+        enhancedContent: mockEnhancedContent,
+        insights: mockAIInsights
+      });
 
-      consoleSpy.mockRestore();
-    });
+      const enterprisePrompt = enterpriseStrategy.buildPrompt({
+        moduleResults: mockModuleResults,
+        enhancedContent: mockEnhancedContent,
+        enterpriseFeatures: {
+          multiPageAnalysis: [],
+          siteWidePatterns: { consistencyScore: 85 },
+          competitiveContext: { benchmark: 'test' },
+          industryBenchmark: { score: 90 }
+        }
+      });
 
-    it('should show deprecation warning for legacy generateNarrativeReport', async () => {
-      // Arrange
-      const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
-      
+      // Verify prompts are generated
+      expect(insightsPrompt).toContain('AI SEO-consultant');
+      expect(narrativePrompt).toContain('persoonlijke AI-consultant');
+      expect(enterprisePrompt).toContain('senior AI-consultant');
+
+      // Test actual AI calls
+      const insightsResult = await vertexClient.generateInsights(insightsPrompt);
+      expect(insightsResult).toBeDefined();
+      expect(insightsResult.confidence).toBe(85);
+
       // Update mock for narrative response
       const mockNarrativeResponse = {
         response: {
@@ -266,49 +281,23 @@ describe('VertexClient Integration Tests - Fase 4.1', () => {
       };
       mockGenerateContent.mockResolvedValue(mockNarrativeResponse);
 
-      // Act
-      const result = await vertexClient.generateNarrativeReport(
-        mockModuleResults,
-        mockEnhancedContent,
-        mockAIInsights
-      );
-
-      // Assert
-      expect(consoleSpy).toHaveBeenCalledWith(
-        '⚠️ DEPRECATED: generateNarrativeReport(moduleResults, enhancedContent, insights) is deprecated. Use PromptFactory.create("narrative").buildPrompt() + generateNarrativeReport(prompt) instead.'
-      );
-      expect(result).toBeDefined();
-      expect(result.executiveSummary).toBe('Test executive summary');
-
-      consoleSpy.mockRestore();
-    });
-
-    it('should throw error for legacy signature with missing parameters', async () => {
-      // Act & Assert
-      await expect(
-        vertexClient.generateInsights(mockModuleResults, undefined as any, 'https://example.com')
-      ).rejects.toThrow('LEGACY_SIGNATURE_MISSING_PARAMS');
-
-      await expect(
-        vertexClient.generateNarrativeReport(mockModuleResults, undefined as any, mockAIInsights)
-      ).rejects.toThrow('LEGACY_SIGNATURE_MISSING_PARAMS');
+      const narrativeResult = await vertexClient.generateNarrativeReport(narrativePrompt);
+      expect(narrativeResult).toBeDefined();
+      expect(narrativeResult.executiveSummary).toBe('Test executive summary');
     });
   });
 
-  describe('Method Overload Type Safety', () => {
-    it('should distinguish between string and ModuleResult[] at compile time', () => {
-      // This test verifies TypeScript overload signatures work correctly
-      // If this compiles without errors, the overloads are properly defined
+  describe('New Signature Type Safety', () => {
+    it('should work correctly with string prompt signatures', () => {
+      // This test verifies new string-based signatures work correctly
+      // These should compile without TypeScript errors
       
       const directPrompt = 'test prompt';
-      const legacyParams = mockModuleResults;
       
-      // These should compile without TypeScript errors
       expect(() => {
         vertexClient.generateInsights(directPrompt);
-        vertexClient.generateInsights(legacyParams, mockEnhancedContent, 'https://example.com');
         vertexClient.generateNarrativeReport(directPrompt);
-        vertexClient.generateNarrativeReport(legacyParams, mockEnhancedContent, mockAIInsights);
+        vertexClient.generateEnterpriseReport(directPrompt);
       }).not.toThrow();
     });
   });

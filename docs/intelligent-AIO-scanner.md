@@ -94,14 +94,15 @@ Een gedetailleerde analyse van de codebase toont aan dat het project verrassend 
 
 ### Analyse van de Huidige Prompting
 
-De codebase bevat al een geavanceerde `VertexAIClient` (`src/lib/ai/vertexClient.ts`) met twee kernprompts:
-1.  `buildInsightsPrompt`: Voor diepgaande, gestructureerde analyse.
-2.  `buildNarrativePrompt`: Voor het genereren van verhalende samenvattingen.
+De codebase bevat een geavanceerde `VertexAIClient` (`src/lib/ai/vertexClient.ts`) met een gecentraliseerd PromptFactory systeem:
+1.  `InsightsPromptStrategy`: Voor diepgaande, gestructureerde analyse.
+2.  `NarrativePromptStrategy`: Voor het genereren van verhalende samenvattingen.
+3.  `EnterprisePromptStrategy`: Voor enterprise-level strategische rapporten.
 
-Deze prompts zijn goed ontworpen: ze specificeren een persona, context, taak en een strikt JSON-outputformaat. We hoeven dus niet vanaf nul te beginnen.
+Deze prompts zijn goed ontworpen en worden beheerd via het PromptFactory pattern voor maximale herbruikbaarheid en onderhoudbaarheid.
 
 **Actieplan voor Prompting:**
-1.  **Verfijn** de bestaande prompts om de rijkere `evidence` en `suggestion` velden optimaal te benutten en de output nog scherper af te stemmen op de AIO-visie.
+1.  **Gebruik** het bestaande PromptFactory systeem om consistent prompts te genereren die de rijkere `evidence` en `suggestion` velden optimaal benutten.
 2.  **Ontwikkel** nieuwe, zeer specifieke en beknopte prompts voor de "Hybride AI-Scan" (Fase 3). Deze prompts moeten de AI instrueren om als een specialist een chirurgische analyse op een klein stukje data uit te voeren en het resultaat in een strak, voorspelbaar JSON-formaat terug te geven.
 
 ## 6. Volgende Stappen

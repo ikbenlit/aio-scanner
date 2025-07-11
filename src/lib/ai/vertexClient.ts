@@ -8,7 +8,7 @@ import { GOOGLE_CLOUD_PROJECT, VERTEX_AI_LOCATION, GOOGLE_APPLICATION_CREDENTIAL
 import { resolve } from 'path';
 import type { ModuleResult } from '../types/scan.js';
 import type { EnhancedContent } from '../scan/ContentExtractor.js';
-import { WebsiteContextAnalyzer, type WebsiteContext } from './prompts/WebsiteContextAnalyzer.js';
+import { WebsiteContextAnalyzer, type WebsiteContext } from './prompts/shared/WebsiteContextAnalyzer.js';
 
 // Phase 3.2A Types
 export interface AIInsights {

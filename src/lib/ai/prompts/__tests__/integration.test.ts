@@ -11,7 +11,7 @@ describe('PromptHelpers Integration', () => {
     url: 'https://example.com',
     moduleResults: [
       {
-        moduleName: 'TechnicalSEO',
+        name: 'TechnicalSEO',
         score: 85,
         findings: [
           {
@@ -38,10 +38,11 @@ describe('PromptHelpers Integration', () => {
       businessSignals: [
         { text: 'contact us', signalType: 'contact', context: 'navigation', confidence: 'high' }
       ],
-      contentQualityAssessment: { score: 78, readability: 'good' },
+      contentQualityAssessment: { overallQualityScore: 78, temporalClaims: [], vagueStatements: [], unsupportedClaims: [] },
       missedOpportunities: [
-        { title: 'Add testimonials', description: 'Customer testimonials missing', priority: 'medium' }
-      ]
+        { category: 'authority', description: 'Customer testimonials missing', impact: 'medium', suggestion: 'Add testimonials', implementationEffort: 'medium' }
+      ],
+      aiOptimizationHints: []
     },
     insights: {
       missedOpportunities: [
@@ -187,7 +188,7 @@ describe('PromptHelpers Integration', () => {
       const largeInput = {
         ...mockPromptInput,
         moduleResults: Array.from({ length: 100 }, (_, i) => ({
-          moduleName: `Module${i}`,
+          name: `Module${i}`,
           score: 85,
           findings: Array.from({ length: 10 }, (_, j) => ({
             title: `Finding ${j} for module ${i}`,

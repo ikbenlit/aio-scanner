@@ -1,0 +1,1323 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Snapshot Tests - Copied Prompt Strategies > EnterprisePromptStrategy Snapshots > should generate consistent enterprise prompt for different industry > enterprise-e-commerce-industry.txt 1`] = `
+"
+Je bent een senior AI-consultant die een strategisch rapport schrijft voor een enterprise klant (€149.95 tier).
+
+BUSINESS TIER ANALYSIS:
+{
+  "missedOpportunities": [
+    {
+      "category": "authority",
+      "title": "Strengthen expertise signals",
+      "description": "Add more specific credentials and certifications",
+      "solution": "Include professional certifications, awards, and detailed experience",
+      "impactScore": 8,
+      "difficulty": "medium",
+      "timeEstimate": "2-3 hours"
+    },
+    {
+      "category": "content",
+      "title": "Improve content depth",
+      "description": "Content lacks comprehensive coverage of topics",
+      "solution": "Add detailed explanations, examples, and related topics",
+      "impactScore": 7,
+      "difficulty": "high",
+      "timeEstimate": "4-6 hours"
+    }
+  ],
+  "authorityEnhancements": [
+    {
+      "category": "expertise",
+      "title": "Add author bio sections",
+      "description": "Include detailed author information with credentials",
+      "solution": "Create comprehensive author profiles with expertise areas",
+      "impactScore": 6,
+      "difficulty": "low",
+      "timeEstimate": "1-2 hours"
+    }
+  ],
+  "citabilityImprovements": [
+    {
+      "category": "sources",
+      "title": "Add external references",
+      "description": "Content lacks credible external sources",
+      "solution": "Include references to industry reports, studies, and expert opinions",
+      "impactScore": 9,
+      "difficulty": "medium",
+      "timeEstimate": "3-4 hours"
+    }
+  ],
+  "implementationPriority": [
+    "Add customer testimonials",
+    "Strengthen expertise signals",
+    "Include case studies",
+    "Improve content depth"
+  ],
+  "generatedAt": "2025-07-11T10:00:00Z",
+  "confidence": 85
+}
+
+MULTI-PAGE INSIGHTS:
+Geanalyseerde paginas: 3
+Site-wide consistentie: 78/100
+{
+  "consistencyScore": 78,
+  "patterns": [
+    "consistent navigation structure",
+    "mixed content quality across pages",
+    "inconsistent call-to-action placement",
+    "varying tone and voice"
+  ],
+  "brandingConsistency": 85,
+  "messageAlignment": 72
+}
+
+COMPETITIVE CONTEXT:
+{
+  "industryCategory": "e-commerce",
+  "benchmarkScore": 65,
+  "currentScore": 82,
+  "competitivePosition": "above-average",
+  "keyDifferentiators": [
+    "specialized expertise",
+    "proven track record"
+  ],
+  "competitiveGaps": [
+    "content depth",
+    "thought leadership"
+  ]
+}
+
+INDUSTRY BENCHMARK:
+{
+  "category": "dutch-e-commerce",
+  "improvementPotential": 22,
+  "topPerformers": 98,
+  "averageScore": 71
+}
+
+TAAK:
+Schrijf een uitgebreid strategisch rapport (800-1200 woorden) met deze secties:
+
+1. EXECUTIVE SUMMARY (200-250 woorden)
+   - Strategic overview van AI-readiness across multiple pages
+   - Key competitive advantages en gaps vs industry benchmark
+   - ROI projectie voor implementatie (3-6 maanden)
+   - Investment prioritization recommendations
+
+2. MULTI-PAGE STRATEGIC ANALYSIS (300-400 woorden)
+   - Consistency analysis tussen homepage en subpaginas
+   - Site-wide content strategy recommendations
+   - Cross-page optimization opportunities
+   - Brand voice en messaging consistency
+
+3. COMPETITIVE POSITIONING (200-250 woorden)
+   - Industry benchmark comparison (dutch-e-commerce sector)
+   - Competitive advantages to leverage immediately
+   - Market positioning recommendations
+   - Differentiation opportunities vs competitors
+
+4. STRATEGIC IMPLEMENTATION ROADMAP (200-300 woorden)
+   - 3-6 month phased implementation plan
+   - Resource allocation recommendations (tijd/budget)
+   - Success metrics en KPIs per fase
+   - ROI timeline en realistic expectations
+   - Risk mitigation strategies
+
+SCHRIJFSTIJL:
+- Executive-level strategic focus (niet tactisch)
+- Concrete ROI en business impact cijfers
+- Actionable strategic recommendations
+- Professional consulting tone
+- Nederlandse taal, formeel niveau
+
+RESPONSE FORMAT (JSON):
+{
+  "executiveSummary": "...",
+  "multiPageAnalysis": "...",
+  "competitivePositioning": "...",
+  "strategicRoadmap": "...",
+  "keyMetrics": {
+    "estimatedROI": "...",
+    "implementationTimeframe": "...",
+    "priorityActions": ["...", "...", "..."]
+  }
+}
+"
+`;
+
+exports[`Snapshot Tests - Copied Prompt Strategies > EnterprisePromptStrategy Snapshots > should generate consistent enterprise prompt for extensive analysis > enterprise-extensive-analysis.txt 1`] = `
+"
+Je bent een senior AI-consultant die een strategisch rapport schrijft voor een enterprise klant (€149.95 tier).
+
+BUSINESS TIER ANALYSIS:
+{
+  "missedOpportunities": [
+    {
+      "category": "authority",
+      "title": "Strengthen expertise signals",
+      "description": "Add more specific credentials and certifications",
+      "solution": "Include professional certifications, awards, and detailed experience",
+      "impactScore": 8,
+      "difficulty": "medium",
+      "timeEstimate": "2-3 hours"
+    },
+    {
+      "category": "content",
+      "title": "Improve content depth",
+      "description": "Content lacks comprehensive coverage of topics",
+      "solution": "Add detailed explanations, examples, and related topics",
+      "impactScore": 7,
+      "difficulty": "high",
+      "timeEstimate": "4-6 hours"
+    }
+  ],
+  "authorityEnhancements": [
+    {
+      "category": "expertise",
+      "title": "Add author bio sections",
+      "description": "Include detailed author information with credentials",
+      "solution": "Create comprehensive author profiles with expertise areas",
+      "impactScore": 6,
+      "difficulty": "low",
+      "timeEstimate": "1-2 hours"
+    }
+  ],
+  "citabilityImprovements": [
+    {
+      "category": "sources",
+      "title": "Add external references",
+      "description": "Content lacks credible external sources",
+      "solution": "Include references to industry reports, studies, and expert opinions",
+      "impactScore": 9,
+      "difficulty": "medium",
+      "timeEstimate": "3-4 hours"
+    }
+  ],
+  "implementationPriority": [
+    "Add customer testimonials",
+    "Strengthen expertise signals",
+    "Include case studies",
+    "Improve content depth"
+  ],
+  "generatedAt": "2025-07-11T10:00:00Z",
+  "confidence": 85
+}
+
+MULTI-PAGE INSIGHTS:
+Geanalyseerde paginas: 5
+Site-wide consistentie: 78/100
+{
+  "consistencyScore": 78,
+  "patterns": [
+    "consistent navigation structure",
+    "mixed content quality across pages",
+    "inconsistent call-to-action placement",
+    "varying tone and voice"
+  ],
+  "brandingConsistency": 85,
+  "messageAlignment": 72
+}
+
+COMPETITIVE CONTEXT:
+{
+  "industryCategory": "professional-services",
+  "benchmarkScore": 65,
+  "currentScore": 82,
+  "competitivePosition": "above-average",
+  "keyDifferentiators": [
+    "specialized expertise",
+    "proven track record"
+  ],
+  "competitiveGaps": [
+    "content depth",
+    "thought leadership"
+  ],
+  "detailedAnalysis": "Comprehensive competitive analysis showing strong market position"
+}
+
+INDUSTRY BENCHMARK:
+{
+  "category": "dutch-professional-services",
+  "improvementPotential": 18,
+  "topPerformers": 95,
+  "averageScore": 67,
+  "recommendations": [
+    "content authority",
+    "technical optimization"
+  ]
+}
+
+TAAK:
+Schrijf een uitgebreid strategisch rapport (800-1200 woorden) met deze secties:
+
+1. EXECUTIVE SUMMARY (200-250 woorden)
+   - Strategic overview van AI-readiness across multiple pages
+   - Key competitive advantages en gaps vs industry benchmark
+   - ROI projectie voor implementatie (3-6 maanden)
+   - Investment prioritization recommendations
+
+2. MULTI-PAGE STRATEGIC ANALYSIS (300-400 woorden)
+   - Consistency analysis tussen homepage en subpaginas
+   - Site-wide content strategy recommendations
+   - Cross-page optimization opportunities
+   - Brand voice en messaging consistency
+
+3. COMPETITIVE POSITIONING (200-250 woorden)
+   - Industry benchmark comparison (dutch-professional-services sector)
+   - Competitive advantages to leverage immediately
+   - Market positioning recommendations
+   - Differentiation opportunities vs competitors
+
+4. STRATEGIC IMPLEMENTATION ROADMAP (200-300 woorden)
+   - 3-6 month phased implementation plan
+   - Resource allocation recommendations (tijd/budget)
+   - Success metrics en KPIs per fase
+   - ROI timeline en realistic expectations
+   - Risk mitigation strategies
+
+SCHRIJFSTIJL:
+- Executive-level strategic focus (niet tactisch)
+- Concrete ROI en business impact cijfers
+- Actionable strategic recommendations
+- Professional consulting tone
+- Nederlandse taal, formeel niveau
+
+RESPONSE FORMAT (JSON):
+{
+  "executiveSummary": "...",
+  "multiPageAnalysis": "...",
+  "competitivePositioning": "...",
+  "strategicRoadmap": "...",
+  "keyMetrics": {
+    "estimatedROI": "...",
+    "implementationTimeframe": "...",
+    "priorityActions": ["...", "...", "..."]
+  }
+}
+"
+`;
+
+exports[`Snapshot Tests - Copied Prompt Strategies > EnterprisePromptStrategy Snapshots > should generate consistent enterprise prompt for standard input > enterprise-standard-input.txt 1`] = `
+"
+Je bent een senior AI-consultant die een strategisch rapport schrijft voor een enterprise klant (€149.95 tier).
+
+BUSINESS TIER ANALYSIS:
+{
+  "missedOpportunities": [
+    {
+      "category": "authority",
+      "title": "Strengthen expertise signals",
+      "description": "Add more specific credentials and certifications",
+      "solution": "Include professional certifications, awards, and detailed experience",
+      "impactScore": 8,
+      "difficulty": "medium",
+      "timeEstimate": "2-3 hours"
+    },
+    {
+      "category": "content",
+      "title": "Improve content depth",
+      "description": "Content lacks comprehensive coverage of topics",
+      "solution": "Add detailed explanations, examples, and related topics",
+      "impactScore": 7,
+      "difficulty": "high",
+      "timeEstimate": "4-6 hours"
+    }
+  ],
+  "authorityEnhancements": [
+    {
+      "category": "expertise",
+      "title": "Add author bio sections",
+      "description": "Include detailed author information with credentials",
+      "solution": "Create comprehensive author profiles with expertise areas",
+      "impactScore": 6,
+      "difficulty": "low",
+      "timeEstimate": "1-2 hours"
+    }
+  ],
+  "citabilityImprovements": [
+    {
+      "category": "sources",
+      "title": "Add external references",
+      "description": "Content lacks credible external sources",
+      "solution": "Include references to industry reports, studies, and expert opinions",
+      "impactScore": 9,
+      "difficulty": "medium",
+      "timeEstimate": "3-4 hours"
+    }
+  ],
+  "implementationPriority": [
+    "Add customer testimonials",
+    "Strengthen expertise signals",
+    "Include case studies",
+    "Improve content depth"
+  ],
+  "generatedAt": "2025-07-11T10:00:00Z",
+  "confidence": 85
+}
+
+MULTI-PAGE INSIGHTS:
+Geanalyseerde paginas: 3
+Site-wide consistentie: 78/100
+{
+  "consistencyScore": 78,
+  "patterns": [
+    "consistent navigation structure",
+    "mixed content quality across pages",
+    "inconsistent call-to-action placement",
+    "varying tone and voice"
+  ],
+  "brandingConsistency": 85,
+  "messageAlignment": 72
+}
+
+COMPETITIVE CONTEXT:
+{
+  "industryCategory": "professional-services",
+  "benchmarkScore": 65,
+  "currentScore": 82,
+  "competitivePosition": "above-average",
+  "keyDifferentiators": [
+    "specialized expertise",
+    "proven track record"
+  ],
+  "competitiveGaps": [
+    "content depth",
+    "thought leadership"
+  ]
+}
+
+INDUSTRY BENCHMARK:
+{
+  "category": "dutch-professional-services",
+  "improvementPotential": 18,
+  "topPerformers": 95,
+  "averageScore": 67,
+  "recommendations": [
+    "content authority",
+    "technical optimization"
+  ]
+}
+
+TAAK:
+Schrijf een uitgebreid strategisch rapport (800-1200 woorden) met deze secties:
+
+1. EXECUTIVE SUMMARY (200-250 woorden)
+   - Strategic overview van AI-readiness across multiple pages
+   - Key competitive advantages en gaps vs industry benchmark
+   - ROI projectie voor implementatie (3-6 maanden)
+   - Investment prioritization recommendations
+
+2. MULTI-PAGE STRATEGIC ANALYSIS (300-400 woorden)
+   - Consistency analysis tussen homepage en subpaginas
+   - Site-wide content strategy recommendations
+   - Cross-page optimization opportunities
+   - Brand voice en messaging consistency
+
+3. COMPETITIVE POSITIONING (200-250 woorden)
+   - Industry benchmark comparison (dutch-professional-services sector)
+   - Competitive advantages to leverage immediately
+   - Market positioning recommendations
+   - Differentiation opportunities vs competitors
+
+4. STRATEGIC IMPLEMENTATION ROADMAP (200-300 woorden)
+   - 3-6 month phased implementation plan
+   - Resource allocation recommendations (tijd/budget)
+   - Success metrics en KPIs per fase
+   - ROI timeline en realistic expectations
+   - Risk mitigation strategies
+
+SCHRIJFSTIJL:
+- Executive-level strategic focus (niet tactisch)
+- Concrete ROI en business impact cijfers
+- Actionable strategic recommendations
+- Professional consulting tone
+- Nederlandse taal, formeel niveau
+
+RESPONSE FORMAT (JSON):
+{
+  "executiveSummary": "...",
+  "multiPageAnalysis": "...",
+  "competitivePositioning": "...",
+  "strategicRoadmap": "...",
+  "keyMetrics": {
+    "estimatedROI": "...",
+    "implementationTimeframe": "...",
+    "priorityActions": ["...", "...", "..."]
+  }
+}
+"
+`;
+
+exports[`Snapshot Tests - Copied Prompt Strategies > EnterprisePromptStrategy Snapshots > should generate consistent enterprise prompt with minimal features > enterprise-minimal-features.txt 1`] = `
+"
+Je bent een senior AI-consultant die een strategisch rapport schrijft voor een enterprise klant (€149.95 tier).
+
+BUSINESS TIER ANALYSIS:
+{
+  "missedOpportunities": [
+    {
+      "category": "authority",
+      "title": "Strengthen expertise signals",
+      "description": "Add more specific credentials and certifications",
+      "solution": "Include professional certifications, awards, and detailed experience",
+      "impactScore": 8,
+      "difficulty": "medium",
+      "timeEstimate": "2-3 hours"
+    },
+    {
+      "category": "content",
+      "title": "Improve content depth",
+      "description": "Content lacks comprehensive coverage of topics",
+      "solution": "Add detailed explanations, examples, and related topics",
+      "impactScore": 7,
+      "difficulty": "high",
+      "timeEstimate": "4-6 hours"
+    }
+  ],
+  "authorityEnhancements": [
+    {
+      "category": "expertise",
+      "title": "Add author bio sections",
+      "description": "Include detailed author information with credentials",
+      "solution": "Create comprehensive author profiles with expertise areas",
+      "impactScore": 6,
+      "difficulty": "low",
+      "timeEstimate": "1-2 hours"
+    }
+  ],
+  "citabilityImprovements": [
+    {
+      "category": "sources",
+      "title": "Add external references",
+      "description": "Content lacks credible external sources",
+      "solution": "Include references to industry reports, studies, and expert opinions",
+      "impactScore": 9,
+      "difficulty": "medium",
+      "timeEstimate": "3-4 hours"
+    }
+  ],
+  "implementationPriority": [
+    "Add customer testimonials",
+    "Strengthen expertise signals",
+    "Include case studies",
+    "Improve content depth"
+  ],
+  "generatedAt": "2025-07-11T10:00:00Z",
+  "confidence": 85
+}
+
+MULTI-PAGE INSIGHTS:
+Geanalyseerde paginas: 1
+Site-wide consistentie: 60/100
+{
+  "consistencyScore": 60
+}
+
+COMPETITIVE CONTEXT:
+undefined
+
+INDUSTRY BENCHMARK:
+undefined
+
+TAAK:
+Schrijf een uitgebreid strategisch rapport (800-1200 woorden) met deze secties:
+
+1. EXECUTIVE SUMMARY (200-250 woorden)
+   - Strategic overview van AI-readiness across multiple pages
+   - Key competitive advantages en gaps vs industry benchmark
+   - ROI projectie voor implementatie (3-6 maanden)
+   - Investment prioritization recommendations
+
+2. MULTI-PAGE STRATEGIC ANALYSIS (300-400 woorden)
+   - Consistency analysis tussen homepage en subpaginas
+   - Site-wide content strategy recommendations
+   - Cross-page optimization opportunities
+   - Brand voice en messaging consistency
+
+3. COMPETITIVE POSITIONING (200-250 woorden)
+   - Industry benchmark comparison (general sector)
+   - Competitive advantages to leverage immediately
+   - Market positioning recommendations
+   - Differentiation opportunities vs competitors
+
+4. STRATEGIC IMPLEMENTATION ROADMAP (200-300 woorden)
+   - 3-6 month phased implementation plan
+   - Resource allocation recommendations (tijd/budget)
+   - Success metrics en KPIs per fase
+   - ROI timeline en realistic expectations
+   - Risk mitigation strategies
+
+SCHRIJFSTIJL:
+- Executive-level strategic focus (niet tactisch)
+- Concrete ROI en business impact cijfers
+- Actionable strategic recommendations
+- Professional consulting tone
+- Nederlandse taal, formeel niveau
+
+RESPONSE FORMAT (JSON):
+{
+  "executiveSummary": "...",
+  "multiPageAnalysis": "...",
+  "competitivePositioning": "...",
+  "strategicRoadmap": "...",
+  "keyMetrics": {
+    "estimatedROI": "...",
+    "implementationTimeframe": "...",
+    "priorityActions": ["...", "...", "..."]
+  }
+}
+"
+`;
+
+exports[`Snapshot Tests - Copied Prompt Strategies > InsightsPromptStrategy Snapshots > should generate consistent insights prompt for minimal input > insights-minimal-input.txt 1`] = `
+"
+Je bent een AI SEO-consultant die websites analyseert voor AI-readiness en citability.
+
+SCAN RESULTATEN:
+[]
+
+ENHANCED CONTENT ANALYSE:
+Authority Signals: undefined
+Time Claims: undefined
+Quality Claims: undefined
+Business Signals: undefined
+Content Quality: undefined
+Current Missed Opportunities: undefined
+
+TAAK:
+Analyseer deze website voor AI-citation opportunities en geef structured insights.
+
+Focus op:
+1. **Missed Opportunities** - Concrete kansen voor betere AI visibility
+2. **Authority Enhancements** - Hoe bestaande signalen sterker kunnen
+3. **Citability Improvements** - Content optimalisaties voor AI assistants
+
+Geef voor elke missed opportunity:
+- Concrete before/after voorbeelden uit hun eigen content
+- Impact score (1-10) en difficulty (easy/medium/hard)
+- Specifieke implementatie instructies
+- Tijd schatting
+
+RESPONSE FORMAT (Strict JSON):
+{
+  "missedOpportunities": [
+    {
+      "category": "authority|specificity|evidence|differentiation|ai_optimization",
+      "title": "Short descriptive title",
+      "description": "What is missing and why it matters",
+      "solution": "Concrete step-by-step solution",
+      "beforeExample": "Current content example from their site",
+      "afterExample": "How it should be improved",
+      "impactScore": 1-10,
+      "difficulty": "easy|medium|hard",
+      "timeEstimate": "15 minutes|2 hours|etc"
+    }
+  ],
+  "authorityEnhancements": [
+    {
+      "currentSignal": "Existing authority signal found",
+      "enhancedVersion": "How to make it stronger",
+      "explanation": "Why this improvement helps AI citation",
+      "impact": "low|medium|high"
+    }
+  ],
+  "citabilityImprovements": [
+    {
+      "section": "Which part of site",
+      "currentContent": "Current content snippet",
+      "improvedContent": "AI-optimized version",
+      "aiReasoning": "Why AI assistants will prefer improved version",
+      "citationPotential": 1-10
+    }
+  ],
+  "implementationPriority": ["Step 1", "Step 2", "Step 3"],
+  "generatedAt": "2025-07-11T10:00:00.000Z",
+  "confidence": 1-100
+}
+
+BELANGRIJKE INSTRUCTIES:
+- Geef ALLEEN valid JSON terug
+- Gebruik concrete voorbeelden uit hun werkelijke content
+- Focus op actionable insights, niet algemene SEO tips
+- Prioriteer quick wins met hoge impact
+- Denk als AI assistant: wat zou je willen citeren van deze site?
+"
+`;
+
+exports[`Snapshot Tests - Copied Prompt Strategies > InsightsPromptStrategy Snapshots > should generate consistent insights prompt for rich input > insights-rich-input.txt 1`] = `
+"
+Je bent een AI SEO-consultant die websites analyseert voor AI-readiness en citability.
+
+SCAN RESULTATEN:
+[
+  {
+    "moduleName": "TechnicalSEO",
+    "score": 85,
+    "findings": [
+      {
+        "title": "Missing meta description",
+        "description": "Page lacks meta description tag",
+        "priority": "high",
+        "recommendation": "Add descriptive meta description between 150-160 characters"
+      },
+      {
+        "title": "Slow loading speed",
+        "description": "Page load time exceeds 3 seconds",
+        "priority": "medium",
+        "recommendation": "Optimize images and reduce HTTP requests"
+      }
+    ],
+    "status": "completed",
+    "completedAt": "2025-07-11T10:00:00Z"
+  },
+  {
+    "moduleName": "SchemaMarkup",
+    "score": 92,
+    "findings": [
+      {
+        "title": "Valid schema markup",
+        "description": "Organization schema correctly implemented",
+        "priority": "low",
+        "recommendation": "Consider adding FAQ schema for better visibility"
+      }
+    ],
+    "status": "completed",
+    "completedAt": "2025-07-11T10:05:00Z"
+  },
+  {
+    "moduleName": "AIContent",
+    "score": 76,
+    "findings": [
+      {
+        "title": "Content authority signals",
+        "description": "Strong expertise demonstrations found",
+        "priority": "high",
+        "recommendation": "Leverage these signals for better positioning"
+      }
+    ],
+    "status": "completed",
+    "completedAt": "2025-07-11T10:10:00Z"
+  }
+]
+
+ENHANCED CONTENT ANALYSE:
+Authority Signals: [{"text":"expert since 2010","markerType":"expertise","context":"about page","confidence":"high"},{"text":"certified professional","markerType":"certification","context":"homepage","confidence":"high"}]
+Time Claims: [{"text":"updated 2025","matchedPattern":"year","context":"footer","confidence":"medium"},{"text":"published January 2025","matchedPattern":"month-year","context":"blog","confidence":"high"}]
+Quality Claims: [{"text":"best quality service","claimType":"quality","strength":"strong","context":"homepage","confidence":"high"},{"text":"award-winning team","claimType":"recognition","strength":"medium","context":"team page","confidence":"medium"}]
+Business Signals: [{"text":"contact us","signalType":"contact","context":"navigation","confidence":"high"},{"text":"book consultation","signalType":"cta","context":"homepage","confidence":"high"}]
+Content Quality: {"score":78,"readability":"good","depth":"comprehensive","expertise":"demonstrated"}
+Current Missed Opportunities: [{"title":"Add customer testimonials","description":"Customer testimonials missing from homepage","priority":"medium"},{"title":"Include case studies","description":"No case studies to demonstrate expertise","priority":"high"}]
+
+TAAK:
+Analyseer deze website voor AI-citation opportunities en geef structured insights.
+
+Focus op:
+1. **Missed Opportunities** - Concrete kansen voor betere AI visibility
+2. **Authority Enhancements** - Hoe bestaande signalen sterker kunnen
+3. **Citability Improvements** - Content optimalisaties voor AI assistants
+
+Geef voor elke missed opportunity:
+- Concrete before/after voorbeelden uit hun eigen content
+- Impact score (1-10) en difficulty (easy/medium/hard)
+- Specifieke implementatie instructies
+- Tijd schatting
+
+RESPONSE FORMAT (Strict JSON):
+{
+  "missedOpportunities": [
+    {
+      "category": "authority|specificity|evidence|differentiation|ai_optimization",
+      "title": "Short descriptive title",
+      "description": "What is missing and why it matters",
+      "solution": "Concrete step-by-step solution",
+      "beforeExample": "Current content example from their site",
+      "afterExample": "How it should be improved",
+      "impactScore": 1-10,
+      "difficulty": "easy|medium|hard",
+      "timeEstimate": "15 minutes|2 hours|etc"
+    }
+  ],
+  "authorityEnhancements": [
+    {
+      "currentSignal": "Existing authority signal found",
+      "enhancedVersion": "How to make it stronger",
+      "explanation": "Why this improvement helps AI citation",
+      "impact": "low|medium|high"
+    }
+  ],
+  "citabilityImprovements": [
+    {
+      "section": "Which part of site",
+      "currentContent": "Current content snippet",
+      "improvedContent": "AI-optimized version",
+      "aiReasoning": "Why AI assistants will prefer improved version",
+      "citationPotential": 1-10
+    }
+  ],
+  "implementationPriority": ["Step 1", "Step 2", "Step 3"],
+  "generatedAt": "2025-07-11T10:00:00.000Z",
+  "confidence": 1-100
+}
+
+BELANGRIJKE INSTRUCTIES:
+- Geef ALLEEN valid JSON terug
+- Gebruik concrete voorbeelden uit hun werkelijke content
+- Focus op actionable insights, niet algemene SEO tips
+- Prioriteer quick wins met hoge impact
+- Denk als AI assistant: wat zou je willen citeren van deze site?
+"
+`;
+
+exports[`Snapshot Tests - Copied Prompt Strategies > InsightsPromptStrategy Snapshots > should generate consistent insights prompt for standard input > insights-standard-input.txt 1`] = `
+"
+Je bent een AI SEO-consultant die websites analyseert voor AI-readiness en citability.
+
+SCAN RESULTATEN:
+[
+  {
+    "moduleName": "TechnicalSEO",
+    "score": 85,
+    "findings": [
+      {
+        "title": "Missing meta description",
+        "description": "Page lacks meta description tag",
+        "priority": "high",
+        "recommendation": "Add descriptive meta description between 150-160 characters"
+      },
+      {
+        "title": "Slow loading speed",
+        "description": "Page load time exceeds 3 seconds",
+        "priority": "medium",
+        "recommendation": "Optimize images and reduce HTTP requests"
+      }
+    ],
+    "status": "completed",
+    "completedAt": "2025-07-11T10:00:00Z"
+  },
+  {
+    "moduleName": "SchemaMarkup",
+    "score": 92,
+    "findings": [
+      {
+        "title": "Valid schema markup",
+        "description": "Organization schema correctly implemented",
+        "priority": "low",
+        "recommendation": "Consider adding FAQ schema for better visibility"
+      }
+    ],
+    "status": "completed",
+    "completedAt": "2025-07-11T10:05:00Z"
+  }
+]
+
+ENHANCED CONTENT ANALYSE:
+Authority Signals: [{"text":"expert since 2010","markerType":"expertise","context":"about page","confidence":"high"},{"text":"certified professional","markerType":"certification","context":"homepage","confidence":"high"}]
+Time Claims: [{"text":"updated 2025","matchedPattern":"year","context":"footer","confidence":"medium"},{"text":"published January 2025","matchedPattern":"month-year","context":"blog","confidence":"high"}]
+Quality Claims: [{"text":"best quality service","claimType":"quality","strength":"strong","context":"homepage","confidence":"high"},{"text":"award-winning team","claimType":"recognition","strength":"medium","context":"team page","confidence":"medium"}]
+Business Signals: [{"text":"contact us","signalType":"contact","context":"navigation","confidence":"high"},{"text":"book consultation","signalType":"cta","context":"homepage","confidence":"high"}]
+Content Quality: {"score":78,"readability":"good","depth":"comprehensive","expertise":"demonstrated"}
+Current Missed Opportunities: [{"title":"Add customer testimonials","description":"Customer testimonials missing from homepage","priority":"medium"},{"title":"Include case studies","description":"No case studies to demonstrate expertise","priority":"high"}]
+
+TAAK:
+Analyseer deze website voor AI-citation opportunities en geef structured insights.
+
+Focus op:
+1. **Missed Opportunities** - Concrete kansen voor betere AI visibility
+2. **Authority Enhancements** - Hoe bestaande signalen sterker kunnen
+3. **Citability Improvements** - Content optimalisaties voor AI assistants
+
+Geef voor elke missed opportunity:
+- Concrete before/after voorbeelden uit hun eigen content
+- Impact score (1-10) en difficulty (easy/medium/hard)
+- Specifieke implementatie instructies
+- Tijd schatting
+
+RESPONSE FORMAT (Strict JSON):
+{
+  "missedOpportunities": [
+    {
+      "category": "authority|specificity|evidence|differentiation|ai_optimization",
+      "title": "Short descriptive title",
+      "description": "What is missing and why it matters",
+      "solution": "Concrete step-by-step solution",
+      "beforeExample": "Current content example from their site",
+      "afterExample": "How it should be improved",
+      "impactScore": 1-10,
+      "difficulty": "easy|medium|hard",
+      "timeEstimate": "15 minutes|2 hours|etc"
+    }
+  ],
+  "authorityEnhancements": [
+    {
+      "currentSignal": "Existing authority signal found",
+      "enhancedVersion": "How to make it stronger",
+      "explanation": "Why this improvement helps AI citation",
+      "impact": "low|medium|high"
+    }
+  ],
+  "citabilityImprovements": [
+    {
+      "section": "Which part of site",
+      "currentContent": "Current content snippet",
+      "improvedContent": "AI-optimized version",
+      "aiReasoning": "Why AI assistants will prefer improved version",
+      "citationPotential": 1-10
+    }
+  ],
+  "implementationPriority": ["Step 1", "Step 2", "Step 3"],
+  "generatedAt": "2025-07-11T10:00:00.000Z",
+  "confidence": 1-100
+}
+
+BELANGRIJKE INSTRUCTIES:
+- Geef ALLEEN valid JSON terug
+- Gebruik concrete voorbeelden uit hun werkelijke content
+- Focus op actionable insights, niet algemene SEO tips
+- Prioriteer quick wins met hoge impact
+- Denk als AI assistant: wat zou je willen citeren van deze site?
+"
+`;
+
+exports[`Snapshot Tests - Copied Prompt Strategies > NarrativePromptStrategy Snapshots > should generate consistent narrative prompt for comprehensive input > narrative-comprehensive-input.txt 1`] = `
+"
+Je bent een persoonlijke AI-consultant die een rapport schrijft voor de website eigenaar.
+
+CONTEXT:
+Scan Results: [
+  {
+    "moduleName": "TechnicalSEO",
+    "score": 85,
+    "findings": [
+      {
+        "title": "Missing meta description",
+        "description": "Page lacks meta description tag",
+        "priority": "high",
+        "recommendation": "Add descriptive meta description between 150-160 characters"
+      },
+      {
+        "title": "Slow loading speed",
+        "description": "Page load time exceeds 3 seconds",
+        "priority": "medium",
+        "recommendation": "Optimize images and reduce HTTP requests"
+      }
+    ],
+    "status": "completed",
+    "completedAt": "2025-07-11T10:00:00Z"
+  },
+  {
+    "moduleName": "SchemaMarkup",
+    "score": 92,
+    "findings": [
+      {
+        "title": "Valid schema markup",
+        "description": "Organization schema correctly implemented",
+        "priority": "low",
+        "recommendation": "Consider adding FAQ schema for better visibility"
+      }
+    ],
+    "status": "completed",
+    "completedAt": "2025-07-11T10:05:00Z"
+  },
+  {
+    "moduleName": "AICitation",
+    "score": 88,
+    "findings": [
+      {
+        "title": "Citation opportunities identified",
+        "description": "Multiple opportunities for external citations",
+        "priority": "high",
+        "recommendation": "Add authoritative sources and references"
+      }
+    ],
+    "status": "completed",
+    "completedAt": "2025-07-11T10:15:00Z"
+  }
+]
+AI Insights: {
+  "missedOpportunities": [
+    {
+      "category": "authority",
+      "title": "Strengthen expertise signals",
+      "description": "Add more specific credentials and certifications",
+      "solution": "Include professional certifications, awards, and detailed experience",
+      "impactScore": 8,
+      "difficulty": "medium",
+      "timeEstimate": "2-3 hours"
+    },
+    {
+      "category": "content",
+      "title": "Improve content depth",
+      "description": "Content lacks comprehensive coverage of topics",
+      "solution": "Add detailed explanations, examples, and related topics",
+      "impactScore": 7,
+      "difficulty": "high",
+      "timeEstimate": "4-6 hours"
+    }
+  ],
+  "authorityEnhancements": [
+    {
+      "category": "expertise",
+      "title": "Add author bio sections",
+      "description": "Include detailed author information with credentials",
+      "solution": "Create comprehensive author profiles with expertise areas",
+      "impactScore": 6,
+      "difficulty": "low",
+      "timeEstimate": "1-2 hours"
+    }
+  ],
+  "citabilityImprovements": [
+    {
+      "category": "sources",
+      "title": "Add external references",
+      "description": "Content lacks credible external sources",
+      "solution": "Include references to industry reports, studies, and expert opinions",
+      "impactScore": 9,
+      "difficulty": "medium",
+      "timeEstimate": "3-4 hours"
+    }
+  ],
+  "implementationPriority": [
+    "Add customer testimonials",
+    "Strengthen expertise signals",
+    "Include case studies",
+    "Improve content depth"
+  ],
+  "generatedAt": "2025-07-11T10:00:00Z",
+  "confidence": 85
+}
+Authority Content: [{"text":"expert since 2010","markerType":"expertise","context":"about page","confidence":"high"},{"text":"certified professional","markerType":"certification","context":"homepage","confidence":"high"}]
+
+SMART ANALYSIS DATA:
+De scan bevat verrijkte findings met:
+- Evidence: Contextuele quotes en voorbeelden uit de werkelijke content
+- Suggestions: Concrete, implementeerbare verbeteringen per finding
+Gebruik deze evidence als proof points en suggestions als actionable advice.
+
+TAAK:
+Schrijf een persoonlijk, professioneel rapport in vloeiende Nederlandse tekst.
+
+TONE:
+- Persoonlijk ("je website", "jouw klanten")
+- Professioneel maar toegankelijk
+- Specifiek voor deze website, niet generiek
+- Gebruik concrete voorbeelden uit hun content
+- Motiverend en actionable
+
+STRUCTUUR:
+1. **Executive Summary** (150-200 woorden)
+   - Persoonlijke opening over hun website
+   - Hoofdbevindingen in context van hun business
+   - Top 3 belangrijkste kansen
+
+2. **Detailed Analysis** (300-400 woorden)
+   - Dieper ingaan op specifieke bevindingen MET evidence quotes
+   - Uitleggen waarom dit belangrijk is voor hun business
+   - Gebruik de evidence velden als concrete voorbeelden uit hun content
+   - Focus op AI-readiness en citation potential
+   - Integreer suggestions als directe verbeteringsadvies
+
+3. **Implementation Roadmap** (200-250 woorden)
+   - Prioriteer acties op impact vs effort
+   - Gebruik suggestion velden voor stap-voor-stap instructies
+   - Realistische tijdschattingen
+   - Quick wins eerst, gebaseerd op suggestions
+
+4. **Conclusion & Next Steps** (100-150 woorden)
+   - Samenvatten belangrijkste acties
+   - Motiveren om te beginnen
+   - Duidelijke volgende stappen
+
+RESPONSE FORMAT (Strict JSON):
+{
+  "executiveSummary": "Complete section text here...",
+  "detailedAnalysis": "Complete section text here...",
+  "implementationRoadmap": "Complete section text here...",
+  "conclusionNextSteps": "Complete section text here...",
+  "generatedAt": "2025-07-11T10:00:00.000Z",
+  "wordCount": <total_word_count>
+}
+
+BELANGRIJKE INSTRUCTIES:
+- Geef ALLEEN valid JSON terug
+- Schrijf in vloeiend Nederlands
+- Gebruik hun werkelijke content voorbeelden UIT EVIDENCE VELDEN
+- Maak het persoonlijk en specifiek
+- Focus op AI citation opportunities
+- Gebruik suggestion velden voor concrete actie-items
+- Quote evidence in blockquotes waar relevant
+- Geen algemene SEO clichés
+"
+`;
+
+exports[`Snapshot Tests - Copied Prompt Strategies > NarrativePromptStrategy Snapshots > should generate consistent narrative prompt for standard input > narrative-standard-input.txt 1`] = `
+"
+Je bent een persoonlijke AI-consultant die een rapport schrijft voor de website eigenaar.
+
+CONTEXT:
+Scan Results: [
+  {
+    "moduleName": "TechnicalSEO",
+    "score": 85,
+    "findings": [
+      {
+        "title": "Missing meta description",
+        "description": "Page lacks meta description tag",
+        "priority": "high",
+        "recommendation": "Add descriptive meta description between 150-160 characters"
+      },
+      {
+        "title": "Slow loading speed",
+        "description": "Page load time exceeds 3 seconds",
+        "priority": "medium",
+        "recommendation": "Optimize images and reduce HTTP requests"
+      }
+    ],
+    "status": "completed",
+    "completedAt": "2025-07-11T10:00:00Z"
+  },
+  {
+    "moduleName": "SchemaMarkup",
+    "score": 92,
+    "findings": [
+      {
+        "title": "Valid schema markup",
+        "description": "Organization schema correctly implemented",
+        "priority": "low",
+        "recommendation": "Consider adding FAQ schema for better visibility"
+      }
+    ],
+    "status": "completed",
+    "completedAt": "2025-07-11T10:05:00Z"
+  }
+]
+AI Insights: {
+  "missedOpportunities": [
+    {
+      "category": "authority",
+      "title": "Strengthen expertise signals",
+      "description": "Add more specific credentials and certifications",
+      "solution": "Include professional certifications, awards, and detailed experience",
+      "impactScore": 8,
+      "difficulty": "medium",
+      "timeEstimate": "2-3 hours"
+    },
+    {
+      "category": "content",
+      "title": "Improve content depth",
+      "description": "Content lacks comprehensive coverage of topics",
+      "solution": "Add detailed explanations, examples, and related topics",
+      "impactScore": 7,
+      "difficulty": "high",
+      "timeEstimate": "4-6 hours"
+    }
+  ],
+  "authorityEnhancements": [
+    {
+      "category": "expertise",
+      "title": "Add author bio sections",
+      "description": "Include detailed author information with credentials",
+      "solution": "Create comprehensive author profiles with expertise areas",
+      "impactScore": 6,
+      "difficulty": "low",
+      "timeEstimate": "1-2 hours"
+    }
+  ],
+  "citabilityImprovements": [
+    {
+      "category": "sources",
+      "title": "Add external references",
+      "description": "Content lacks credible external sources",
+      "solution": "Include references to industry reports, studies, and expert opinions",
+      "impactScore": 9,
+      "difficulty": "medium",
+      "timeEstimate": "3-4 hours"
+    }
+  ],
+  "implementationPriority": [
+    "Add customer testimonials",
+    "Strengthen expertise signals",
+    "Include case studies",
+    "Improve content depth"
+  ],
+  "generatedAt": "2025-07-11T10:00:00Z",
+  "confidence": 85
+}
+Authority Content: [{"text":"expert since 2010","markerType":"expertise","context":"about page","confidence":"high"},{"text":"certified professional","markerType":"certification","context":"homepage","confidence":"high"}]
+
+SMART ANALYSIS DATA:
+De scan bevat verrijkte findings met:
+- Evidence: Contextuele quotes en voorbeelden uit de werkelijke content
+- Suggestions: Concrete, implementeerbare verbeteringen per finding
+Gebruik deze evidence als proof points en suggestions als actionable advice.
+
+TAAK:
+Schrijf een persoonlijk, professioneel rapport in vloeiende Nederlandse tekst.
+
+TONE:
+- Persoonlijk ("je website", "jouw klanten")
+- Professioneel maar toegankelijk
+- Specifiek voor deze website, niet generiek
+- Gebruik concrete voorbeelden uit hun content
+- Motiverend en actionable
+
+STRUCTUUR:
+1. **Executive Summary** (150-200 woorden)
+   - Persoonlijke opening over hun website
+   - Hoofdbevindingen in context van hun business
+   - Top 3 belangrijkste kansen
+
+2. **Detailed Analysis** (300-400 woorden)
+   - Dieper ingaan op specifieke bevindingen MET evidence quotes
+   - Uitleggen waarom dit belangrijk is voor hun business
+   - Gebruik de evidence velden als concrete voorbeelden uit hun content
+   - Focus op AI-readiness en citation potential
+   - Integreer suggestions als directe verbeteringsadvies
+
+3. **Implementation Roadmap** (200-250 woorden)
+   - Prioriteer acties op impact vs effort
+   - Gebruik suggestion velden voor stap-voor-stap instructies
+   - Realistische tijdschattingen
+   - Quick wins eerst, gebaseerd op suggestions
+
+4. **Conclusion & Next Steps** (100-150 woorden)
+   - Samenvatten belangrijkste acties
+   - Motiveren om te beginnen
+   - Duidelijke volgende stappen
+
+RESPONSE FORMAT (Strict JSON):
+{
+  "executiveSummary": "Complete section text here...",
+  "detailedAnalysis": "Complete section text here...",
+  "implementationRoadmap": "Complete section text here...",
+  "conclusionNextSteps": "Complete section text here...",
+  "generatedAt": "2025-07-11T10:00:00.000Z",
+  "wordCount": <total_word_count>
+}
+
+BELANGRIJKE INSTRUCTIES:
+- Geef ALLEEN valid JSON terug
+- Schrijf in vloeiend Nederlands
+- Gebruik hun werkelijke content voorbeelden UIT EVIDENCE VELDEN
+- Maak het persoonlijk en specifiek
+- Focus op AI citation opportunities
+- Gebruik suggestion velden voor concrete actie-items
+- Quote evidence in blockquotes waar relevant
+- Geen algemene SEO clichés
+"
+`;
+
+exports[`Snapshot Tests - Copied Prompt Strategies > NarrativePromptStrategy Snapshots > should generate consistent narrative prompt without insights > narrative-no-insights.txt 1`] = `
+"
+Je bent een persoonlijke AI-consultant die een rapport schrijft voor de website eigenaar.
+
+CONTEXT:
+Scan Results: [
+  {
+    "moduleName": "TechnicalSEO",
+    "score": 85,
+    "findings": [
+      {
+        "title": "Missing meta description",
+        "description": "Page lacks meta description tag",
+        "priority": "high",
+        "recommendation": "Add descriptive meta description between 150-160 characters"
+      },
+      {
+        "title": "Slow loading speed",
+        "description": "Page load time exceeds 3 seconds",
+        "priority": "medium",
+        "recommendation": "Optimize images and reduce HTTP requests"
+      }
+    ],
+    "status": "completed",
+    "completedAt": "2025-07-11T10:00:00Z"
+  },
+  {
+    "moduleName": "SchemaMarkup",
+    "score": 92,
+    "findings": [
+      {
+        "title": "Valid schema markup",
+        "description": "Organization schema correctly implemented",
+        "priority": "low",
+        "recommendation": "Consider adding FAQ schema for better visibility"
+      }
+    ],
+    "status": "completed",
+    "completedAt": "2025-07-11T10:05:00Z"
+  }
+]
+AI Insights: {}
+Authority Content: [{"text":"expert since 2010","markerType":"expertise","context":"about page","confidence":"high"},{"text":"certified professional","markerType":"certification","context":"homepage","confidence":"high"}]
+
+SMART ANALYSIS DATA:
+De scan bevat verrijkte findings met:
+- Evidence: Contextuele quotes en voorbeelden uit de werkelijke content
+- Suggestions: Concrete, implementeerbare verbeteringen per finding
+Gebruik deze evidence als proof points en suggestions als actionable advice.
+
+TAAK:
+Schrijf een persoonlijk, professioneel rapport in vloeiende Nederlandse tekst.
+
+TONE:
+- Persoonlijk ("je website", "jouw klanten")
+- Professioneel maar toegankelijk
+- Specifiek voor deze website, niet generiek
+- Gebruik concrete voorbeelden uit hun content
+- Motiverend en actionable
+
+STRUCTUUR:
+1. **Executive Summary** (150-200 woorden)
+   - Persoonlijke opening over hun website
+   - Hoofdbevindingen in context van hun business
+   - Top 3 belangrijkste kansen
+
+2. **Detailed Analysis** (300-400 woorden)
+   - Dieper ingaan op specifieke bevindingen MET evidence quotes
+   - Uitleggen waarom dit belangrijk is voor hun business
+   - Gebruik de evidence velden als concrete voorbeelden uit hun content
+   - Focus op AI-readiness en citation potential
+   - Integreer suggestions als directe verbeteringsadvies
+
+3. **Implementation Roadmap** (200-250 woorden)
+   - Prioriteer acties op impact vs effort
+   - Gebruik suggestion velden voor stap-voor-stap instructies
+   - Realistische tijdschattingen
+   - Quick wins eerst, gebaseerd op suggestions
+
+4. **Conclusion & Next Steps** (100-150 woorden)
+   - Samenvatten belangrijkste acties
+   - Motiveren om te beginnen
+   - Duidelijke volgende stappen
+
+RESPONSE FORMAT (Strict JSON):
+{
+  "executiveSummary": "Complete section text here...",
+  "detailedAnalysis": "Complete section text here...",
+  "implementationRoadmap": "Complete section text here...",
+  "conclusionNextSteps": "Complete section text here...",
+  "generatedAt": "2025-07-11T10:00:00.000Z",
+  "wordCount": <total_word_count>
+}
+
+BELANGRIJKE INSTRUCTIES:
+- Geef ALLEEN valid JSON terug
+- Schrijf in vloeiend Nederlands
+- Gebruik hun werkelijke content voorbeelden UIT EVIDENCE VELDEN
+- Maak het persoonlijk en specifiek
+- Focus op AI citation opportunities
+- Gebruik suggestion velden voor concrete actie-items
+- Quote evidence in blockquotes waar relevant
+- Geen algemene SEO clichés
+"
+`;
+
+exports[`Snapshot Tests - Copied Prompt Strategies > Token Limiting Behavior > should generate consistent truncated output for oversized inputs > insights-oversized-truncated.txt 1`] = `
+"
+
+
+
+[Content truncated to fit token limit]"
+`;

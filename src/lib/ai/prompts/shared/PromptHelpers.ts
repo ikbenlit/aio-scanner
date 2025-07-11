@@ -317,7 +317,7 @@ export class PromptHelpers {
     if (config.tone) {
       sections.push({
         title: 'TONE',
-        content: this.formatToneSection(this.TONE_GUIDELINES[config.tone]).replace('TONE:\n', ''),
+        content: this.formatToneSection([...this.TONE_GUIDELINES[config.tone]]).replace('TONE:\n', ''),
         priority: 'medium'
       });
     }
@@ -334,7 +334,7 @@ export class PromptHelpers {
     const responseFormat: ResponseFormat = {
       format: 'json',
       schema: this.JSON_SCHEMAS[config.responseSchema],
-      instructions: config.instructions ? this.COMMON_INSTRUCTIONS[config.instructions] : undefined
+      instructions: config.instructions ? [...this.COMMON_INSTRUCTIONS[config.instructions]] : undefined
     };
     
     return this.buildStructuredPrompt({

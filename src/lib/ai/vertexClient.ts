@@ -9,6 +9,7 @@ import { resolve } from 'path';
 import type { ModuleResult } from '../types/scan.js';
 import type { EnhancedContent } from '../scan/ContentExtractor.js';
 import { WebsiteContextAnalyzer, type WebsiteContext } from './prompts/shared/WebsiteContextAnalyzer.js';
+import { PromptFactory } from './prompts/PromptFactory.js';
 
 // Phase 3.2A Types
 export interface AIInsights {
@@ -56,6 +57,20 @@ export interface NarrativeReport {
   wordCount: number;
 }
 
+export interface EnterpriseReport {
+  executiveSummary: string;
+  multiPageAnalysis: string;
+  competitivePositioning: string;
+  strategicRoadmap: string;
+  keyMetrics: {
+    estimatedROI: string;
+    implementationTimeframe: string;
+    priorityActions: string[];
+  };
+  generatedAt: string;
+  wordCount: number;
+}
+
 export interface CostTracker {
   maxBudgetEuros: number;
   currentSpend: number;
@@ -98,12 +113,27 @@ export class VertexAIClient {
   }
 
   /**
-   * Phase 3.2A: Generate AI Insights from module results and enhanced content
+   * Phase 4.1: Generate AI Insights - NEW signature with direct prompt (recommended)
+   */
+  async generateInsights(prompt: string): Promise<AIInsights>;
+  
+  /**
+   * Phase 3.2A: Generate AI Insights - LEGACY signature (deprecated)
+   * @deprecated Use PromptFactory.create('insights').buildPrompt() + generateInsights(prompt)
    */
   async generateInsights(
     moduleResults: ModuleResult[], 
     enhancedContent: EnhancedContent,
     url: string
+  ): Promise<AIInsights>;
+  
+  /**
+   * Implementation for both signatures
+   */
+  async generateInsights(
+    promptOrModuleResults: string | ModuleResult[], 
+    enhancedContent?: EnhancedContent,
+    url?: string
   ): Promise<AIInsights> {
     
     // Budget check
@@ -111,7 +141,21 @@ export class VertexAIClient {
       throw new Error('BUDGET_EXCEEDED');
     }
     
-    const prompt = this.buildInsightsPrompt(moduleResults, enhancedContent, url);
+    let prompt: string;
+    
+    if (typeof promptOrModuleResults === 'string') {
+      // New way: direct prompt string
+      prompt = promptOrModuleResults;
+    } else {
+      // Legacy way: build prompt internally with deprecation warning
+      console.warn('⚠️ DEPRECATED: generateInsights(moduleResults, enhancedContent, url) is deprecated. Use PromptFactory.create("insights").buildPrompt() + generateInsights(prompt) instead.');
+      
+      if (!enhancedContent || !url) {
+        throw new Error('LEGACY_SIGNATURE_MISSING_PARAMS');
+      }
+      
+      prompt = this.buildInsightsPrompt(promptOrModuleResults, enhancedContent, url);
+    }
     
     try {
       console.log('🧠 Generating AI insights...');
@@ -136,19 +180,48 @@ export class VertexAIClient {
   }
 
   /**
-   * Phase 3.2A: Generate Narrative Report for Business Tier
+   * Phase 4.1: Generate Narrative Report - NEW signature with direct prompt (recommended)
+   */
+  async generateNarrativeReport(prompt: string): Promise<NarrativeReport>;
+  
+  /**
+   * Phase 3.2A: Generate Narrative Report - LEGACY signature (deprecated)
+   * @deprecated Use PromptFactory.create('narrative').buildPrompt() + generateNarrativeReport(prompt)
    */
   async generateNarrativeReport(
     moduleResults: ModuleResult[], 
     enhancedContent: EnhancedContent,
     insights: AIInsights
+  ): Promise<NarrativeReport>;
+  
+  /**
+   * Implementation for both signatures
+   */
+  async generateNarrativeReport(
+    promptOrModuleResults: string | ModuleResult[], 
+    enhancedContent?: EnhancedContent,
+    insights?: AIInsights
   ): Promise<NarrativeReport> {
     
     if (!this.canAffordRequest()) {
       throw new Error('BUDGET_EXCEEDED');
     }
     
-    const prompt = this.buildNarrativePrompt(moduleResults, enhancedContent, insights);
+    let prompt: string;
+    
+    if (typeof promptOrModuleResults === 'string') {
+      // New way: direct prompt string
+      prompt = promptOrModuleResults;
+    } else {
+      // Legacy way: build prompt internally with deprecation warning
+      console.warn('⚠️ DEPRECATED: generateNarrativeReport(moduleResults, enhancedContent, insights) is deprecated. Use PromptFactory.create("narrative").buildPrompt() + generateNarrativeReport(prompt) instead.');
+      
+      if (!enhancedContent || !insights) {
+        throw new Error('LEGACY_SIGNATURE_MISSING_PARAMS');
+      }
+      
+      prompt = this.buildNarrativePrompt(promptOrModuleResults, enhancedContent, insights);
+    }
     
     try {
       console.log('📝 Generating narrative report...');
@@ -166,6 +239,34 @@ export class VertexAIClient {
     } catch (error: any) {
       console.error('❌ Narrative generation failed:', error);
       throw new Error('NARRATIVE_GENERATION_FAILED');
+    }
+  }
+
+  /**
+   * Phase 4.1: Generate Enterprise Report - NEW signature with direct prompt
+   */
+  async generateEnterpriseReport(prompt: string): Promise<EnterpriseReport> {
+    
+    if (!this.canAffordRequest()) {
+      throw new Error('BUDGET_EXCEEDED');
+    }
+    
+    try {
+      console.log('🏢 Generating enterprise report...');
+      const result = await this.model.generateContent(prompt);
+      const responseText = result.response.candidates?.[0]?.content?.parts?.[0]?.text;
+      
+      if (!responseText) {
+        throw new Error('AI_ENTERPRISE_EMPTY');
+      }
+      
+      this.recordRequest(Date.now(), prompt.length);
+      
+      return this.parseEnterpriseReport(responseText);
+      
+    } catch (error: any) {
+      console.error('❌ Enterprise report generation failed:', error);
+      throw new Error('ENTERPRISE_GENERATION_FAILED');
     }
   }
 
@@ -398,6 +499,49 @@ BELANGRIJKE INSTRUCTIES:
       console.error('❌ Failed to parse narrative report:', error);
       console.error('Raw response:', responseText);
       throw new Error('NARRATIVE_PARSE_FAILED');
+    }
+  }
+
+  /**
+   * Phase 4.1: Parse Enterprise Report JSON response
+   */
+  private parseEnterpriseReport(responseText: string): EnterpriseReport {
+    try {
+      const cleanedResponse = responseText
+        .replace(/```json\n?/g, '')
+        .replace(/```\n?/g, '')
+        .trim();
+      
+      const parsed = JSON.parse(cleanedResponse);
+      
+      // Calculate word count
+      const totalText = [
+        parsed.executiveSummary,
+        parsed.multiPageAnalysis,
+        parsed.competitivePositioning,
+        parsed.strategicRoadmap
+      ].join(' ');
+      
+      const wordCount = totalText.split(/\s+/).length;
+      
+      return {
+        executiveSummary: parsed.executiveSummary || '',
+        multiPageAnalysis: parsed.multiPageAnalysis || '',
+        competitivePositioning: parsed.competitivePositioning || '',
+        strategicRoadmap: parsed.strategicRoadmap || '',
+        keyMetrics: {
+          estimatedROI: parsed.keyMetrics?.estimatedROI || '',
+          implementationTimeframe: parsed.keyMetrics?.implementationTimeframe || '',
+          priorityActions: parsed.keyMetrics?.priorityActions || []
+        },
+        generatedAt: parsed.generatedAt || new Date().toISOString(),
+        wordCount
+      };
+      
+    } catch (error) {
+      console.error('❌ Failed to parse enterprise report:', error);
+      console.error('Raw response:', responseText);
+      throw new Error('ENTERPRISE_PARSE_FAILED');
     }
   }
 

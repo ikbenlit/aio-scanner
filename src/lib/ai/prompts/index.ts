@@ -3,7 +3,16 @@
  */
 
 // Core strategy pattern exports
-export { PromptStrategy, BasePromptStrategy, type PromptInput } from './PromptStrategy.js';
+export { BasePromptStrategy } from './PromptStrategy.js';
+export type { PromptStrategy, PromptInput } from './PromptStrategy.js';
+
+// Registry-based factory
+export { PromptFactory, type PromptType } from './PromptFactory.js';
+
+// Concrete prompt strategies (copy-first implementations)
+export { InsightsPromptStrategy } from './InsightsPromptStrategy.js';
+export { NarrativePromptStrategy } from './NarrativePromptStrategy.js';
+export { EnterprisePromptStrategy } from './EnterprisePromptStrategy.js';
 
 // Shared utilities
 export { WebsiteContextAnalyzer, type WebsiteContext } from './shared/WebsiteContextAnalyzer.js';

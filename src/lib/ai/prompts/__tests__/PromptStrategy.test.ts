@@ -2,7 +2,7 @@
  * Test suite for PromptStrategy interface and BasePromptStrategy
  */
 
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { BasePromptStrategy, type PromptInput } from '../PromptStrategy.js';
 
 // Test implementation of BasePromptStrategy

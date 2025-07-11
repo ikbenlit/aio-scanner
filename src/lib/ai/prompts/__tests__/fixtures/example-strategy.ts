@@ -140,7 +140,7 @@ ${this.formatJSON(enterpriseFeatures.siteWidePatterns || {})}`,
       responseFormat: {
         format: 'json',
         schema: this.helpers.JSON_SCHEMAS.ENTERPRISE_REPORT,
-        instructions: this.helpers.COMMON_INSTRUCTIONS.ENTERPRISE_STRATEGIC
+        instructions: [...this.helpers.COMMON_INSTRUCTIONS.ENTERPRISE_STRATEGIC]
       }
     });
   }

@@ -2,24 +2,44 @@
 
 **Referentie:** [AIO Scanner Results & PDF Redesign Concept](aio_scanner_redesign_concept.md)
 
-## 1. Doel
+## Overzicht per Fase
 
-Dit document beschrijft de technische implementatie voor de herontwerp van de AIO Scanner resultatenpagina en PDF-rapportage. Het doel is om de huidige, technische checklist te transformeren naar een business-impact-gedreven, gepersonaliseerde en actiegerichte ervaring voor de gebruiker, conform het redesign concept.
+| Fase | Subfase                       | Status | Eigenaar |
+|------|-------------------------------|--------|----------|
+| 1    | 1.1 DB Schema & Migratie      | ⬜ TODO | BD       |
+| 1    | 1.2 AI Strategy Ontwikkeling  | ⬜ TODO | BD       |
+| 1    | 1.3 Seed Script               | ⬜ TODO | BD       |
+| 2    | 2.1 Svelte Componenten        | ⬜ TODO | FE       |
+| 2    | 2.2 Data Fetching             | ⬜ TODO | FE       |
+| 2    | 2.3 UI Interactiviteit        | ⬜ TODO | FE       |
+| 3    | 3.1 PDF Edge Function         | ⬜ TODO | BD       |
+| 3    | 3.2 PDF Template              | ⬜ TODO | FE       |
+| 3    | 3.3 PDF UI Integratie         | ⬜ TODO | FE       |
+| 4    | 4.1 End-to-End Testen         | ⬜ TODO | QA       |
+| 4    | 4.2 Regressietesten           | ⬜ TODO | QA       |
+| 4    | 4.3 Feature Flag Release      | ⬜ TODO | LD/PO    |
+
+_Legenda status: ⬜ TODO · 🔄 IN PROGRESS · ✅ DONE_
+
+## 1. Introductie & Doel
+
+Dit document beschrijft de technische implementatie voor de herontwerp van de AIO Scanner resultatenpagina en PDF-rapportage. Het hoofddoel is om de huidige, technische checklist te transformeren naar een **business-impact-gedreven, gepersonaliseerde en actiegerichte ervaring** voor de gebruiker.
 
 **Kernprincipes:**
 - **Copy-First:** Maximaal hergebruik van de bestaande SvelteKit + Supabase architectuur.
 - **Separation of Concerns (SoC):** Duidelijke scheiding tussen data-laag (Supabase), AI-logica (Prompts), en presentatie-laag (SvelteKit).
 - **Don't Repeat Yourself (DRY):** Generieke componenten en functies voor zowel de web- als PDF-weergave.
 
-## 2. Architectuur en Datamodel
+---
 
-De kern van deze implementatie is de introductie van een rijker datamodel voor scan-bevindingen. Dit model zal de basis vormen voor zowel de web-interface als het PDF-rapport.
+## Fase 1: Backend & Datamodel (5-8 dagen)
 
-### 2.1. Backend (Supabase)
+**Doel:** De fundering leggen voor de verrijkte scanresultaten. Dit omvat het uitbreiden van het datamodel in Supabase en het ontwikkelen van de AI-logica die de nieuwe, contextrijke data kan genereren.
 
-#### 2.1.1. Nieuw Database Schema: `scan_findings`
+### 1.1. Architectuur: Database & AI
 
-We introduceren een nieuwe tabel `scan_findings` om de verrijkte resultaten op te slaan. Dit vervangt (of is een aanvulling op) de huidige manier van opslag.
+#### Nieuw Database Schema: `scan_findings`
+We introduceren een nieuwe tabel `scan_findings` om de verrijkte resultaten op te slaan.
 
 **Tabel: `scan_findings`**
 ```sql
@@ -29,50 +49,50 @@ CREATE TABLE scan_findings (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     scan_id UUID REFERENCES scans(id) ON DELETE CASCADE NOT NULL,
     created_at TIMESTAMPTZ DEFAULT NOW(),
-
-    -- Core Finding Info
     title TEXT NOT NULL,
     priority finding_priority NOT NULL,
     time_estimate_minutes INT,
-    
-    -- Business Context (AI-generated)
     problem_statement TEXT,
     solution_summary TEXT,
     business_impact_summary TEXT, -- e.g., "+25% conversie"
-    
-    -- Expanded Details (for detail view)
     implementation_steps JSONB, -- { "title": "Stap 1", "description": "..." }[]
     roi_analysis JSONB, -- { "investment": "...", "return": "...", "calculation": "..." }
     before_after_example JSONB, -- { "before": "...", "after": "..." }
-
-    -- Metadata
     is_completed BOOLEAN DEFAULT FALSE,
     category TEXT -- e.g., 'SEO', 'Content', 'Technical'
 );
 ```
+- **Overwegingen:** `JSONB` biedt flexibiliteit voor gestructureerde data. De `priority` ENUM zorgt voor consistentie.
 
-**Overwegingen:**
-- `JSONB` wordt gebruikt voor flexibele, gestructureerde data zoals stappenplannen en ROI-analyses.
-- Een `priority` ENUM zorgt voor consistente data en maakt prioriteren eenvoudig.
-- De relatie met een eventuele `scans` tabel blijft behouden via `scan_id`.
+#### Aanpassing AI Prompt Strategieën
+De bestaande AI-logica wordt aangepast om de velden in de `scan_findings` tabel te vullen.
+1.  **Hergebruik:** We bouwen voort op de `refactor-prompt-management` inspanning en maken een nieuwe `RichFindingGenerationStrategy`.
+2.  **Output Structuur:** De prompt wordt ontworpen om een JSON-array te genereren die overeenkomt met de `scan_findings` structuur.
+3.  **Suggestie (Prompt Chaining):** Om betrouwbaarheid te verhogen, splitsen we de AI-taak op:
+    *   **Prompt 1 (Identificatie):** Identificeert kernproblemen.
+    *   **Prompt 2 (Verrijking):** Genereert voor elk probleem de business context, ROI en stappenplan.
 
-#### 2.1.2. Aanpassing AI Prompt Strategieën
+### 1.2. Taken
+-   [ ] **1.1:** Finaliseren en migreren van het `scan_findings` Supabase schema via een SQL-migratiebestand in `supabase/migrations/` (bijv. `20250726_scan_findings.sql`).
+-   [ ] **1.2:** Ontwikkelen van de nieuwe `RichFindingGenerationStrategy` voor de AI, inclusief prompt-engineering en output validatie (JSON-schema).
+-   [ ] **1.3:** Creëren van een `seed` script om de database te vullen met test-bevindingen voor frontend-ontwikkeling.
 
-De bestaande AI-logica moet worden aangepast om de velden in de `scan_findings` tabel te vullen.
+#### Definition of Done
+* Migratiebestand `supabase/migrations/20250726_scan_findings.sql` succesvol uitgerold in DEV en STAGING.
+* `scan_findings` tabel zichtbaar in Supabase Studio en bevat testdata.
+* `RichFindingGenerationStrategy` produceert valide JSON volgens schema (> 95 % succesrate in unit-tests).
+* Seed-script levert ≥ 20 dummy findings verdeeld over alle prioriteiten.
 
-**Aanpak:**
-1.  **Hergebruik Prompt Refactor:** We bouwen voort op de recente `refactor-prompt-management` inspanning. Er wordt een nieuwe `PromptStrategy` gemaakt, bijvoorbeeld `RichFindingGenerationStrategy`.
-2.  **Output Structuur:** De prompt wordt ontworpen om een JSON-array te genereren die direct overeenkomt met de structuur van `scan_findings`.
-3.  **(Suggestie) Prompt Chaining:** Om de betrouwbaarheid van de output te verhogen, kunnen we een "chain-of-thought" aanpak overwegen:
-    *   **Prompt 1 (Identificatie):** Identificeert de kernproblemen (zoals nu).
-    *   **Prompt 2 (Verrijking):** Neemt elk geïdentificeerd probleem als input en genereert de bijbehorende business context, ROI, stappenplan, etc. Dit verdeelt de taak in kleinere, beter beheersbare stappen voor de LLM.
+---
 
-### 2.2. Frontend (SvelteKit)
+## Fase 2: Web Resultaten Pagina (Frontend) (5-8 dagen)
 
-#### 2.2.1. Data Models (TypeScript)
+**Doel:** De nieuwe, verrijkte data visualiseren in een actiegerichte en gebruiksvriendelijke webinterface, volledig in lijn met het UX/UI-concept.
 
-We definiëren TypeScript interfaces die overeenkomen met het `scan_findings` schema voor type-safety in de SvelteKit-applicatie.
+### 2.1. Architectuur: SvelteKit
 
+#### Data Models (TypeScript)
+We definiëren een `ScanFinding` interface in `src/lib/types/scan.ts` voor type-safety, die het `scan_findings` schema spiegelt.
 ```typescript
 // src/lib/types/scan.ts
 export type FindingPriority = 'urgent' | 'high_impact' | 'recommended';
@@ -94,74 +114,84 @@ export interface ScanFinding {
 }
 ```
 
-#### 2.2.2. Componenten Structuur (Copy-First)
+#### Componenten Structuur (`src/lib/components/results/`)
+We ontwikkelen de volgende herbruikbare componenten:
+-   `ExecutiveSummary.svelte`: De hero-sectie met de algemene score.
+-   `FindingsLayout.svelte`: Groepeert bevindingen op prioriteit (`urgent`, etc.).
+-   `FindingCard.svelte`: De compacte kaartweergave van een bevinding.
+-   `FindingDetail.svelte`: De uitklapbare weergave met stappenplan en ROI.
+-   `ProgressTracker.svelte`: Indicator voor voltooide acties.
 
-We hergebruiken de bestaande componentenstructuur en voegen de volgende, nieuwe componenten toe:
+#### State Management
+We gebruiken een Svelte *writable store* om de `is_completed` status van bevindingen te beheren. Dit zorgt voor een reactieve UI en maakt optimistische updates mogelijk voor een soepele gebruikerservaring.
 
--   `src/lib/components/results/`
-    -   `ExecutiveSummary.svelte`: De hero-sectie met de algemene score en samenvatting.
-    -   `FindingsLayout.svelte`: De hoofdlayout die bevindingen groepeert op prioriteit.
-    -   `FindingCard.svelte`: De basis-kaartweergave van een bevinding.
-        -   Props: `finding: ScanFinding`
-    -   `FindingDetail.svelte`: De uitklapbare weergave met het stappenplan en ROI. Wordt conditioneel gerenderd binnen `FindingCard`.
-    -   `ProgressTracker.svelte`: Indicator die toont "3 van 8 acties voltooid".
-
-**(Suggestie) State Management:**
-Om de status (`is_completed`) van bevindingen over de componenten heen te synchroniseren, gebruiken we een Svelte *writable store*. Dit maakt de UI reactief en voorkomt complexe prop-drilling. Bij het markeren van een taak als voltooid, passen we een **optimistische UI** update toe voor een soepele gebruikerservaring.
-
-## 3. PDF Generatie
-
-Voor de PDF-rapportage stellen we een robuuste, server-side aanpak voor om consistentie en kwaliteit te waarborgen.
-
-### 3.1. Architectuur: Supabase Edge Function
-
-1.  **Creëer een Edge Function:** `supabase/functions/generate-pdf-report`.
-2.  **Gebruik Deno-Puppeteer:** Deze functie gebruikt een browser-engine om een HTML-template om te zetten naar een PDF.
-3.  **Input:** De functie accepteert een `scan_id` als parameter.
-4.  **Proces:**
-    a. Haalt de `scan_findings` op voor de gegeven `scan_id`.
-    b. Rendert een private Svelte-component of HTML-template met deze data.
-    c. Gebruikt Puppeteer om deze HTML-pagina "te printen" naar een PDF-buffer.
-    d. Retourneert de PDF als een `Blob`.
-
-### 3.2. Template
-
-We kunnen een aparte set Svelte-componenten maken, geoptimaliseerd voor PDF-layout (`src/lib/components/pdf/`), die de data van de bevindingen gebruiken. Dit maximaliseert hergebruik van logica en styling (met print-specifieke CSS).
-
-## 4. Implementatieplan (Fasering)
-
-### Fase 1: Backend en Datamodel (5-8 dagen)
--   [ ] **1.1:** Finaliseren en migreren van het `scan_findings` Supabase schema.
--   [ ] **1.2:** Ontwikkelen van de nieuwe `RichFindingGenerationStrategy` voor de AI, inclusief prompt-engineering en output validatie (JSON-schema).
--   [ ] **1.3:** Creëren van een `seed` script om de database te vullen met test-bevindingen voor frontend-ontwikkeling.
-
-### Fase 2: Web Resultaten Pagina (Frontend) (5-8 dagen)
--   [ ] **2.1:** Ontwikkelen van de nieuwe Svelte-componenten (`ExecutiveSummary`, `FindingCard`, etc.) in een readonly-staat.
+### 2.2. Taken
+-   [ ] **2.1:** Ontwikkelen van de nieuwe Svelte-componenten in een readonly-staat.
 -   [ ] **2.2:** Implementeren van data-fetching vanuit Supabase in de SvelteKit `+page.server.ts`.
 -   [ ] **2.3:** Toevoegen van interactiviteit:
     -   Uitklapbare secties voor details.
     -   State management (Svelte store) voor `is_completed` status.
     -   Implementeren van de "Markeer als Gedaan" knop met optimistische UI updates.
 
-### Fase 3: PDF Generatie (3-5 dagen)
--   [ ] **3.1:** Opzetten van de Supabase Edge Function `generate-pdf-report`.
--   [ ] **3.2:** Ontwikkelen van de HTML/CSS-template voor het PDF-rapport.
--   [ ] **3.3:** Integreren van de "Download PDF" knop op de web-interface, die de Edge Function aanroept.
-
-### Fase 4: Testen en Afronding (2-3 dagen)
--   [ ] **4.1:** End-to-end testen van de volledige flow: van scan tot weergave en PDF-download.
--   [ ] **4.2:** Regressietesten om zeker te zijn dat bestaande functionaliteit niet is beïnvloed.
--   [ ] **4.3:** (Optioneel) Implementeren van de nieuwe weergave achter een feature flag.
-
-## 5. Aanvullende Aanbevelingen (Lead Dev Input)
-
--   **Feature Flagging:** Om risico's te minimaliseren, introduceren we de nieuwe resultatenpagina via een feature flag in Supabase (bv. via een `config` tabel of PostgREST). Dit laat ons toe de feature te testen in productie voor specifieke gebruikers alvorens deze voor iedereen live te zetten.
--   **Generic Components:** De `FindingCard` moet zo generiek mogelijk worden opgezet, zodat deze met minimale aanpassingen ook kan dienen als basis voor de rijen in het PDF-template. Styling kan worden overschreven met CSS-variabelen of aparte stylesheets.
--   **I18n (Internationalisatie):** Hoewel de huidige focus Nederlands is, is het verstandig om UI-strings (zoals "Urgent", "Stappenplan") niet hard te coderen, maar via een i18n-bibliotheek te laten lopen. Dit vereenvoudigt toekomstige vertalingen.
+#### Definition of Done
+* Alle componenten renderen zonder console-errors in Storybook.
+* Data-fetch via Supabase in `+page.server.ts` ≤ 500 ms in DEV.
+* "Markeer als Gedaan" update UI én Supabase binnen 1 s (optimistisch schrijven).
+* UX-review: pixel-perfect voor desktop (≥ 1280 px) en mobile (≤ 375 px).
 
 ---
 
-## 6. Sessielog: Kick-off & Plan Review
+## Fase 3: PDF Generatie (3-5 dagen)
+
+**Doel:** Een professioneel, pixel-perfect PDF-rapport genereren op basis van de scanresultaten, geschikt voor offline gebruik en presentaties.
+
+### 3.1. Architectuur: Supabase Edge Function
+
+1.  **Creëer een Edge Function:** `supabase/functions/generate-pdf-report`.
+2.  **Technologie:** We gebruiken Deno-Puppeteer om een HTML-template server-side om te zetten naar een PDF. Dit garandeert een consistente, hoogwaardige output.
+3.  **Proces:**
+    a. De functie ontvangt een `scan_id`.
+    b. Haalt alle bijbehorende `scan_findings` op.
+    c. Rendert een HTML-template met deze data.
+    d. "Print" de pagina naar een PDF en retourneert deze.
+
+### 3.2. Taken
+-   [ ] **3.1:** Opzetten van de Supabase Edge Function `generate-pdf-report`.
+-   [ ] **3.2:** Ontwikkelen van de HTML/CSS-template voor het PDF-rapport (eventueel met `src/lib/components/pdf/` componenten).
+-   [ ] **3.3:** Integreren van de "Download PDF" knop op de web-interface die de Edge Function aanroept.
+
+#### Definition of Done
+* Edge Function gedeployed; PDF ≤ 5 MB en gegenereerd < 20 s (p95).
+* Visuele regressietest (Percy) toont < 1 % afwijking t.o.v. Figma-design.
+* Download-knop retourneert HTTP 200 met correcte `Content-Disposition`-header.
+
+---
+
+## Fase 4: Testen en Afronding (2-3 dagen)
+
+**Doel:** De kwaliteit en correcte werking van de volledige flow waarborgen en de feature gecontroleerd uitrollen naar productie.
+
+### 4.1. Taken
+-   [ ] **4.1:** End-to-end testen van de volledige flow: van scan tot weergave en PDF-download.
+-   [ ] **4.2:** Regressietesten om zeker te zijn dat bestaande functionaliteit niet is beïnvloed.
+-   [ ] **4.3:** Implementeren en testen van de nieuwe weergave achter een feature flag.
+
+#### Definition of Done
+* Cypress E2E-suite (≥ 15 scenario’s) slaagt in CI.
+* Regressietest baseline < 0,5 % UI-afwijking.
+* Feature-flag `scan_results_v2` kan live togglen zonder downtime.
+
+---
+
+## Algemene Aanbevelingen
+
+-   **Feature Flagging:** Om risico's te minimaliseren, introduceren we de nieuwe resultatenpagina via een feature flag in Supabase. Dit laat ons toe de feature te testen in productie voor specifieke gebruikers.
+-   **Generic Components:** De `FindingCard` moet zo generiek mogelijk worden opgezet, zodat deze met minimale aanpassingen ook kan dienen als basis voor de rijen in het PDF-template.
+-   **I18n (Internationalisatie):** Hoewel de focus Nederlands is, coderen we UI-strings niet hard, maar gebruiken we een i18n-bibliotheek ter voorbereiding op toekomstige vertalingen.
+
+---
+
+## Sessielog: Kick-off & Plan Review
 
 **Datum:** 2024-07-26
 **Aanwezig:** Lead Dev (LD), Product Owner (PO), Backend Dev (BD), Frontend Dev (FE), UX Designer (UX).

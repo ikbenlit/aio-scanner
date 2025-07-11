@@ -1,6 +1,7 @@
 import type { ModuleResult } from '../types/scan.js';
 import type { EnhancedContent } from './ContentExtractor';
 import { VertexAIClient } from '../ai/vertexClient.js';
+import { PromptFactory } from '../ai/prompts/PromptFactory.js';
 import type { 
     AIInsights as VertexAIInsights, 
     NarrativeReport as VertexNarrativeReport,
@@ -39,17 +40,25 @@ export class LLMEnhancementService {
         }
 
         try {
-            // Generate structured insights using VertexAI
+            // Generate structured insights using VertexAI with PromptFactory
             console.log('🧠 Generating AI insights...');
-            const insights = await this.vertexClient.generateInsights(moduleResults, enhancedContent, url);
+            const insightsStrategy = PromptFactory.create('insights');
+            const insightsPrompt = insightsStrategy.buildPrompt({
+                moduleResults,
+                enhancedContent,
+                url
+            });
+            const insights = await this.vertexClient.generateInsights(insightsPrompt);
             
-            // Generate narrative report using VertexAI
+            // Generate narrative report using VertexAI with PromptFactory
             console.log('📝 Generating narrative report...');
-            const narrative = await this.vertexClient.generateNarrativeReport(
-                moduleResults, 
-                enhancedContent, 
+            const narrativeStrategy = PromptFactory.create('narrative');
+            const narrativePrompt = narrativeStrategy.buildPrompt({
+                moduleResults,
+                enhancedContent,
                 insights
-            );
+            });
+            const narrative = await this.vertexClient.generateNarrativeReport(narrativePrompt);
             
             const result = { insights, narrative };
             

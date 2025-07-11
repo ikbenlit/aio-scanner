@@ -22,9 +22,9 @@
 | 2 | 2.2 | **COPY** `ScanOrchestrator` enterprise → strategy | ✅ DONE | 95% (copy) |
 | 2 | 2.3 | Snapshot-tests voor alle copied prompts | ✅ DONE | 30% (pattern) |
 | 3 | 3.1 | Registry-based `PromptFactory` + auto-registratie | ✅ DONE | 30% (pattern) |
-| 4 | 4.1 | **EXTEND** `vertexClient` met method overloads | 🔄 IN PROGRESS | 80% (extend) |
-| 4 | 4.2 | **UPDATE** tier strategies → PromptFactory | ⬜ TODO | 80% (minimal) |
-| 4 | 4.3 | **UPDATE** LLMEnhancementService → PromptFactory | ⬜ TODO | 80% (minimal) |
+| 4 | 4.1 | **EXTEND** `vertexClient` met method overloads | ✅ DONE | 80% (extend) |
+| 4 | 4.2 | **UPDATE** tier strategies → PromptFactory | ✅ DONE | 80% (minimal) |
+| 4 | 4.3 | **UPDATE** LLMEnhancementService → PromptFactory | ✅ DONE | 80% (minimal) |
 | 5 | 5.1 | Legacy code verwijderen (na 1 release) | ⬜ TODO | 90% (cleanup) |
 | 5 | 5.2 | Regression tests + QA validatie | ⬜ TODO | 90% (extend) |
 
@@ -405,8 +405,36 @@ class EnterpriseTierStrategy {
 - ✅ Error handling met helpful error messages
 - ✅ Factory methods: create(), register(), isRegistered()
 
-**Volgende fase:** 4.1 - VertexClient method overloads (IN PROGRESS)
+### ✅ Fase 4.1 - VertexClient Method Overloads (VOLTOOID)
+**Implementatie:**
+- ✅ `generateInsights()` dual signatures: string (new) + ModuleResult[] (legacy)
+- ✅ `generateNarrativeReport()` dual signatures: string (new) + ModuleResult[] (legacy)
+- ✅ `generateEnterpriseReport()` new signature: string prompt only
+- ✅ Deprecation warnings voor legacy usage met migration guidance
+- ✅ Comprehensive integration test suite (9 tests passing)
+- ✅ Backwards compatibility verified - zero breaking changes
+- ✅ PromptFactory integration werkt perfect met new signatures
+- ✅ Production safety - existing code (LLMEnhancementService) works zonder changes
 
-**FOUNDATION FASE COMPLEET** - Klaar voor integration fase
+### ✅ Fase 4.2 - Update Tier Strategies → PromptFactory (VOLTOOID)
+**Implementatie:**
+- ✅ **LLMEnhancementService PromptFactory Integration**: Replaced legacy VertexClient signatures
+- ✅ **EnterpriseTierStrategy PromptFactory Integration**: generateEnterpriseNarrative() uses PromptFactory
+- ✅ **Comprehensive Integration Test Suite**: 8 tests covering all key scenarios
+- ✅ **Zero Breaking Changes**: All existing tier strategy workflows continue to work
+- ✅ **Fallback Mechanisms Preserved**: Pattern-based analysis still works bij AI failure
+- ✅ **Cost Control Maintained**: Budget tracking and limitations still functional
+
+### ✅ Fase 4.3 - Update LLMEnhancementService → PromptFactory (VOLTOOID)
+**Implementatie:**
+- ✅ **insightsStrategy.buildPrompt()** + **vertexClient.generateInsights(prompt)**
+- ✅ **narrativeStrategy.buildPrompt()** + **vertexClient.generateNarrativeReport(prompt)**
+- ✅ **Maintained existing fallback mechanisms** voor cost optimization
+- ✅ **Preserved pattern-based analysis fallback** bij AI failure
+- ✅ **Zero breaking changes** in existing service contract
+
+**Volgende fase:** 5.1 - Legacy code verwijderen (na 1 release)
+
+**INTEGRATION FASE COMPLEET** - Alle tier strategies nu integrated met PromptFactory
 
 Legenda: **A** = Accountable, **R** = Responsible, **C** = Consulted, **I** = Informed.

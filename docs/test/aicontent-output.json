@@ -1,0 +1,165 @@
+[
+  {
+    "type": "selector",
+    "category": "headings",
+    "pattern": "h1",
+    "matches": 1,
+    "impact": "medium",
+    "description": "Analyseert heading structuur",
+    "debugMeta": {
+      "matchedElements": [
+        "<h1>"
+      ],
+      "selector": "h1"
+    }
+  },
+  {
+    "type": "selector",
+    "category": "headings",
+    "pattern": "h2",
+    "matches": 9,
+    "impact": "medium",
+    "description": "Analyseert heading structuur",
+    "debugMeta": {
+      "matchedElements": [
+        "<h2>",
+        "<h2>",
+        "<h2>",
+        "<h2>",
+        "<h2>"
+      ],
+      "selector": "h2"
+    }
+  },
+  {
+    "type": "selector",
+    "category": "headings",
+    "pattern": "h3",
+    "matches": 3,
+    "impact": "medium",
+    "description": "Analyseert heading structuur",
+    "debugMeta": {
+      "matchedElements": [
+        "<h3>",
+        "<h3>",
+        "<h3>"
+      ],
+      "selector": "h3"
+    }
+  },
+  {
+    "type": "regex",
+    "category": "personalPronouns",
+    "pattern": "\\bje\\b",
+    "matches": 76,
+    "impact": "medium",
+    "description": "Detecteert conversational tone via persoonlijke voornaamwoorden",
+    "debugMeta": {
+      "matchedText": [
+        "je",
+        "je",
+        "je",
+        "je",
+        "je"
+      ],
+      "regex": "\\bje\\b"
+    }
+  },
+  {
+    "type": "regex",
+    "category": "personalPronouns",
+    "pattern": "\\bjij\\b",
+    "matches": 2,
+    "impact": "medium",
+    "description": "Detecteert conversational tone via persoonlijke voornaamwoorden",
+    "debugMeta": {
+      "matchedText": [
+        "jij",
+        "jij"
+      ],
+      "regex": "\\bjij\\b"
+    }
+  },
+  {
+    "type": "regex",
+    "category": "personalPronouns",
+    "pattern": "\\bjouw\\b",
+    "matches": 3,
+    "impact": "medium",
+    "description": "Detecteert conversational tone via persoonlijke voornaamwoorden",
+    "debugMeta": {
+      "matchedText": [
+        "jouw",
+        "jouw",
+        "jouw"
+      ],
+      "regex": "\\bjouw\\b"
+    }
+  },
+  {
+    "type": "regex",
+    "category": "personalPronouns",
+    "pattern": "\\bu\\b",
+    "matches": 7,
+    "impact": "medium",
+    "description": "Detecteert conversational tone via persoonlijke voornaamwoorden",
+    "debugMeta": {
+      "matchedText": [
+        "u",
+        "u",
+        "u",
+        "u",
+        "u"
+      ],
+      "regex": "\\bu\\b"
+    }
+  },
+  {
+    "type": "regex",
+    "category": "personalPronouns",
+    "pattern": "\\bwe\\b",
+    "matches": 2,
+    "impact": "medium",
+    "description": "Detecteert conversational tone via persoonlijke voornaamwoorden",
+    "debugMeta": {
+      "matchedText": [
+        "we",
+        "We"
+      ],
+      "regex": "\\bwe\\b"
+    }
+  },
+  {
+    "type": "regex",
+    "category": "personalPronouns",
+    "pattern": "\\bwij\\b",
+    "matches": 2,
+    "impact": "medium",
+    "description": "Detecteert conversational tone via persoonlijke voornaamwoorden",
+    "debugMeta": {
+      "matchedText": [
+        "wij",
+        "wij"
+      ],
+      "regex": "\\bwij\\b"
+    }
+  },
+  {
+    "type": "regex",
+    "category": "questionMarks",
+    "pattern": "\\?",
+    "matches": 55,
+    "impact": "low",
+    "description": "Telt vraagmarkeringen voor engagement",
+    "debugMeta": {
+      "matchedText": [
+        "?",
+        "?",
+        "?",
+        "?",
+        "?"
+      ],
+      "regex": "\\?"
+    }
+  }
+]

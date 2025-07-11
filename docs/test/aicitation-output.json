@@ -1,0 +1,242 @@
+[
+  {
+    "type": "selector",
+    "category": "authorBio",
+    "pattern": "[class*=\"over\" i]",
+    "matches": 9,
+    "impact": "high",
+    "description": "Detecteert author/team secties",
+    "debugMeta": {
+      "matchedElements": [
+        "<ul class=\"w-nav-list level_1 hover_simple\">",
+        "<div class=\"l-section-overlay\">",
+        "<div class=\"l-section-overlay\">",
+        "<div class=\"l-section-overlay\">",
+        "<div class=\"l-section-overlay\">"
+      ],
+      "selector": "[class*=\"over\" i]"
+    }
+  },
+  {
+    "type": "selector",
+    "category": "contactInfo",
+    "pattern": "[class*=\"footer\" i]",
+    "matches": 3,
+    "impact": "medium",
+    "description": "Detecteert contact informatie secties",
+    "debugMeta": {
+      "matchedElements": [
+        "<div class=\"cmplz-divider cmplz-footer\">",
+        "<footer id=\"page-footer\" class=\"l-footer\">",
+        "<section class=\"l-section wpb_row us_custom_cd308c05 height_medium width_full color_footer-bottom\">"
+      ],
+      "selector": "[class*=\"footer\" i]"
+    }
+  },
+  {
+    "type": "selector",
+    "category": "contactInfo",
+    "pattern": "[id*=\"footer\" i]",
+    "matches": 1,
+    "impact": "medium",
+    "description": "Detecteert contact informatie secties",
+    "debugMeta": {
+      "matchedElements": [
+        "<footer id=\"page-footer\" class=\"l-footer\">"
+      ],
+      "selector": "[id*=\"footer\" i]"
+    }
+  },
+  {
+    "type": "regex",
+    "category": "expertiseSignals",
+    "pattern": "published|gepubliceerd|artikel|research",
+    "matches": 1,
+    "impact": "high",
+    "description": "Detecteert expertise indicatoren en credentials",
+    "debugMeta": {
+      "matchedText": [
+        "Published"
+      ],
+      "regex": "published|gepubliceerd|artikel|research"
+    }
+  },
+  {
+    "type": "regex",
+    "category": "expertiseSignals",
+    "pattern": "iso|accredited|member|lid van|association",
+    "matches": 2,
+    "impact": "high",
+    "description": "Detecteert expertise indicatoren en credentials",
+    "debugMeta": {
+      "matchedText": [
+        "IsO",
+        "IsO"
+      ],
+      "regex": "iso|accredited|member|lid van|association"
+    }
+  },
+  {
+    "type": "regex",
+    "category": "quoteableContent",
+    "pattern": "succesvol|uniek|expert|bewezen|resultaat|transformatie",
+    "matches": 9,
+    "impact": "medium",
+    "description": "Identificeert quoteerbare content en impactful statements",
+    "debugMeta": {
+      "matchedText": [
+        "uniek",
+        "uniek",
+        "uniek",
+        "uniek",
+        "uniek"
+      ],
+      "regex": "succesvol|uniek|expert|bewezen|resultaat|transformatie"
+    }
+  },
+  {
+    "type": "regex",
+    "category": "authorityMarkers",
+    "pattern": "tv|radio|podcast|nieuwsuur",
+    "matches": 3,
+    "impact": "high",
+    "description": "Detecteert media mentions, client signals en industry recognition",
+    "debugMeta": {
+      "matchedText": [
+        "tv",
+        "tv",
+        "tV"
+      ],
+      "regex": "tv|radio|podcast|nieuwsuur"
+    }
+  },
+  {
+    "type": "regex",
+    "category": "authorityMarkers",
+    "pattern": "nos|rtl|bbc|cnn",
+    "matches": 5,
+    "impact": "high",
+    "description": "Detecteert media mentions, client signals en industry recognition",
+    "debugMeta": {
+      "matchedText": [
+        "rtl",
+        "nos",
+        "nos",
+        "nos",
+        "nos"
+      ],
+      "regex": "nos|rtl|bbc|cnn"
+    }
+  },
+  {
+    "type": "regex",
+    "category": "authorityMarkers",
+    "pattern": "klanten|clients|partners",
+    "matches": 3,
+    "impact": "high",
+    "description": "Detecteert media mentions, client signals en industry recognition",
+    "debugMeta": {
+      "matchedText": [
+        "Klanten",
+        "klanten",
+        "Klanten"
+      ],
+      "regex": "klanten|clients|partners"
+    }
+  },
+  {
+    "type": "regex",
+    "category": "authorityMarkers",
+    "pattern": "best|top|leading|#1",
+    "matches": 210,
+    "impact": "high",
+    "description": "Detecteert media mentions, client signals en industry recognition",
+    "debugMeta": {
+      "matchedText": [
+        "top",
+        "top",
+        "top",
+        "top",
+        "top"
+      ],
+      "regex": "best|top|leading|#1"
+    }
+  },
+  {
+    "type": "regex",
+    "category": "businessTransparency",
+    "pattern": "email|telefoon|phone|address|adres",
+    "matches": 2,
+    "impact": "medium",
+    "description": "Detecteert contact informatie en business registratie details",
+    "debugMeta": {
+      "matchedText": [
+        "Phone",
+        "email"
+      ],
+      "regex": "email|telefoon|phone|address|adres"
+    }
+  },
+  {
+    "type": "regex",
+    "category": "businessTransparency",
+    "pattern": "contact|kvk|btw|vat|chamber of commerce",
+    "matches": 10,
+    "impact": "medium",
+    "description": "Detecteert contact informatie en business registratie details",
+    "debugMeta": {
+      "matchedText": [
+        "contact",
+        "Contact",
+        "vat",
+        "Contact",
+        "Contact"
+      ],
+      "regex": "contact|kvk|btw|vat|chamber of commerce"
+    }
+  },
+  {
+    "type": "regex",
+    "category": "businessTransparency",
+    "pattern": "kvk\\s*:?\\s*\\d+",
+    "matches": 1,
+    "impact": "medium",
+    "description": "Detecteert contact informatie en business registratie details",
+    "debugMeta": {
+      "matchedText": [
+        "KvK 70651450"
+      ],
+      "regex": "kvk\\s*:?\\s*\\d+"
+    }
+  },
+  {
+    "type": "regex",
+    "category": "professionalTitles",
+    "pattern": "ceo|directeur|oprichter|founder",
+    "matches": 2,
+    "impact": "medium",
+    "description": "Detecteert professionele titels en functies",
+    "debugMeta": {
+      "matchedText": [
+        "ceo",
+        "ceO"
+      ],
+      "regex": "ceo|directeur|oprichter|founder"
+    }
+  },
+  {
+    "type": "regex",
+    "category": "professionalTitles",
+    "pattern": "manager|hoofd|senior",
+    "matches": 2,
+    "impact": "medium",
+    "description": "Detecteert professionele titels en functies",
+    "debugMeta": {
+      "matchedText": [
+        "manager",
+        "manager"
+      ],
+      "regex": "manager|hoofd|senior"
+    }
+  }
+]

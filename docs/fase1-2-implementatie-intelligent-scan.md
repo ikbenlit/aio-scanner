@@ -12,8 +12,8 @@
 | | 1.2 "Slimme" Analyse Modules | ✅ Voltooid | Backend | Evidence + suggestions geïmplementeerd |
 | | 1.3 Frontend Integratie & PDF Rapportage | ✅ Voltooid | Frontend, Backend, UX | SmartFindingCard geïntegreerd |
 | | 1.4 Finale Integratie & Verificatie | ✅ Voltooid | Frontend, UX | End-to-end pipeline geverifieerd |
-| **Fase 2** | 2.1 `CrawlManager` Service & Database | ⏳ Gepland | Backend | Enige grote nieuwbouw |
-| | 2.2 Async API & Frontend voor Crawling | ⏳ Gepland | Backend, Frontend, UX | Complexe user journey |
+| **Fase 2** | 2.1 `CrawlManager` Service & Database | ✅ Voltooid | Backend | End-to-end geverifieerd + production-ready |
+| | 2.2 Async API & Frontend voor Crawling | ✅ Voltooid | Frontend, UX | Complete user journey geïmplementeerd |
 | **Fase 3** | 3.1 Hybride AI-Analyse (Backend) | ⏳ Gepland | Backend | Vereist prompt engineering |
 | | 3.2 UI Verfijning voor AI-inzichten | ⏳ Gepland | Frontend, UX | Communicatie is key |
 

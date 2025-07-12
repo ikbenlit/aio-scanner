@@ -153,6 +153,7 @@
       description: 'Voor MKB en marketing professionals',
       features: [
         'Alle Starter-functies',
+        'Site-wide crawling (tot 250 pagina\'s)',
         'AI-auteur voor content verbetering',
         'Volledig narratief PDF-rapport',
         'Analyse van de versheid van content'

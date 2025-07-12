@@ -28,4 +28,30 @@ export interface UserScanHistory {
   created_at: string;
   updated_at?: string;
 }
+
+// Interface voor crawls table
+export interface CrawlRecord {
+  id: string;
+  user_id: string;
+  root_url: string;
+  status: 'pending' | 'running' | 'completed' | 'failed';
+  pages_scanned?: number;
+  total_pages_found?: number;
+  created_at: string;
+  completed_at?: string | null;
+  error_message?: string | null;
+}
+
+// Interface voor crawl_pages table
+export interface CrawlPage {
+  id: string;
+  crawl_id: string;
+  url: string;
+  status: 'pending' | 'scanning' | 'completed' | 'failed';
+  http_status?: number;
+  scan_result_id?: string | null; // FK to scans table
+  error_message?: string | null;
+  discovered_at: string;
+  scanned_at?: string | null;
+}
   

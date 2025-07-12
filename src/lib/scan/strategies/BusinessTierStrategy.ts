@@ -6,6 +6,7 @@ import type { ScanTier } from '../../types/database';
 /**
  * Business tier strategy - includes AI enhancement and full analysis
  * Executes all 6 modules + LLM enhancement + comprehensive AI report
+ * Also supports site-wide crawling capabilities for Business tier
  */
 export class BusinessTierStrategy extends BaseTierStrategy {
     protected tier: ScanTier = 'business';
@@ -223,6 +224,26 @@ export class BusinessTierStrategy extends BaseTierStrategy {
         }
     }
     
+    /**
+     * Check if Business tier supports crawling
+     * Business tier includes site-wide crawling capabilities
+     */
+    supportsCrawling(): boolean {
+        return true;
+    }
+    
+    /**
+     * Get crawling limits for Business tier
+     */
+    getCrawlLimits() {
+        return {
+            maxPages: 250,
+            maxDepth: 5,
+            respectRobotsTxt: true,
+            includeSubdomains: false
+        };
+    }
+
     /**
      * Generate and store PDF for business tier
      */

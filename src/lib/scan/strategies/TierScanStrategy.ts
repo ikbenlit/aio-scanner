@@ -36,6 +36,21 @@ export interface TierScanStrategy {
      * Get expected execution time for this tier (for progress estimation)
      */
     getEstimatedDuration(): number; // in milliseconds
+    
+    /**
+     * Check if this tier supports site-wide crawling
+     */
+    supportsCrawling?(): boolean;
+    
+    /**
+     * Get crawling limits for this tier (if supported)
+     */
+    getCrawlLimits?(): {
+        maxPages: number;
+        maxDepth: number;
+        respectRobotsTxt: boolean;
+        includeSubdomains?: boolean;
+    };
 }
 
 /**
@@ -80,6 +95,20 @@ export abstract class BaseTierStrategy implements TierScanStrategy {
     }
     
     abstract getEstimatedDuration(): number;
+    
+    /**
+     * Default implementation: most tiers don't support crawling
+     */
+    supportsCrawling(): boolean {
+        return false;
+    }
+    
+    /**
+     * Default implementation: return null for non-crawling tiers
+     */
+    getCrawlLimits() {
+        return null;
+    }
     
     /**
      * Common helper: Calculate overall score from module results

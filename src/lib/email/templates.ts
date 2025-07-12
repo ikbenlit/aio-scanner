@@ -21,6 +21,15 @@ export interface EmailTemplateResult {
   };
   includeRecommendations?: boolean;
   enhancedInsights?: boolean;
+  // Phase 2.2 - Crawl Support
+  isCrawlResult?: boolean;
+  crawlId?: string;
+  totalPagesScanned?: number;
+  siteWideStats?: {
+    avgScore: number;
+    totalIssues: number;
+    topIssueTypes: string[];
+  };
 }
 
 // Helper functie om scan engine result te converteren naar email template format
@@ -167,6 +176,138 @@ function formatRoadmapSteps(roadmap: string): string {
   
   // Default paragraph formatting
   return formatTextForHTML(roadmap);
+}
+
+// Site-wide crawl completion email template
+export function getCrawlCompletionEmailTemplate(
+  crawlResult: EmailTemplateResult,
+  recipientEmail: string
+): { subject: string; html: string; text: string } {
+  const domainName = new URL(crawlResult.url).hostname;
+  
+  const subject = `✅ Uw site-analyse voor ${domainName} is voltooid!`;
+  
+  const html = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Site-wide Analyse Voltooid</title>
+</head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+  
+  <!-- Header -->
+  <div style="text-align: center; margin-bottom: 2rem; padding: 2rem; background: linear-gradient(135deg, #3b82f6 0%, #6366f1 100%); border-radius: 12px; color: white;">
+    <h1 style="margin: 0; font-size: 24px; font-weight: bold;">🎉 Site-wide Analyse Voltooid!</h1>
+    <p style="margin: 0.5rem 0 0 0; opacity: 0.9;">Uw volledige website is geanalyseerd</p>
+  </div>
+
+  <!-- Summary -->
+  <div style="background: #f8fafc; padding: 1.5rem; border-radius: 8px; margin-bottom: 1.5rem;">
+    <h2 style="margin: 0 0 1rem 0; color: #1e293b; font-size: 18px;">Analyse Overzicht</h2>
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+      <div>
+        <strong style="color: #3b82f6;">Website:</strong><br>
+        <span style="color: #64748b;">${crawlResult.url}</span>
+      </div>
+      <div>
+        <strong style="color: #3b82f6;">Datum:</strong><br>
+        <span style="color: #64748b;">${new Date(crawlResult.createdAt).toLocaleDateString('nl-NL')}</span>
+      </div>
+      <div>
+        <strong style="color: #3b82f6;">Pagina's Gescand:</strong><br>
+        <span style="color: #64748b; font-size: 20px; font-weight: bold;">${crawlResult.totalPagesScanned || 0}</span>
+      </div>
+      <div>
+        <strong style="color: #3b82f6;">Gemiddelde Score:</strong><br>
+        <span style="color: #${crawlResult.siteWideStats?.avgScore >= 80 ? '10b981' : crawlResult.siteWideStats?.avgScore >= 60 ? 'f59e0b' : 'ef4444'}; font-size: 20px; font-weight: bold;">${crawlResult.siteWideStats?.avgScore || 0}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Key Findings -->
+  ${crawlResult.siteWideStats?.totalIssues ? `
+  <div style="background: #fef2f2; border: 1px solid #fecaca; padding: 1.5rem; border-radius: 8px; margin-bottom: 1.5rem;">
+    <h3 style="margin: 0 0 1rem 0; color: #dc2626; font-size: 16px;">🚨 Issues Gevonden</h3>
+    <p style="margin: 0 0 1rem 0; color: #7f1d1d;">
+      We hebben <strong>${crawlResult.siteWideStats.totalIssues} issues</strong> geïdentificeerd die uw SEO kunnen beïnvloeden.
+    </p>
+    ${crawlResult.siteWideStats.topIssueTypes?.length ? `
+    <div style="margin-top: 1rem;">
+      <strong style="color: #dc2626;">Meest voorkomende problemen:</strong>
+      <ul style="margin: 0.5rem 0; padding-left: 1.5rem; color: #7f1d1d;">
+        ${crawlResult.siteWideStats.topIssueTypes.slice(0, 3).map(issue => `<li>${issue}</li>`).join('')}
+      </ul>
+    </div>
+    ` : ''}
+  </div>
+  ` : ''}
+
+  <!-- Call to Action -->
+  <div style="text-align: center; margin: 2rem 0;">
+    <a href="${process.env.PUBLIC_BASE_URL || 'https://aio-scanner.nl'}/crawl/${crawlResult.crawlId}/results" 
+       style="display: inline-block; background: linear-gradient(135deg, #3b82f6 0%, #6366f1 100%); color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; box-shadow: 0 4px 6px rgba(59, 130, 246, 0.25);">
+      📊 Bekijk Volledige Resultaten
+    </a>
+  </div>
+
+  <!-- What's Next -->
+  <div style="background: #f0f9ff; border: 1px solid #bae6fd; padding: 1.5rem; border-radius: 8px; margin-bottom: 1.5rem;">
+    <h3 style="margin: 0 0 1rem 0; color: #0369a1; font-size: 16px;">🚀 Wat kunt u nu doen?</h3>
+    <ul style="margin: 0; padding-left: 1.5rem; color: #075985;">
+      <li>Bekijk het complete dashboard met alle pagina resultaten</li>
+      <li>Filter op specifieke issues om prioriteiten te stellen</li>
+      <li>Start een nieuwe single-page scan voor diepgaande analyse</li>
+      <li>Download gedetailleerde rapporten voor uw team</li>
+    </ul>
+  </div>
+
+  <!-- Footer -->
+  <div style="text-align: center; margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid #e2e8f0; color: #64748b; font-size: 14px;">
+    <p style="margin: 0;">Vriendelijke groet,<br><strong>Het AIO Scanner Team</strong></p>
+    <p style="margin: 0.5rem 0 0 0;">
+      Vragen? Antwoord op deze email of bezoek onze 
+      <a href="${process.env.PUBLIC_BASE_URL || 'https://aio-scanner.nl'}" style="color: #3b82f6;">website</a>
+    </p>
+  </div>
+
+</body>
+</html>
+  `;
+
+  const text = `
+🎉 Uw site-wide analyse is voltooid!
+
+Website: ${crawlResult.url}
+Datum: ${new Date(crawlResult.createdAt).toLocaleDateString('nl-NL')}
+Pagina's Gescand: ${crawlResult.totalPagesScanned || 0}
+Gemiddelde Score: ${crawlResult.siteWideStats?.avgScore || 0}
+
+${crawlResult.siteWideStats?.totalIssues ? `
+🚨 Issues Gevonden: ${crawlResult.siteWideStats.totalIssues}
+${crawlResult.siteWideStats.topIssueTypes?.length ? `
+Meest voorkomende problemen:
+${crawlResult.siteWideStats.topIssueTypes.slice(0, 3).map(issue => `- ${issue}`).join('\n')}
+` : ''}
+` : ''}
+
+📊 Bekijk uw volledige resultaten:
+${process.env.PUBLIC_BASE_URL || 'https://aio-scanner.nl'}/crawl/${crawlResult.crawlId}/results
+
+🚀 Wat kunt u nu doen?
+- Bekijk het complete dashboard met alle pagina resultaten
+- Filter op specifieke issues om prioriteiten te stellen  
+- Start een nieuwe single-page scan voor diepgaande analyse
+- Download gedetailleerde rapporten voor uw team
+
+Vriendelijke groet,
+Het AIO Scanner Team
+
+Vragen? Antwoord op deze email of bezoek onze website.
+  `;
+
+  return { subject, html, text };
 }
 
 function generateEnhancedInsights(scanResult: EmailTemplateResult): string {

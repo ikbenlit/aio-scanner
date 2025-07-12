@@ -23,6 +23,7 @@
     const navItems = [
       { href: '#features', label: 'Features' },
       { href: '#pricing', label: 'Prijzen' },
+      { href: '/crawl/start', label: 'Site-wide Scan', isBusinessTier: true },
       { href: '/blog', label: 'Blog' }
     ];
     

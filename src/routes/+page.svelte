@@ -106,6 +106,11 @@
     console.log('Navigate to login');
   }
   
+  // Handle site-wide crawl start
+  function handleSiteWideCrawl() {
+    goto('/crawl/start');
+  }
+  
   function handleDirectPurchase() {
     // TODO: Navigate to upgrade page
     console.log('Navigate to upgrade');
@@ -123,6 +128,7 @@
   <HeroSection 
     on:scan={handleScan} 
     on:businessScan={handleBusinessScan}
+    on:siteWideCrawl={handleSiteWideCrawl}
     {isScanning} 
     {isBusinessScanning}
   />
